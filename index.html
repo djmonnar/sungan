@@ -493,6 +493,17 @@
     .filter-bar { gap: 0.3rem; }
     .filter-btn { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
   }
+
+  /* 스크롤 애니메이션 클래스 추가 */
+  .fade-in-section {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+  }
+  .fade-in-section.is-visible {
+    opacity: 1;
+    transform: none;
+  }
 </style>
 </head>
 <body>
@@ -539,7 +550,7 @@
 </section>
 
 <!-- Portfolio -->
-<section id="portfolio">
+<section id="portfolio" class="fade-in-section">
   <p class="section-label">Selected Works</p>
   <h2 class="section-title">PORTFOLIO</h2>
   <div class="divider"></div>
@@ -559,7 +570,7 @@
 </section>
 
 <!-- About -->
-<section id="about">
+<section id="about" class="fade-in-section">
   <div class="about-image">
     <img src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80" alt="순간 스튜디오">
   </div>
@@ -591,7 +602,7 @@
 </section>
 
 <!-- Services -->
-<section id="services">
+<section id="services" class="fade-in-section">
   <p class="section-label">What We Do</p>
   <h2 class="section-title">SERVICES</h2>
   <div class="divider"></div>
@@ -622,7 +633,7 @@
 </section>
 
 <!-- Clients Marquee -->
-<section style="padding: 0 3rem;">
+<section style="padding: 0 3rem;" class="fade-in-section">
   <div class="clients-marquee">
     <div class="marquee-track" id="marqueeTrack">
       <!-- JS에서 채워집니다 -->
@@ -631,7 +642,7 @@
 </section>
 
 <!-- Contact -->
-<section id="contact">
+<section id="contact" class="fade-in-section">
   <p class="section-label">Get In Touch</p>
   <h2 class="section-title">CONTACT</h2>
   <div class="divider" style="margin: 1.5rem auto;"></div>
@@ -773,7 +784,29 @@
   // 혹시 이미지 로딩이 느려도 최대 2.5초 후 강제로 숨김
   setTimeout(hidePreloader, 2500);
 
-  // ─── SCROLL REVEAL (Intersection Observer) ───
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) e.targ
+  // ─── SCROLL REVEAL (Intersection Observer) 완성 ───
+  // 스크롤 시 요소들이 나타나는 애니메이션 로직을 완성했습니다.
+  const observerOptions = {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.1
+  };
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-visible');
+        observer.unobserve(entry.target); // 한 번만 나타나게 하려면 unobserve 호출
+      }
+    });
+  }, observerOptions);
+
+  // fade-in-section 클래스를 가진 요소들을 관찰합니다.
+  document.querySelectorAll('.fade-in-section').forEach((section) => {
+    observer.observe(section);
+  });
+
+</script>
+</body>
+</html>
+
