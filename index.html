@@ -765,11 +765,13 @@
   });
 
   // ─── PRELOADER ───
-  window.addEventListener('load', () => {
-    setTimeout(() => {
-      document.getElementById('preloader').classList.add('hide');
-    }, 1200);
-  });
+  function hidePreloader() {
+    document.getElementById('preloader').classList.add('hide');
+  }
+  // 이미지 로딩 완료 시
+  window.addEventListener('load', () => setTimeout(hidePreloader, 800));
+  // 혹시 이미지 로딩이 느려도 최대 2.5초 후 강제로 숨김
+  setTimeout(hidePreloader, 2500);
 
   // ─── SCROLL REVEAL (Intersection Observer) ───
   const observer = new IntersectionObserver((entries) => {
