@@ -1,375 +1,794 @@
-```html
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>순간, 스튜디오 — 전문사진촬영 및 최적화 갤러리</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://i.ibb.co" crossorigin>
-<link rel="preconnect" href="https://img.youtube.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
-<style>
-:root{--bg:#0c0c0c;--bg2:#111;--bg-card:#161616;--text:#e0dcd6;--muted:#777;--accent:#c9a96e;--white:#fff;--sans:'Noto Sans KR',sans-serif;--display:'Bebas Neue',sans-serif;--serif:'Cormorant Garamond',serif}
-*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>순간, 스튜디오 — 3D Virtual Gallery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Cormorant+Garamond:ital,wght@1,300&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050505;
+            --accent: #c9a96e;
+            --text: #e0dcd6;
+            --muted: #666;
+            --line: #1a1a1a;
+        }
 
-/* 최적화: 레이어 분리 및 GPU 가속 */
-.preloader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .6s ease;will-change:opacity}
-.preloader.hide{opacity:0;visibility:hidden;pointer-events:none}
-.preloader-text{font-family:var(--sans);font-weight:700;font-size:clamp(1.5rem,5vw,3rem);letter-spacing:.1em;color:var(--accent);animation:pulse 1.5s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(12,12,12,.85);backdrop-filter:blur(15px);border-bottom:1px solid rgba(201,169,110,.08);transition:transform .4s;will-change:transform}
-nav.hidden{transform:translateY(-100%)}
-.nav-logo{font-family:var(--sans);font-weight:700;font-size:1.1rem;color:var(--accent);text-decoration:none;letter-spacing:.05em;cursor:pointer}
-.nav-links{display:flex;gap:1.5rem;align-items:center}
-.nav-links a{font-size:.7rem;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s;cursor:pointer}
-.nav-links a:hover{color:var(--accent)}
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg);
+            font-family: 'Noto Sans KR', sans-serif;
+            color: var(--text);
+            touch-action: none;
+        }
 
-.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px;background:none;border:none;padding:4px}
-.hamburger span{width:22px;height:1.5px;background:var(--text);transition:all .3s}
-.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(4px,5px)}
-.hamburger.active span:nth-child(2){opacity:0}
-.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-5px)}
+        body.modal-open {
+            overflow: hidden;
+        }
 
-.mobile-menu{display:none;position:fixed;inset:0;z-index:99;background:rgba(12,12,12,.98);flex-direction:column;align-items:center;justify-content:center;gap:2rem;will-change:opacity}
-.mobile-menu.open{display:flex}
-.mobile-menu a{font-family:var(--sans);font-size:1.3rem;font-weight:500;letter-spacing:.1em;color:var(--text);text-decoration:none}
+        #loader {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.8s ease, visibility 0.8s ease;
+            visibility: visible;
+        }
 
-.hero{height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.hero-bg{position:absolute;inset:0;background:url('https://i.ibb.co/FbDwFTZx/1-1.jpg') center/cover no-repeat;filter:brightness(.3) saturate(.7);transform:translateZ(0);animation:heroZoom 30s ease-in-out infinite alternate}
-@keyframes heroZoom{0%{transform:scale(1)}100%{transform:scale(1.1)}}
-.hero-content{position:relative;z-index:2;text-align:center;animation:fadeUp 1s ease .3s both}
-.hero-title{font-family:var(--sans);font-weight:700;font-size:clamp(2.5rem,10vw,6rem);letter-spacing:.05em;line-height:1.1;color:var(--white)}
-.hero-cta{display:inline-block;margin-top:2rem;padding:.8rem 2.5rem;border:1px solid var(--accent);color:var(--accent);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:all .3s}
-.hero-cta:hover{background:var(--accent);color:var(--bg)}
+        #loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
-section{padding:5rem 2rem}
-.section-label{font-size:.6rem;font-weight:400;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
-.section-title{font-family:var(--display);font-size:clamp(1.8rem,4vw,3rem);letter-spacing:.08em;color:var(--white);margin-bottom:.8rem}
+        .loader-title {
+            letter-spacing: 0.5em;
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 0.95rem;
+            text-align: center;
+            padding: 0 20px;
+        }
 
-/* 카테고리 미리보기 영역 */
-.cat-section{padding:3rem 2rem 4rem}
-.cat-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.5rem}
-.cat-header h3{font-family:var(--display);font-size:clamp(1.5rem,3vw,2.2rem);letter-spacing:.06em;color:var(--white)}
-.cat-more{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);text-decoration:none;border:1px solid rgba(201,169,110,.3);padding:.5rem 1.2rem;transition:all .3s;cursor:pointer;background:none;font-family:var(--sans)}
-.cat-more:hover{background:var(--accent);color:var(--bg)}
+        .loader-bar {
+            width: min(220px, 60vw);
+            height: 2px;
+            background: var(--line);
+            margin-top: 20px;
+            position: relative;
+            overflow: hidden;
+        }
 
-.gallery-wall{display:flex;gap:1.2rem;overflow-x:auto;padding-bottom:1rem;scrollbar-width:none}
-.gallery-wall::-webkit-scrollbar{display:none}
-.gallery-frame{flex:0 0 auto;width:min(320px,45vw);position:relative}
-.frame-inner{background:#1a1a1a;border:1px solid #222;padding:8px 8px 30px;transition:transform .3s ease;will-change:transform}
-.frame-inner:hover{transform:translateY(-5px)}
-.frame-inner img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer;opacity:0;transition:opacity .5s ease}
-.frame-inner img.loaded{opacity:1}
+        .loader-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            transition: width 0.25s ease;
+            will-change: width;
+        }
 
-/* 갤러리 페이지 전용 */
-.gallery-page{display:none;min-height:100vh;padding:6rem 2rem 4rem}
-.gallery-page.active{display:block}
-.gallery-masonry{columns:3;column-gap:1rem}
-.g-item{break-inside:avoid;margin-bottom:1rem;opacity:0;transform:translateY(20px);transition:all .5s ease}
-.g-item.show{opacity:1;transform:translateY(0)}
-.g-item-frame{background:#1a1a1a;border:1px solid #222;padding:6px 6px 24px}
-.g-item-frame img{width:100%;display:block;cursor:pointer;background:#000}
+        #canvas-container {
+            width: 100%;
+            height: 100%;
+            outline: none;
+        }
 
-/* 로드 더 보기 버튼 */
-.load-more-container{display:flex;justify-content:center;margin-top:3rem}
-.btn-load-more{background:transparent;border:1px solid var(--accent);color:var(--accent);padding:1rem 3rem;font-family:var(--sans);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:all .3s}
-.btn-load-more:hover{background:var(--accent);color:var(--bg)}
-.btn-load-more:disabled{border-color:var(--muted);color:var(--muted);cursor:default}
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            pointer-events: none;
+        }
 
-/* 영상 그리드 */
-.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem;margin-top:2rem}
-.video-card{background:var(--bg-card);border:1px solid rgba(255,255,255,.04);overflow:hidden}
-.video-thumb{position:relative;aspect-ratio:16/9;background:#000}
-.video-thumb img{width:100%;height:100%;object-fit:cover}
+        .logo {
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            pointer-events: auto;
+            cursor: pointer;
+            user-select: none;
+        }
 
-/* 라이트박스 */
-.lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center}
-.lightbox.open{display:flex}
-.lightbox img{max-width:95vw;max-height:95vh;object-fit:contain}
-.lightbox-close{position:absolute;top:1rem;right:1rem;font-size:2rem;color:var(--white);background:none;border:none;cursor:pointer;padding:10px}
+        .nav-sub {
+            font-style: italic;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.95rem;
+            color: var(--muted);
+            text-align: right;
+        }
 
-/* 유틸리티 */
-.fade-in{opacity:0;transform:translateY(20px);transition:opacity .6s ease-out,transform .6s ease-out;will-change:opacity,transform}
-.fade-in.visible{opacity:1;transform:none}
+        .scroll-guide {
+            position: fixed;
+            bottom: max(26px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0.82;
+            transition: opacity 0.35s ease;
+            will-change: opacity;
+        }
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .scroll-guide.hidden {
+            opacity: 0;
+        }
 
-@media(max-width:768px){
-    nav{padding:.8rem 1rem}.nav-links{display:none}.hamburger{display:flex}
-    .gallery-masonry{columns:2}
-    section{padding:3rem 1.2rem}
-    .gallery-frame{width:min(260px,70vw)}
-}
-@media(max-width:480px){ .gallery-masonry{columns:1} }
-</style>
+        .scroll-guide p {
+            font-size: 0.65rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            margin: 0 0 10px;
+            color: var(--accent);
+        }
+
+        .mouse-icon {
+            width: 20px;
+            height: 35px;
+            border: 1px solid var(--accent);
+            border-radius: 10px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .mouse-icon::after {
+            content: '';
+            width: 2px;
+            height: 6px;
+            background: var(--accent);
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scrollMove 2s infinite;
+        }
+
+        @keyframes scrollMove {
+            0% { transform: translate(-50%, 0); opacity: 1; }
+            100% { transform: translate(-50%, 15px); opacity: 0; }
+        }
+
+        #detail-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: rgba(5, 5, 5, 0.98);
+            display: none;
+            flex-direction: column;
+            overflow-y: auto;
+            overscroll-behavior: contain;
+        }
+
+        #detail-modal.active {
+            display: flex;
+        }
+
+        .modal-inner {
+            width: 100%;
+            min-height: 100%;
+            padding: 80px 20px 40px;
+        }
+
+        .modal-close {
+            position: fixed;
+            top: max(20px, env(safe-area-inset-top));
+            right: 20px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            z-index: 600;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-header {
+            max-width: 1100px;
+            margin: 0 auto 40px;
+            width: 100%;
+        }
+
+        .modal-header h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            color: #fff;
+            margin: 8px 0 0;
+            letter-spacing: -0.02em;
+            line-height: 1.1;
+        }
+
+        .modal-label {
+            color: var(--accent);
+            letter-spacing: 0.3em;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin: 0;
+        }
+
+        .modal-divider {
+            width: 40px;
+            height: 1px;
+            background: var(--accent);
+            margin-top: 20px;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .modal-grid img {
+            width: 100%;
+            aspect-ratio: 3 / 4;
+            object-fit: cover;
+            border: 1px solid var(--line);
+            filter: grayscale(100%);
+            transition: transform 0.45s ease, filter 0.45s ease, opacity 0.3s ease;
+            opacity: 0;
+            background: #0b0b0b;
+        }
+
+        .modal-grid img.loaded {
+            opacity: 1;
+        }
+
+        .modal-grid img:hover {
+            filter: grayscale(0%);
+            transform: scale(1.02);
+        }
+
+        .fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            padding: 24px;
+            text-align: center;
+            color: #fff;
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            nav {
+                padding: 20px 16px;
+            }
+
+            .logo {
+                font-size: 0.95rem;
+                max-width: 50%;
+                line-height: 1.3;
+            }
+
+            .nav-sub {
+                font-size: 0.8rem;
+                max-width: 42%;
+            }
+
+            .modal-inner {
+                padding: 76px 16px 30px;
+            }
+
+            .modal-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+
+            .modal-close {
+                right: 16px;
+                padding: 9px 14px;
+                font-size: 0.65rem;
+            }
+        }
+    </style>
 </head>
 <body>
-
-<div class="preloader" id="preloader"><div class="preloader-text">순간, 스튜디오</div></div>
-
-<nav id="navbar">
-    <a class="nav-logo" onclick="showHome()">순간, 스튜디오</a>
-    <div class="nav-links">
-        <a onclick="showHome()">Home</a>
-        <a onclick="openGallery('product')">제품</a>
-        <a onclick="openGallery('promo')">홍보</a>
-        <a onclick="openGallery('profile')">프로필</a>
-        <a onclick="openGallery('interior')">인테리어</a>
-        <a onclick="openGallery('food')">음식</a>
-        <a onclick="openGallery('video')">영상</a>
-        <a href="#contact">Contact</a>
-    </div>
-    <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-</nav>
-
-<div class="mobile-menu" id="mobileMenu">
-    <a onclick="showHome();closeMobile()">Home</a>
-    <a onclick="openGallery('product');closeMobile()">제품 촬영</a>
-    <a onclick="openGallery('promo');closeMobile()">홍보 촬영</a>
-    <a onclick="openGallery('profile');closeMobile()">프로필 촬영</a>
-    <a onclick="openGallery('interior');closeMobile()">인테리어 촬영</a>
-    <a onclick="openGallery('food');closeMobile()">음식 촬영</a>
-    <a onclick="openGallery('video');closeMobile()">영상 포트폴리오</a>
-</div>
-
-<div id="homePage">
-    <section class="hero">
-        <div class="hero-bg"></div>
-        <div class="hero-content">
-            <p class="section-label" style="color:var(--accent)">Photography & Film</p>
-            <h1 class="hero-title">찰나의 기록,<br>순간을 담다</h1>
-            <a href="#categories" class="hero-cta">View Portfolio</a>
+    <div id="loader">
+        <div class="loader-title">MOMENT STUDIO</div>
+        <div class="loader-bar">
+            <div class="loader-progress" id="progress"></div>
         </div>
-    </section>
-
-    <div id="categories">
-        <!-- 카테고리 미리보기들이 여기에 렌더링됨 -->
     </div>
 
-    <section id="contact" class="fade-in">
-        <p class="section-label">Contact</p>
-        <h2 class="section-title">함께 이야기해요</h2>
-        <div style="margin-top:2rem">
-            <p style="color:var(--muted); margin-bottom:1rem">경남 진주시 대신로 365 지하1층</p>
-            <a href="https://blog.naver.com/sungan_studio" target="_blank" class="hero-cta">네이버 블로그 방문하기</a>
-        </div>
-    </section>
-</div>
+    <nav>
+        <div class="logo" id="homeBtn">순간, 스튜디오</div>
+        <div class="nav-sub">Virtual Experience v2.0</div>
+    </nav>
 
-<!-- 상세 갤러리 페이지 -->
-<div class="gallery-page" id="galleryPage">
-    <button class="cat-more" onclick="showHome()" style="margin-bottom:2rem">← BACK HOME</button>
-    <p class="section-label" id="gpLabel"></p>
-    <h2 class="section-title" id="gpTitle"></h2>
-    
-    <div id="gpGrid" class="gallery-masonry"></div>
-    
-    <div class="load-more-container" id="loadMoreContainer">
-        <button class="btn-load-more" id="btnLoadMore" onclick="loadNextBatch()">더 보기 (LOAD MORE)</button>
+    <div class="scroll-guide" id="guide">
+        <p>Scroll to Explore</p>
+        <div class="mouse-icon"></div>
     </div>
-</div>
 
-<!-- 영상 페이지 -->
-<div class="gallery-page" id="videoPage">
-    <button class="cat-more" onclick="showHome()" style="margin-bottom:2rem">← BACK HOME</button>
-    <p class="section-label">Film Portfolio</p>
-    <h2 class="section-title">영상 작업물</h2>
-    <div class="video-grid" id="videoGrid"></div>
-</div>
+    <div id="canvas-container" aria-label="3D gallery"></div>
 
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
-    <button class="lightbox-close">✕</button>
-    <img id="lbImg" src="" alt="">
-</div>
-
-<script>
-// 데이터 구조 (기존 데이터 유지)
-const DATA = {
-    product: { label: '제품 촬영', icon: '📦', subs: { 'ALL': ['https://i.ibb.co/394NT0hM/image.jpg','https://i.ibb.co/Q7gdWbNN/vr.jpg','https://i.ibb.co/gLPWMbw0/vr.jpg','https://i.ibb.co/bj5Hvq1t/vr.jpg','https://i.ibb.co/mrDwxBdB/vr.jpg','https://i.ibb.co/4nQ2B4ZL/image.jpg','https://i.ibb.co/Mkx3G0XQ/image.jpg','https://i.ibb.co/Jfh7gtp/1.jpg','https://i.ibb.co/svfw8871/2.jpg'] }},
-    promo: { label: '홍보 촬영', icon: '🎯', subs: { 'ALL': ['https://i.ibb.co/W4PFFG1T/6.jpg','https://i.ibb.co/8498hrMN/3.jpg','https://i.ibb.co/60WVSVVY/5.jpg','https://i.ibb.co/QvH8vj6X/4.jpg','https://i.ibb.co/r2G8zdr5/4.jpg','https://i.ibb.co/99b7W86m/2.jpg','https://i.ibb.co/W4M1K7Z8/1.jpg','https://i.ibb.co/wFQsSP65/4.jpg','https://i.ibb.co/PGMmdjJq/2.jpg','https://i.ibb.co/4w2Q22xn/3.jpg','https://i.ibb.co/FkzLz4c1/5.jpg','https://i.ibb.co/xSkm32tQ/1.jpg','https://i.ibb.co/XxccBsBD/3.jpg'] }},
-    profile: { label: '프로필 촬영', icon: '📸', subs: { 'ALL': ['https://i.ibb.co/FbDwFTZx/1-1.jpg','https://i.ibb.co/Lhn5BrVT/1-2.jpg','https://i.ibb.co/XZ5py8NV/1-3.jpg','https://i.ibb.co/S4ZpqSjt/1-4.jpg','https://i.ibb.co/cc1q7k0k/1-5.jpg','https://i.ibb.co/qYpTzfN7/1-6.jpg','https://i.ibb.co/GQtfgYFF/1-7.jpg','https://i.ibb.co/rR1RhYZq/1-8.jpg','https://i.ibb.co/FqzYHmpn/1-9.jpg','https://i.ibb.co/k6HBx8zZ/1-10.jpg','https://i.ibb.co/mV6gG0kN/1-11.jpg','https://i.ibb.co/DDbWgZ6J/1-12.jpg','https://i.ibb.co/rRstD68X/1-13.jpg','https://i.ibb.co/C5PXH99z/1-14.jpg'] }},
-    interior: { label: '인테리어 촬영', icon: '🏠', subs: { 'ALL': ['https://i.ibb.co/9kDFk5bS/3.jpg','https://i.ibb.co/qYQ5W6fK/1.jpg','https://i.ibb.co/HT55zCp8/2.jpg','https://i.ibb.co/7tmwks0d/3.jpg','https://i.ibb.co/C5N6pLsH/1.jpg','https://i.ibb.co/S4hMNRdS/2.jpg','https://i.ibb.co/N6cVtpjg/3.jpg','https://i.ibb.co/bT1sD4f/image.jpg','https://i.ibb.co/ZpBVxtMg/image.jpg','https://i.ibb.co/6cLDmtLx/1-1.jpg','https://i.ibb.co/tTV9rVGp/1-3.jpg','https://i.ibb.co/21WYhrP1/1-4.jpg','https://i.ibb.co/v4qc5n82/1-5.jpg','https://i.ibb.co/Myn4N6TV/1-6.jpg','https://i.ibb.co/Y4LpjSFZ/1-9.jpg','https://i.ibb.co/5XmFMQz8/1-10.jpg','https://i.ibb.co/Vpt7y3Mm/1-11.jpg','https://i.ibb.co/wNtT1WWZ/1-12.jpg'] }},
-    food: { label: '음식 촬영', icon: '🍽️', subs: { 'ALL': ['https://i.ibb.co/JwdN9TrW/image.jpg','https://i.ibb.co/6VJXZd8/image.jpg','https://i.ibb.co/1tmmNPZ1/image.jpg','https://i.ibb.co/mCRvwztW/image.jpg','https://i.ibb.co/cSp5XrfM/image.jpg','https://i.ibb.co/TB3Frm96/1.jpg','https://i.ibb.co/SC0yfQX/2.jpg','https://i.ibb.co/39Qbttgc/1-1.jpg','https://i.ibb.co/NM0WwcW/1-2.jpg','https://i.ibb.co/ZR2DSJVW/1-1.jpg','https://i.ibb.co/RkngspyV/1-2.jpg','https://i.ibb.co/j9jvSMQ3/1-3.jpg','https://i.ibb.co/JwW3PW7Y/1-6.jpg','https://i.ibb.co/HTz73Hg2/DSC08642.jpg','https://i.ibb.co/tpyJp01Y/DSC08650.jpg','https://i.ibb.co/DHz11r37/DSC08652.jpg','https://i.ibb.co/cSNk3mDb/DSC08669.jpg','https://i.ibb.co/yF0rML2z/DSC08675.jpg','https://i.ibb.co/V0B159NQ/DSC08681.jpg','https://i.ibb.co/1YWpvHzK/DSC08699.jpg','https://i.ibb.co/4wHWGqDn/DSC08715.jpg','https://i.ibb.co/Xr5HjCJP/DSC08739.jpg','https://i.ibb.co/0ycXqhgf/DSC08757.jpg','https://i.ibb.co/wZPMF6k9/DSC08771.jpg','https://i.ibb.co/wrJ9KvL9/DSC08792.jpg','https://i.ibb.co/xSWwKc4z/DSC08824.jpg','https://i.ibb.co/N6pr3zd3/DSC08865.jpg','https://i.ibb.co/bgT4cNLk/DSC08880.jpg','https://i.ibb.co/tT9jrkrX/DSC08937.jpg','https://i.ibb.co/pBWrcnM0/DSC08984.jpg','https://i.ibb.co/YT8Pfmtr/DSC09017.jpg','https://i.ibb.co/PsCksysB/DSC09035.jpg','https://i.ibb.co/p6Q3DMxn/DSC09056.jpg','https://i.ibb.co/G30mWgVd/DSC09072.jpg','https://i.ibb.co/7JhPnnT6/DSC09089.jpg','https://i.ibb.co/wh8rZ7nd/DSC09094.jpg','https://i.ibb.co/M5SQfzJ1/DSC09110.jpg','https://i.ibb.co/hF1WrVw7/DSC09111.jpg','https://i.ibb.co/R4ptHhYd/DSC09112.jpg','https://i.ibb.co/nNCQzYg8/image.jpg','https://i.ibb.co/PsyWq9cb/1001-1.jpg','https://i.ibb.co/fVJ9TRh7/1001-2.jpg','https://i.ibb.co/pvWCT1S1/1001-3.jpg','https://i.ibb.co/hJ8qc96m/1001-4.jpg','https://i.ibb.co/M583cGPG/1001-5.jpg','https://i.ibb.co/wFzRfN2h/1001-6.jpg','https://i.ibb.co/7xq7cN38/1001-7.jpg','https://i.ibb.co/DH0yF4Xj/1001-8.jpg','https://i.ibb.co/hJxgyJqb/1001-9.jpg','https://i.ibb.co/S7WXyg3F/1001-10.jpg','https://i.ibb.co/3mKQdJ37/1001-11.jpg','https://i.ibb.co/1Yv9qYmN/1001-12.jpg','https://i.ibb.co/VpYr1fRY/1001-13.jpg','https://i.ibb.co/9k7RtnFt/1001-14.jpg','https://i.ibb.co/5Xccgt8r/1001-15.jpg','https://i.ibb.co/mCSX2VVL/1001-16.jpg','https://i.ibb.co/fYtRrgSy/1001-17.jpg','https://i.ibb.co/HMBT56s/1001-18.jpg','https://i.ibb.co/BKwN2DTw/1001-19.jpg','https://i.ibb.co/gb0TrPtn/1001-20.jpg','https://i.ibb.co/x8Dym1PZ/2001-1.jpg','https://i.ibb.co/zH5dbht9/2001-2.jpg','https://i.ibb.co/Pv9YM9jh/2001-3.jpg','https://i.ibb.co/4gjJP7LP/2001-4.jpg','https://i.ibb.co/F4H28LkM/2001-5.jpg','https://i.ibb.co/jZVbZmff/2001-6.jpg','https://i.ibb.co/TxbXw2jH/2001-7.jpg','https://i.ibb.co/bRmYCH8X/2001-8.jpg','https://i.ibb.co/S7mcB6Ls/2001-9.jpg','https://i.ibb.co/ZRNQvr1K/2001-10.jpg','https://i.ibb.co/JWnH0xHf/2001-11.jpg','https://i.ibb.co/3Ymy5vXq/2001-12.jpg','https://i.ibb.co/gZ8H7T4G/2001-13.jpg','https://i.ibb.co/Q7R15CQr/2001-14.jpg','https://i.ibb.co/4nC6v2x2/2001-15.jpg','https://i.ibb.co/LDmNnpLD/2001-16.jpg','https://i.ibb.co/wZTL9tHR/2001-17.jpg','https://i.ibb.co/TxXqqVR3/2001-18.jpg','https://i.ibb.co/b560drDm/2001-19.jpg','https://i.ibb.co/kzRQ5cV/2001-20.jpg','https://i.ibb.co/B2b356J9/2001-21.jpg','https://i.ibb.co/1YHsnQ6P/2001-22.jpg','https://i.ibb.co/N2Y4bG33/2001-23.jpg','https://i.ibb.co/Z6LCPY3G/2001-24.jpg','https://i.ibb.co/LyF5jfb/2001-25.jpg','https://i.ibb.co/GvyxFD1Y/2001-26.jpg','https://i.ibb.co/nqvjZQy8/3001-1.jpg','https://i.ibb.co/wFrcxG76/3001-2.jpg','https://i.ibb.co/zhJL0s1z/3001-3.jpg','https://i.ibb.co/XNvG96Z/3001-4.jpg','https://i.ibb.co/k2fgZWW4/3001-5.jpg','https://i.ibb.co/DBfhm9n/3001-6.jpg','https://i.ibb.co/jvZf3fLb/3001-7.jpg','https://i.ibb.co/xtLgP78H/3001-8.jpg','https://i.ibb.co/hRG5bYDV/3001-9.jpg','https://i.ibb.co/TMFrHbhr/3001-10.jpg'] }}
-};
-
-const VIDEOS = {
-    'All Films': [
-        {title:'DASHU 다운텍 광고', id:'WEPXeWG6rE4'},
-        {title:'진주유치원 홍보', id:'xw1FHU9_HdQ'},
-        {title:'정치 캠페인 쇼츠', id:'TfZKVnArQpU'},
-        {title:'청년창업의날 스케치', id:'8pZJkn1M3do'}
-    ]
-};
-
-let currentGalleryList = [];
-let currentIndex = 0;
-const BATCH_SIZE = 12; // 한 번에 로드할 이미지 수
-
-// 메인 화면 렌더링 (요청하신 대로 2장씩만)
-function renderHome() {
-    const container = document.getElementById('categories');
-    container.innerHTML = '';
-    
-    Object.entries(DATA).forEach(([key, cat]) => {
-        const allImgs = Object.values(cat.subs).flat();
-        const previews = allImgs.slice(0, 2); // 2장 제한
-
-        const section = document.createElement('div');
-        section.className = 'cat-section fade-in';
-        section.innerHTML = `
-            <div class="cat-header">
-                <h3>${cat.icon} ${cat.label}</h3>
-                <button class="cat-more" onclick="openGallery('${key}')">SEE ALL</button>
+    <div id="detail-modal" aria-hidden="true">
+        <button class="modal-close" id="modalCloseBtn" type="button">CLOSE GALLERY</button>
+        <div class="modal-inner" id="modalBackdrop">
+            <div class="modal-header">
+                <p class="modal-label" id="modal-label"></p>
+                <h2 id="modal-title">CATEGORY</h2>
+                <div class="modal-divider"></div>
             </div>
-            <div class="gallery-wall">
-                ${previews.map(src => `
-                    <div class="gallery-frame">
-                        <div class="frame-inner">
-                            <img src="${src}" alt="${cat.label}" loading="lazy" decoding="async" onload="this.classList.add('loaded')" onclick="openLb(this.src)">
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        container.appendChild(section);
-    });
-    
-    initObserver();
-}
-
-// 갤러리 열기 (배치 로딩 적용)
-function openGallery(key) {
-    if(key === 'video') { openVideo(); return; }
-    
-    const cat = DATA[key];
-    currentGalleryList = Object.values(cat.subs).flat();
-    currentIndex = 0;
-    
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('videoPage').style.display = 'none';
-    document.getElementById('galleryPage').classList.add('active');
-    
-    document.getElementById('gpLabel').textContent = "Portfolio";
-    document.getElementById('gpTitle').textContent = cat.label;
-    
-    const grid = document.getElementById('gpGrid');
-    grid.innerHTML = ''; // 초기화
-    
-    loadNextBatch();
-    window.scrollTo(0, 0);
-}
-
-// 다음 묶음 이미지 로드 (렉 방지 핵심)
-function loadNextBatch() {
-    const grid = document.getElementById('gpGrid');
-    const nextBatch = currentGalleryList.slice(currentIndex, currentIndex + BATCH_SIZE);
-    
-    nextBatch.forEach(src => {
-        const item = document.createElement('div');
-        item.className = 'g-item';
-        item.innerHTML = `
-            <div class="g-item-frame">
-                <img src="${src}" loading="lazy" decoding="async" onclick="openLb(this.src)" onload="this.parentElement.parentElement.classList.add('show')">
-            </div>
-        `;
-        grid.appendChild(item);
-    });
-    
-    currentIndex += BATCH_SIZE;
-    
-    const btn = document.getElementById('btnLoadMore');
-    if (currentIndex >= currentGalleryList.length) {
-        btn.textContent = "모든 이미지를 불러왔습니다";
-        btn.disabled = true;
-    } else {
-        btn.textContent = `더 보기 (${currentIndex}/${currentGalleryList.length})`;
-        btn.disabled = false;
-    }
-}
-
-function openVideo() {
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('galleryPage').classList.remove('active');
-    document.getElementById('videoPage').style.display = 'block';
-    
-    const grid = document.getElementById('videoGrid');
-    grid.innerHTML = VIDEOS['All Films'].map(v => `
-        <div class="video-card">
-            <div class="video-thumb" onclick="this.innerHTML='<iframe src=\\'https://www.youtube.com/embed/${v.id}?autoplay=1\\' allowfullscreen style=\\'width:100%;height:100%;border:none\\'></iframe>'">
-                <img src="https://img.youtube.com/vi/${v.id}/hqdefault.jpg" alt="${v.title}">
-                <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.2);cursor:pointer">▶</div>
-            </div>
-            <div style="padding:1rem">
-                <p style="font-size:.8rem;font-weight:500">${v.title}</p>
-            </div>
+            <div class="modal-grid" id="modal-grid"></div>
         </div>
-    `).join('');
-    window.scrollTo(0, 0);
-}
+    </div>
 
-function showHome() {
-    document.getElementById('homePage').style.display = 'block';
-    document.getElementById('galleryPage').classList.remove('active');
-    document.getElementById('videoPage').style.display = 'none';
-    window.scrollTo(0, 0);
-}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-// 라이트박스
-function openLb(src) {
-    document.getElementById('lbImg').src = src;
-    document.getElementById('lightbox').classList.add('open');
-    document.body.style.overflow = 'hidden';
-}
-function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-}
-
-// 공통 기능: 내비게이션 및 모바일 메뉴
-const hamburger = document.getElementById('hamburger');
-const mobileMenu = document.getElementById('mobileMenu');
-hamburger.onclick = () => {
-    hamburger.classList.toggle('active');
-    mobileMenu.classList.toggle('open');
-};
-function closeMobile() {
-    hamburger.classList.remove('active');
-    mobileMenu.classList.remove('open');
-}
-
-// 스크롤 시 내비바 숨기기 최적화
-let lastS = 0;
-window.onscroll = () => {
-    const cur = window.scrollY;
-    document.getElementById('navbar').classList.toggle('hidden', cur > lastS && cur > 100);
-    lastS = cur;
-};
-
-// Intersection Observer (등장 애니메이션)
-function initObserver() {
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('visible');
-                observer.unobserve(entry.target);
+    <script>
+        const ARTWORKS = [
+            {
+                id: 'hero',
+                title: '순간, 스튜디오',
+                sub: '찰나의 기록',
+                img: 'https://i.ibb.co/FbDwFTZx/1-1.jpg',
+                label: 'WELCOME',
+                gallery: [
+                    'https://i.ibb.co/FbDwFTZx/1-1.jpg',
+                    'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
+                    'https://i.ibb.co/XZ5py8NV/1-3.jpg'
+                ]
+            },
+            {
+                id: 'product',
+                title: 'Product',
+                sub: '제품 촬영',
+                img: 'https://i.ibb.co/394NT0hM/image.jpg',
+                label: 'COMMERCIAL',
+                gallery: [
+                    'https://i.ibb.co/394NT0hM/image.jpg',
+                    'https://i.ibb.co/Q7gdWbNN/vr.jpg',
+                    'https://i.ibb.co/gLPWMbw0/vr.jpg',
+                    'https://i.ibb.co/bj5Hvq1t/vr.jpg'
+                ]
+            },
+            {
+                id: 'promo',
+                title: 'Promotion',
+                sub: '홍보 촬영',
+                img: 'https://i.ibb.co/W4PFFG1T/6.jpg',
+                label: 'BRANDING',
+                gallery: [
+                    'https://i.ibb.co/W4PFFG1T/6.jpg',
+                    'https://i.ibb.co/8498hrMN/3.jpg',
+                    'https://i.ibb.co/60WVSVVY/5.jpg'
+                ]
+            },
+            {
+                id: 'profile',
+                title: 'Profile',
+                sub: '프로필 촬영',
+                img: 'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
+                label: 'PEOPLE',
+                gallery: [
+                    'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
+                    'https://i.ibb.co/XZ5py8NV/1-3.jpg',
+                    'https://i.ibb.co/S4ZpqSjt/1-4.jpg'
+                ]
+            },
+            {
+                id: 'interior',
+                title: 'Interior',
+                sub: '인테리어 촬영',
+                img: 'https://i.ibb.co/9kDFk5bS/3.jpg',
+                label: 'SPACE',
+                gallery: [
+                    'https://i.ibb.co/9kDFk5bS/3.jpg',
+                    'https://i.ibb.co/qYQ5W6fK/1.jpg',
+                    'https://i.ibb.co/HT55zCp8/2.jpg'
+                ]
+            },
+            {
+                id: 'food',
+                title: 'Food',
+                sub: '음식 촬영',
+                img: 'https://i.ibb.co/JwdN9TrW/image.jpg',
+                label: 'TASTE',
+                gallery: [
+                    'https://i.ibb.co/JwdN9TrW/image.jpg',
+                    'https://i.ibb.co/6VJXZd8/image.jpg',
+                    'https://i.ibb.co/1tmmNPZ1/image.jpg',
+                    'https://i.ibb.co/mCRvwztW/image.jpg'
+                ]
             }
-        });
-    }, { threshold: 0.1 });
-    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-}
+        ];
 
-// 초기 실행
-window.onload = () => {
-    setTimeout(() => {
-        document.getElementById('preloader').classList.add('hide');
-        renderHome();
-    }, 500);
-};
-</script>
+        let scene, camera, renderer, clock;
+        let interactables = [];
+        let frameGroups = [];
+        let targetZ = 5;
+        let currentZ = 5;
+        let isModalOpen = false;
+        let touchY = 0;
+        let isPointerDown = false;
+        let loadedCount = 0;
+
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const textureLoader = new THREE.TextureLoader();
+
+        const loaderEl = document.getElementById('loader');
+        const progressEl = document.getElementById('progress');
+        const guideEl = document.getElementById('guide');
+        const modalEl = document.getElementById('detail-modal');
+        const modalGridEl = document.getElementById('modal-grid');
+        const modalLabelEl = document.getElementById('modal-label');
+        const modalTitleEl = document.getElementById('modal-title');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+        const homeBtn = document.getElementById('homeBtn');
+        const container = document.getElementById('canvas-container');
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function getCameraLimits() {
+            return {
+                maxZ: 5,
+                minZ: (ARTWORKS.length - 1) * -12 - 5
+            };
+        }
+
+        function updateGuideVisibility() {
+            if (targetZ < 4) {
+                guideEl.classList.add('hidden');
+            } else {
+                guideEl.classList.remove('hidden');
+            }
+        }
+
+        function updateLoader() {
+            loadedCount += 1;
+            const progress = (loadedCount / ARTWORKS.length) * 100;
+            progressEl.style.width = `${progress}%`;
+
+            if (loadedCount >= ARTWORKS.length) {
+                setTimeout(() => {
+                    loaderEl.classList.add('hidden');
+                }, 350);
+            }
+        }
+
+        function createFallbackMessage(message) {
+            document.body.innerHTML = `<div class="fallback">${message}</div>`;
+        }
+
+        function createRenderer() {
+            try {
+                renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: false,
+                    powerPreference: 'high-performance'
+                });
+            } catch (error) {
+                createFallbackMessage('이 브라우저에서는 3D 갤러리를 실행할 수 없습니다.');
+                throw error;
+            }
+
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            container.appendChild(renderer.domElement);
+        }
+
+        function optimizeTexture(tex) {
+            tex.encoding = THREE.sRGBEncoding;
+            tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy?.() || 1);
+            tex.generateMipmaps = true;
+            tex.minFilter = THREE.LinearMipmapLinearFilter;
+            tex.magFilter = THREE.LinearFilter;
+            tex.wrapS = THREE.ClampToEdgeWrapping;
+            tex.wrapT = THREE.ClampToEdgeWrapping;
+            tex.needsUpdate = true;
+        }
+
+        function preloadModalImages(urls) {
+            urls.forEach((url) => {
+                const img = new Image();
+                img.decoding = 'async';
+                img.loading = 'eager';
+                img.src = url;
+            });
+        }
+
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050505);
+            scene.fog = new THREE.FogExp2(0x050505, 0.08);
+
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(0, 0, 5);
+
+            clock = new THREE.Clock();
+
+            const ambient = new THREE.AmbientLight(0xffffff, 0.45);
+            scene.add(ambient);
+
+            const floorGeo = new THREE.PlaneGeometry(20, 200);
+            const floorMat = new THREE.MeshStandardMaterial({
+                color: 0x0a0a0a,
+                roughness: 0.14,
+                metalness: 0.45
+            });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = -2.5;
+            scene.add(floor);
+        }
+
+        function createFrames() {
+            ARTWORKS.forEach((art, i) => {
+                const zPos = i * -12;
+                const side = i === 0 ? 0 : (i % 2 === 1 ? 4 : -4);
+
+                const group = new THREE.Group();
+                group.position.set(side, 0, zPos);
+
+                if (i !== 0) {
+                    group.rotation.y = side > 0 ? -0.5 : 0.5;
+                }
+
+                const frameGeo = new THREE.BoxGeometry(3.2, 4.2, 0.1);
+                const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+                const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+                group.add(frameMesh);
+
+                const hitGeo = new THREE.PlaneGeometry(3.5, 4.5);
+                const hitMat = new THREE.MeshBasicMaterial({
+                    transparent: true,
+                    opacity: 0,
+                    side: THREE.DoubleSide
+                });
+                const hitMesh = new THREE.Mesh(hitGeo, hitMat);
+                hitMesh.position.z = 0.08;
+                hitMesh.userData = art;
+                interactables.push(hitMesh);
+                group.add(hitMesh);
+
+                const light = new THREE.PointLight(0xc9a96e, 1.25, 8);
+                light.position.set(0, 3, 1);
+                group.add(light);
+
+                frameGroups.push(group);
+                scene.add(group);
+
+                textureLoader.load(
+                    art.img,
+                    (tex) => {
+                        optimizeTexture(tex);
+
+                        const imgGeo = new THREE.PlaneGeometry(3, 4);
+                        const imgMat = new THREE.MeshBasicMaterial({ map: tex });
+                        const imgMesh = new THREE.Mesh(imgGeo, imgMat);
+                        imgMesh.position.z = 0.06;
+                        group.add(imgMesh);
+
+                        preloadModalImages(art.gallery);
+                        updateLoader();
+                    },
+                    undefined,
+                    () => {
+                        console.warn('이미지 로드 실패:', art.img);
+
+                        const fallbackGeo = new THREE.PlaneGeometry(3, 4);
+                        const fallbackMat = new THREE.MeshBasicMaterial({
+                            color: 0x111111
+                        });
+                        const fallbackMesh = new THREE.Mesh(fallbackGeo, fallbackMat);
+                        fallbackMesh.position.z = 0.06;
+                        group.add(fallbackMesh);
+
+                        updateLoader();
+                    }
+                );
+            });
+        }
+
+        function openModal(data) {
+            isModalOpen = true;
+            document.body.classList.add('modal-open');
+            modalLabelEl.textContent = data.label;
+            modalTitleEl.textContent = data.sub;
+
+            modalGridEl.innerHTML = data.gallery.map((img, idx) => {
+                return `<img src="${img}" alt="${data.title} ${idx + 1}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
+            }).join('');
+
+            modalGridEl.querySelectorAll('img').forEach((img) => {
+                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+                img.addEventListener('error', () => {
+                    img.classList.add('loaded');
+                    img.alt = '이미지를 불러올 수 없습니다';
+                }, { once: true });
+            });
+
+            modalEl.classList.add('active');
+            modalEl.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeModal() {
+            isModalOpen = false;
+            modalEl.classList.remove('active');
+            modalEl.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+        }
+
+        function handlePointerSelect(clientX, clientY) {
+            if (isModalOpen) return;
+
+            mouse.x = (clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(interactables, false);
+
+            if (intersects.length > 0) {
+                const data = intersects[0].object.userData;
+                if (data.id !== 'hero') {
+                    openModal(data);
+                }
+            }
+        }
+
+        function handleWheel(e) {
+            if (isModalOpen) return;
+
+            targetZ -= e.deltaY * 0.01;
+            const { minZ, maxZ } = getCameraLimits();
+            targetZ = clamp(targetZ, minZ, maxZ);
+            updateGuideVisibility();
+        }
+
+        function handleTouchStart(e) {
+            if (isModalOpen) return;
+            if (!e.touches || !e.touches.length) return;
+            touchY = e.touches[0].clientY;
+        }
+
+        function handleTouchMove(e) {
+            if (isModalOpen) return;
+            if (!e.touches || !e.touches.length) return;
+
+            e.preventDefault();
+            const currentTouchY = e.touches[0].clientY;
+            const delta = touchY - currentTouchY;
+            touchY = currentTouchY;
+
+            targetZ -= delta * 0.03;
+            const { minZ, maxZ } = getCameraLimits();
+            targetZ = clamp(targetZ, minZ, maxZ);
+            updateGuideVisibility();
+        }
+
+        function handleResize() {
+            if (!camera || !renderer) return;
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            currentZ += (targetZ - currentZ) * 0.06;
+            camera.position.z = currentZ;
+
+            const time = clock.getElapsedTime();
+
+            for (let i = 0; i < frameGroups.length; i++) {
+                const group = frameGroups[i];
+                const distance = Math.abs(camera.position.z - group.position.z);
+
+                if (distance < 28) {
+                    group.visible = true;
+                    group.position.y = Math.sin(time + i) * 0.05;
+                } else {
+                    group.visible = true;
+                    group.position.y = 0;
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function bindEvents() {
+            window.addEventListener('wheel', handleWheel, { passive: true });
+
+            window.addEventListener('pointerdown', () => {
+                isPointerDown = true;
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                if (!isPointerDown) return;
+                isPointerDown = false;
+
+                if (e.pointerType === 'mouse' || e.pointerType === 'touch' || e.pointerType === 'pen') {
+                    handlePointerSelect(e.clientX, e.clientY);
+                }
+            });
+
+            window.addEventListener('touchstart', handleTouchStart, { passive: true });
+            window.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+            window.addEventListener('resize', handleResize);
+
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && isModalOpen) {
+                    closeModal();
+                }
+            });
+
+            modalCloseBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeModal();
+            });
+
+            modalEl.addEventListener('click', (e) => {
+                if (e.target === modalEl || e.target.id === 'modalBackdrop') {
+                    closeModal();
+                }
+            });
+
+            modalEl.querySelector('.modal-inner').addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            homeBtn.addEventListener('click', () => {
+                targetZ = 5;
+                closeModal();
+                updateGuideVisibility();
+            });
+        }
+
+        function init() {
+            if (!window.THREE) {
+                createFallbackMessage('Three.js를 불러오지 못했습니다.');
+                return;
+            }
+
+            createRenderer();
+            initScene();
+            createFrames();
+            bindEvents();
+            updateGuideVisibility();
+            animate();
+        }
+
+        init();
+    </script>
 </body>
 </html>
-
-```
