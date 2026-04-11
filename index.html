@@ -161,13 +161,10 @@
     /* ── STAGE / CAROUSEL ──────────────────────────────────── */
     #stage {
       position: fixed; inset: 0;
-      perspective: 1500px;
-      perspective-origin: 50% 50%;
-      /* overflow visible → adjacent cards peek from screen edges */
+      /* perspective 제거 → rotateY 없이 translateX+scale만 사용, GPU 절약 */
+      transform: translateZ(0);
     }
-    #track {
-      position: absolute; inset: 0;
-    }
+    #track { position: absolute; inset: 0; }
 
     /* ── CATEGORY CARDS ────────────────────────────────────── */
     .c-card {
@@ -176,9 +173,10 @@
       width: 88vw; left: 6vw;
       border-radius: var(--radius);
       overflow: hidden;
-      will-change: transform, opacity;
-      transition: transform .55s cubic-bezier(.25,.46,.45,.94),
-                  opacity  .45s ease;
+      /* will-change는 JS에서 활성 카드에만 부여 */
+      transition: transform .46s cubic-bezier(.25,.46,.45,.94),
+                  opacity  .36s ease;
+      contain: layout paint;
     }
     /* Inset border ring for premium look */
     .c-card::before {
@@ -196,7 +194,7 @@
       width: 100%; height: 100%;
       object-fit: cover;
       transition: transform .4s ease;
-      will-change: transform;
+      transform: translateZ(0); /* GPU 레이어 → 화질 깨짐 방지 */
     }
     /* Multi-layer gradient for depth */
     .c-img-wrap::after {
@@ -671,24 +669,24 @@ function setPositions(animate = true) {
     const off    = i - cur;
     const absOff = Math.abs(off);
 
-    /* 3D transform values */
-    const tx      = off * 80;               /* vw  – adjacent cards peek ±14vw */
-    const rotY    = off * -14;              /* deg – coverflow tilt */
-    const scale   = 1 - absOff * 0.085;    /* scale down non-active */
-    const opacity = absOff === 0 ? 1 : absOff === 1 ? 0.6 : 0.15;
+    /* ── 2D 전용 transform (rotateY 제거 → 렉/화질 깨짐 해결) ── */
+    const tx      = off * 80;                        /* vw: 옆 카드 피킹 */
+    const scale   = 1 - absOff * 0.085;              /* 거리감 */
+    const opacity = absOff === 0 ? 1 : absOff === 1 ? 0.6 : 0.12;
+
+    /* will-change: 활성 카드와 직접 인접 카드에만 부여 */
+    card.style.willChange = absOff <= 1 ? 'transform, opacity' : 'auto';
 
     if (!animate) {
       card.style.transition = 'none';
     }
 
-    card.style.transform =
-      `translateX(${tx}vw) rotateY(${rotY}deg) scale(${scale})`;
-    card.style.opacity      = opacity;
-    card.style.zIndex       = 10 - absOff;
+    card.style.transform     = `translateX(${tx}vw) scale(${scale})`;
+    card.style.opacity       = opacity;
+    card.style.zIndex        = 10 - absOff;
     card.style.pointerEvents = off === 0 ? 'auto' : 'none';
 
     if (!animate) {
-      /* Force reflow so transition: none takes effect, then restore */
       void card.offsetHeight;
       card.style.transition = '';
     }
@@ -783,18 +781,23 @@ document.addEventListener('keydown', e => {
 });
 
 /* ════════════════════════════════════════════════════
-   GYROSCOPE PARALLAX  (active card image)
+   GYROSCOPE PARALLAX  (rAF 스로틀 → 과부하 방지)
 ════════════════════════════════════════════════════ */
 if (window.DeviceOrientationEvent) {
+  let gyroRAF = null;
   window.addEventListener('deviceorientation', e => {
     if (detail.classList.contains('open')) return;
-    const gx = Math.max(-1, Math.min(1, (e.gamma || 0) / 22));
-    const gy = Math.max(-1, Math.min(1, ((e.beta || 0) - 30) / 36));
-    const cards = track.querySelectorAll('.c-card');
-    const active = cards[cur];
-    if (!active) return;
-    const img = active.querySelector('img');
-    if (img) img.style.transform = `translate(${gx * 12}px, ${gy * 7}px) scale(1.07)`;
+    if (gyroRAF) return; /* 이미 프레임 예약됨 → 건너뜀 */
+    gyroRAF = requestAnimationFrame(() => {
+      gyroRAF = null;
+      const gx = Math.max(-1, Math.min(1, (e.gamma || 0) / 22));
+      const gy = Math.max(-1, Math.min(1, ((e.beta  || 0) - 30) / 36));
+      const cards = track.querySelectorAll('.c-card');
+      const active = cards[cur];
+      if (!active) return;
+      const img = active.querySelector('img');
+      if (img) img.style.transform = `translateZ(0) translate(${gx*12}px, ${gy*7}px) scale(1.07)`;
+    });
   }, { passive: true });
 }
 
