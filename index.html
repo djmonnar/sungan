@@ -3,792 +3,1277 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>순간, 스튜디오 — 3D Virtual Gallery</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700&family=Cormorant+Garamond:ital,wght@1,300&display=swap" rel="stylesheet">
+    <title>순간, 스튜디오 — Virtual Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://i.ibb.co">
+    <link rel="dns-prefetch" href="https://img.youtube.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Sans+KR:wght@300;400;700&family=Cormorant+Garamond:ital,wght@1,300&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #050505;
+            --bg: #080705;
             --accent: #c9a96e;
-            --text: #e0dcd6;
-            --muted: #666;
-            --line: #1a1a1a;
+            --accent-light: #e8c88a;
+            --text: #e8e0d5;
+            --muted: #6b6356;
+            --wall: #0e0d0a;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
-            background-color: var(--bg);
+            background: var(--bg);
             font-family: 'Noto Sans KR', sans-serif;
             color: var(--text);
             touch-action: none;
         }
 
-        body.modal-open {
-            overflow: hidden;
-        }
-
+        /* ── LOADER ── */
         #loader {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
+            position: fixed; inset: 0; z-index: 1000;
             background: var(--bg);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.8s ease, visibility 0.8s ease;
-            visibility: visible;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 0;
+            transition: opacity 1s ease, visibility 1s ease;
         }
+        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-        #loader.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
+        .loader-ornament {
+            width: 60px; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin-bottom: 28px;
         }
-
-        .loader-title {
-            letter-spacing: 0.5em;
-            font-weight: 700;
+        .loader-studio {
+            font-family: 'Cinzel', serif;
+            letter-spacing: 0.55em;
+            font-size: 0.72rem;
             color: var(--accent);
-            font-size: 0.95rem;
-            text-align: center;
-            padding: 0 20px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
         }
-
+        .loader-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 2rem;
+            color: var(--text);
+            letter-spacing: 0.05em;
+            margin-bottom: 36px;
+        }
         .loader-bar {
-            width: min(220px, 60vw);
-            height: 2px;
-            background: var(--line);
-            margin-top: 20px;
-            position: relative;
-            overflow: hidden;
+            width: min(240px, 60vw);
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+            position: relative; overflow: hidden;
         }
-
         .loader-progress {
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0%;
+            position: absolute; left: 0; top: 0;
+            height: 100%; width: 0%;
             background: var(--accent);
-            transition: width 0.25s ease;
+            transition: width 0.3s ease;
             will-change: width;
         }
-
-        #canvas-container {
-            width: 100%;
-            height: 100%;
-            outline: none;
+        .loader-caption {
+            margin-top: 16px;
+            font-size: 0.6rem;
+            letter-spacing: 0.35em;
+            color: var(--muted);
+            text-transform: uppercase;
         }
 
+        /* ── NAV ── */
         nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            padding: 24px 20px;
-            z-index: 100;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            position: fixed; top: 0; left: 0; width: 100%;
+            padding: 22px 28px;
+            z-index: 200;
+            display: flex; justify-content: space-between; align-items: center;
             pointer-events: none;
+            background: linear-gradient(to bottom, rgba(8,7,5,0.7) 0%, transparent 100%);
         }
-
         .logo {
-            font-weight: 700;
-            font-size: 1.05rem;
-            letter-spacing: 0.2em;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.3em;
             color: var(--accent);
             pointer-events: auto;
             cursor: pointer;
             user-select: none;
+            text-transform: uppercase;
         }
-
-        .nav-sub {
-            font-style: italic;
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 0.95rem;
-            color: var(--muted);
+        .nav-right {
             text-align: right;
         }
+        .nav-sub {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--muted);
+            display: block;
+        }
+        .room-counter {
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.3em;
+            color: var(--accent);
+            opacity: 0.7;
+            display: block;
+            margin-top: 2px;
+        }
 
+        /* ── SCROLL GUIDE ── */
         .scroll-guide {
             position: fixed;
-            bottom: max(26px, env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            z-index: 100;
+            bottom: max(28px, env(safe-area-inset-bottom));
+            left: 50%; transform: translateX(-50%);
+            text-align: center; z-index: 100;
             pointer-events: none;
-            opacity: 0.82;
-            transition: opacity 0.35s ease;
-            will-change: opacity;
+            opacity: 0.8;
+            transition: opacity 0.4s ease;
         }
-
-        .scroll-guide.hidden {
-            opacity: 0;
-        }
-
+        .scroll-guide.hidden { opacity: 0; }
         .scroll-guide p {
-            font-size: 0.65rem;
+            font-family: 'Cinzel', serif;
+            font-size: 0.58rem;
             letter-spacing: 0.4em;
             text-transform: uppercase;
-            margin: 0 0 10px;
+            margin: 0 0 12px;
             color: var(--accent);
         }
-
         .mouse-icon {
-            width: 20px;
-            height: 35px;
-            border: 1px solid var(--accent);
-            border-radius: 10px;
-            margin: 0 auto;
-            position: relative;
+            width: 18px; height: 30px;
+            border: 1px solid rgba(201,169,110,0.5);
+            border-radius: 9px;
+            margin: 0 auto; position: relative;
         }
-
         .mouse-icon::after {
             content: '';
-            width: 2px;
-            height: 6px;
+            width: 2px; height: 5px;
             background: var(--accent);
-            position: absolute;
-            top: 6px;
-            left: 50%;
-            transform: translateX(-50%);
-            animation: scrollMove 2s infinite;
+            position: absolute; top: 5px;
+            left: 50%; transform: translateX(-50%);
+            animation: scrollAnim 2s infinite;
         }
-
-        @keyframes scrollMove {
+        @keyframes scrollAnim {
             0% { transform: translate(-50%, 0); opacity: 1; }
-            100% { transform: translate(-50%, 15px); opacity: 0; }
+            100% { transform: translate(-50%, 12px); opacity: 0; }
         }
 
+        /* ── HOVER HINT ── */
+        #hover-hint {
+            position: fixed; bottom: max(28px, env(safe-area-inset-bottom));
+            right: 28px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.58rem;
+            letter-spacing: 0.25em;
+            color: var(--accent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            text-align: right;
+        }
+        #hover-hint.show { opacity: 0.75; }
+
+        /* ── CANVAS ── */
+        #canvas-container { width: 100%; height: 100%; outline: none; }
+
+        /* ── MODAL ── */
         #detail-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 500;
-            background: rgba(5, 5, 5, 0.98);
-            display: none;
-            flex-direction: column;
-            overflow-y: auto;
-            overscroll-behavior: contain;
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(8,7,5,0.97);
+            display: none; flex-direction: column;
+            overflow-y: auto; overscroll-behavior: contain;
+            backdrop-filter: blur(4px);
         }
-
-        #detail-modal.active {
-            display: flex;
-        }
+        #detail-modal.active { display: flex; }
 
         .modal-inner {
-            width: 100%;
-            min-height: 100%;
-            padding: 80px 20px 40px;
+            width: 100%; min-height: 100%;
+            padding: 90px 32px 60px;
         }
 
         .modal-close {
             position: fixed;
             top: max(20px, env(safe-area-inset-top));
-            right: 20px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid var(--accent);
+            right: 24px;
+            background: transparent;
+            border: 1px solid rgba(201,169,110,0.4);
             color: var(--accent);
-            padding: 10px 18px;
+            padding: 9px 20px;
             cursor: pointer;
-            font-size: 0.7rem;
-            letter-spacing: 0.2em;
+            font-family: 'Cinzel', serif;
+            font-size: 0.6rem;
+            letter-spacing: 0.3em;
             z-index: 600;
-            backdrop-filter: blur(4px);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .modal-close:hover {
+            background: rgba(201,169,110,0.1);
+            border-color: var(--accent);
         }
 
         .modal-header {
             max-width: 1100px;
-            margin: 0 auto 40px;
+            margin: 0 auto 50px;
             width: 100%;
+            border-left: 1px solid var(--accent);
+            padding-left: 24px;
         }
-
-        .modal-header h2 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            color: #fff;
-            margin: 8px 0 0;
-            letter-spacing: -0.02em;
-            line-height: 1.1;
-        }
-
         .modal-label {
+            font-family: 'Cinzel', serif;
             color: var(--accent);
-            letter-spacing: 0.3em;
-            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            font-size: 0.65rem;
             text-transform: uppercase;
+            margin: 0 0 8px;
+        }
+        .modal-header h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            color: #fff;
+            margin: 0 0 4px;
+            font-weight: 300;
+            letter-spacing: 0.03em;
+        }
+        .modal-header p {
+            color: var(--muted);
+            font-size: 0.8rem;
             margin: 0;
+            letter-spacing: 0.1em;
         }
 
-        .modal-divider {
-            width: 40px;
-            height: 1px;
-            background: var(--accent);
-            margin-top: 20px;
-        }
-
-        .modal-grid {
+        /* Photo grid */
+        .photo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 18px;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 16px;
             max-width: 1100px;
             margin: 0 auto;
         }
-
-        .modal-grid img {
+        .photo-grid img {
             width: 100%;
             aspect-ratio: 3 / 4;
             object-fit: cover;
-            border: 1px solid var(--line);
-            filter: grayscale(100%);
-            transition: transform 0.45s ease, filter 0.45s ease, opacity 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.06);
             opacity: 0;
-            background: #0b0b0b;
+            transition: opacity 0.5s ease, transform 0.45s ease, filter 0.4s ease;
+            filter: grayscale(30%);
+            background: #111;
+            cursor: pointer;
+        }
+        .photo-grid img.loaded { opacity: 1; }
+        .photo-grid img:hover { transform: scale(1.02); filter: grayscale(0%); }
+
+        /* Video grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .video-cat-label {
+            max-width: 1100px;
+            margin: 32px auto 14px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.35em;
+            color: var(--muted);
+            border-bottom: 1px solid rgba(201,169,110,0.2);
+            padding-bottom: 8px;
+        }
+        .video-card {
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.07);
+            transition: border-color 0.25s, transform 0.25s;
+            overflow: hidden;
+            background: #0d0c0a;
+        }
+        .video-card:hover { border-color: rgba(201,169,110,0.4); transform: translateY(-2px); }
+        .video-thumb-wrap {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: #111;
+        }
+        .video-thumb-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.4s ease, opacity 0.4s;
+            opacity: 0;
+        }
+        .video-thumb-wrap img.loaded { opacity: 1; }
+        .video-card:hover .video-thumb-wrap img { transform: scale(1.05); }
+        .play-btn {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .play-btn::after {
+            content: '';
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            background: rgba(201,169,110,0.85);
+            display: flex; align-items: center; justify-content: center;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23080705'%3E%3Cpath d='M8 5v14l11-7z'/%3E%3C/svg%3E");
+            background-size: 24px;
+            background-repeat: no-repeat;
+            background-position: 55% 50%;
+            transition: transform 0.2s;
+        }
+        .video-card:hover .play-btn::after { transform: scale(1.1); }
+        .video-info {
+            padding: 14px 16px;
+        }
+        .video-cat-badge {
+            font-family: 'Cinzel', serif;
+            font-size: 0.58rem;
+            letter-spacing: 0.2em;
+            color: var(--accent);
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .video-title-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.4;
         }
 
-        .modal-grid img.loaded {
-            opacity: 1;
+        /* Lightbox for full photo view */
+        #lightbox {
+            position: fixed; inset: 0; z-index: 800;
+            background: rgba(0,0,0,0.96);
+            display: none; align-items: center; justify-content: center;
+        }
+        #lightbox.active { display: flex; }
+        #lightbox img { max-width: 92vw; max-height: 92vh; object-fit: contain; }
+        #lightbox-close {
+            position: absolute; top: 20px; right: 24px;
+            background: none; border: none;
+            color: var(--accent); font-size: 1.5rem;
+            cursor: pointer; line-height: 1;
         }
 
-        .modal-grid img:hover {
-            filter: grayscale(0%);
-            transform: scale(1.02);
-        }
-
-        .fallback {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            padding: 24px;
-            text-align: center;
-            color: #fff;
-            background: var(--bg);
-            line-height: 1.6;
-        }
-
+        /* Mobile */
         @media (max-width: 768px) {
-            nav {
-                padding: 20px 16px;
-            }
-
-            .logo {
-                font-size: 0.95rem;
-                max-width: 50%;
-                line-height: 1.3;
-            }
-
-            .nav-sub {
-                font-size: 0.8rem;
-                max-width: 42%;
-            }
-
-            .modal-inner {
-                padding: 76px 16px 30px;
-            }
-
-            .modal-grid {
-                grid-template-columns: 1fr;
-                gap: 14px;
-            }
-
-            .modal-close {
-                right: 16px;
-                padding: 9px 14px;
-                font-size: 0.65rem;
-            }
+            nav { padding: 18px 20px; }
+            .logo { font-size: 0.75rem; }
+            .modal-inner { padding: 76px 16px 40px; }
+            .photo-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+            .video-grid { grid-template-columns: 1fr; gap: 14px; }
+            .modal-close { right: 16px; padding: 8px 14px; font-size: 0.58rem; }
+            #hover-hint { display: none; }
+        }
+        @media (max-width: 480px) {
+            .photo-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
-    <div id="loader">
-        <div class="loader-title">MOMENT STUDIO</div>
-        <div class="loader-bar">
-            <div class="loader-progress" id="progress"></div>
+
+<!-- LOADER -->
+<div id="loader">
+    <div class="loader-ornament"></div>
+    <div class="loader-studio">Moment Studio</div>
+    <div class="loader-title">순간, 스튜디오</div>
+    <div class="loader-bar"><div class="loader-progress" id="progress"></div></div>
+    <div class="loader-caption">컬렉션 준비 중</div>
+</div>
+
+<!-- NAV -->
+<nav>
+    <div class="logo" id="homeBtn">순간, 스튜디오</div>
+    <div class="nav-right">
+        <span class="nav-sub">Virtual Gallery</span>
+        <span class="room-counter" id="roomCounter">ENTRANCE</span>
+    </div>
+</nav>
+
+<!-- SCROLL GUIDE -->
+<div class="scroll-guide" id="guide">
+    <p>Scroll to Enter</p>
+    <div class="mouse-icon"></div>
+</div>
+
+<!-- HOVER HINT -->
+<div id="hover-hint" id="hoverHint">클릭하여 작품 보기 ↗</div>
+
+<!-- CANVAS -->
+<div id="canvas-container" aria-label="3D virtual gallery"></div>
+
+<!-- MODAL -->
+<div id="detail-modal" aria-hidden="true" role="dialog">
+    <button class="modal-close" id="modalCloseBtn" type="button">✕ CLOSE</button>
+    <div class="modal-inner" id="modalInner">
+        <div class="modal-header">
+            <p class="modal-label" id="modal-label"></p>
+            <h2 id="modal-title"></h2>
+            <p id="modal-desc"></p>
         </div>
+        <div id="modal-content"></div>
     </div>
+</div>
 
-    <nav>
-        <div class="logo" id="homeBtn">순간, 스튜디오</div>
-        <div class="nav-sub">Virtual Experience v2.0</div>
-    </nav>
+<!-- LIGHTBOX -->
+<div id="lightbox">
+    <button id="lightbox-close">×</button>
+    <img id="lightbox-img" src="" alt="">
+</div>
 
-    <div class="scroll-guide" id="guide">
-        <p>Scroll to Explore</p>
-        <div class="mouse-icon"></div>
-    </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
-    <div id="canvas-container" aria-label="3D gallery"></div>
+<script>
+/* ═══════════════════════════════════════════
+   DATABASE  (엑셀 데이터 기반 전체 교체)
+═══════════════════════════════════════════ */
+const ARTWORKS = [
+    {
+        id: 'hero', title: '순간, 스튜디오', sub: '찰나의 기록',
+        img: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+        label: 'ENTRANCE', type: 'welcome',
+        desc: '경남 진주시 대신로 365 지하1층'
+    },
+    {
+        id: 'product', title: 'Product', sub: '제품 촬영',
+        img: 'https://i.ibb.co/bgVfDWBB/vr.jpg',
+        label: 'COMMERCIAL', type: 'photo',
+        desc: 'VR 장비 · 뷰티 · 생활용품',
+        gallery: [
+            'https://i.ibb.co/bgVfDWBB/vr.jpg',
+            'https://i.ibb.co/zhKgwjvF/vr.jpg',
+            'https://i.ibb.co/MxT40KMm/image.jpg',
+            'https://i.ibb.co/Mxshn8y8/image.jpg',
+            'https://i.ibb.co/k233w2PJ/image.jpg',
+            'https://i.ibb.co/xqj1mSVc/image.jpg',
+            'https://i.ibb.co/SXFyLRV0/image.jpg',
+            'https://i.ibb.co/m5HZtywB/image.jpg',
+            'https://i.ibb.co/vCpQ2ZL8/1.jpg',
+            'https://i.ibb.co/prNyBjFh/2.jpg',
+            'https://i.ibb.co/hFYrjDPQ/vr.jpg',
+            'https://i.ibb.co/v6gzN9Q0/image.jpg',
+            'https://i.ibb.co/39xbszr0/vr.jpg',
+            'https://i.ibb.co/0jVQfSD2/image.jpg',
+            'https://i.ibb.co/twpQFHS2/image.jpg',
+            'https://i.ibb.co/WN00LXWv/vr.jpg',
+            'https://i.ibb.co/KzmRt64d/image.jpg'
+        ]
+    },
+    {
+        id: 'promo', title: 'Promotion', sub: '홍보 촬영',
+        img: 'https://i.ibb.co/spVX6587/1.jpg',
+        label: 'BRANDING', type: 'photo',
+        desc: '보드게임 카페 · 키오스크 · 매장 연출',
+        gallery: [
+            'https://i.ibb.co/spVX6587/1.jpg',
+            'https://i.ibb.co/cXpL9nmp/3.jpg',
+            'https://i.ibb.co/ymBmW1rY/4.jpg',
+            'https://i.ibb.co/Ldd3TPnK/3.jpg',
+            'https://i.ibb.co/Txpr3kcB/4.jpg',
+            'https://i.ibb.co/wZKZhKZd/2.jpg',
+            'https://i.ibb.co/h1Wv28Qf/3.jpg',
+            'https://i.ibb.co/VpWCPWhh/1.jpg',
+            'https://i.ibb.co/LXZg6LpW/4.jpg',
+            'https://i.ibb.co/QvqGxX3r/5.jpg',
+            'https://i.ibb.co/Y7jnpbPj/2.jpg',
+            'https://i.ibb.co/G4q7BQcb/3.jpg'
+        ]
+    },
+    {
+        id: 'profile', title: 'Profile', sub: '프로필 촬영',
+        img: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+        label: 'PEOPLE', type: 'photo',
+        desc: '인물 · 증명 · 비즈니스 프로필',
+        gallery: [
+            'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+            'https://i.ibb.co/SX0XmQXR/1-2.jpg',
+            'https://i.ibb.co/DgpybcdJ/1-3.jpg',
+            'https://i.ibb.co/G4tYPyXx/1-4.jpg',
+            'https://i.ibb.co/B2cTdydH/1-5.jpg',
+            'https://i.ibb.co/PGB80nj7/1-6.jpg',
+            'https://i.ibb.co/HDtBVJX2/1-7.jpg',
+            'https://i.ibb.co/1JTJrg4G/1-8.jpg',
+            'https://i.ibb.co/7DfGFLF/1-9.jpg',
+            'https://i.ibb.co/8gfSRcbd/1-10.jpg'
+        ]
+    },
+    {
+        id: 'food1', title: 'Food', sub: '문산 선지국',
+        img: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg',
+        label: 'TASTE', type: 'photo',
+        desc: '선지국 · 소고기 · 수육 · 양곰탕',
+        gallery: [
+            'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg',
+            'https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg',
+            'https://i.ibb.co/ym59SLc5/1-3.jpg',
+            'https://i.ibb.co/RJ8Yw4b/1.jpg',
+            'https://i.ibb.co/6RbtBJ5g/2.jpg',
+            'https://i.ibb.co/r2zDC11M/3.jpg',
+            'https://i.ibb.co/HpLKNs3q/4.jpg',
+            'https://i.ibb.co/1gRHbT4/1.jpg',
+            'https://i.ibb.co/TxN6h8vz/2.jpg',
+            'https://i.ibb.co/PXgNj5H/1.jpg',
+            'https://i.ibb.co/bRN5nhFS/image.jpg',
+            'https://i.ibb.co/bc6FRP2/copy-0.jpg',
+            'https://i.ibb.co/rqxzz1h/copy-0.jpg',
+            'https://i.ibb.co/2Y0Mgp9Z/1.jpg',
+            'https://i.ibb.co/Wpy4TC1f/image.jpg',
+            'https://i.ibb.co/spKNT6Z7/copy-0.jpg',
+            'https://i.ibb.co/XrDZb5B7/1.jpg',
+            'https://i.ibb.co/Pz0VmDJk/image.jpg',
+            'https://i.ibb.co/pjW6hL24/copy-0.jpg',
+            'https://i.ibb.co/WWtq3qkM/1.jpg',
+            'https://i.ibb.co/GfjLbyvM/image.jpg',
+            'https://i.ibb.co/HLhQjVNS/1.jpg',
+            'https://i.ibb.co/Ng87309q/image.jpg',
+            'https://i.ibb.co/C3qVKR3P/copy-0.jpg'
+        ]
+    },
+    {
+        id: 'food2', title: 'Food', sub: '여운 포차',
+        img: 'https://i.ibb.co/xdFXY4X/DSC08642.jpg',
+        label: 'TASTE', type: 'photo',
+        desc: '포장마차 · 야식 · 감성 푸드',
+        gallery: [
+            'https://i.ibb.co/xdFXY4X/DSC08642.jpg',
+            'https://i.ibb.co/BKKgggYn/DSC08650.jpg',
+            'https://i.ibb.co/tPkTZDnX/DSC08652.jpg',
+            'https://i.ibb.co/DPVc0Q80/DSC08669.jpg',
+            'https://i.ibb.co/s90Jprkp/DSC08675.jpg',
+            'https://i.ibb.co/3yBrjM5d/DSC08681.jpg',
+            'https://i.ibb.co/Mx5BHFxC/DSC08699.jpg',
+            'https://i.ibb.co/KcDc7nyf/DSC08715.jpg',
+            'https://i.ibb.co/xSdcXyWs/DSC08739.jpg',
+            'https://i.ibb.co/8Lggd7X9/DSC08757.jpg',
+            'https://i.ibb.co/Wp5DBmTB/DSC08771.jpg',
+            'https://i.ibb.co/2Y836vcJ/DSC08792.jpg',
+            'https://i.ibb.co/SXs5mXTd/DSC08824.jpg',
+            'https://i.ibb.co/sp45mFk4/DSC08865.jpg',
+            'https://i.ibb.co/1GSKF1Gm/DSC08880.jpg',
+            'https://i.ibb.co/C3HpGSdz/DSC08937.jpg',
+            'https://i.ibb.co/Kz8Q8V40/DSC08984.jpg',
+            'https://i.ibb.co/Xg8Qhsr/DSC09017.jpg'
+        ]
+    },
+    {
+        id: 'video', title: 'Video', sub: '영상 제작',
+        img: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+        label: 'MOTION', type: 'video',
+        desc: '제품광고 · 브랜드 홍보 · 행사 아카이빙',
+        videos: [
+            { title: 'DASHU 다운텍', url: 'https://youtu.be/WEPXeWG6rE4', cat: '제품 광고', vid: 'WEPXeWG6rE4' },
+            { title: 'MIP 립밤 (쇼츠)', url: 'https://youtube.com/shorts/b-_Sh5KLv2c', cat: '제품 광고', vid: 'b-_Sh5KLv2c' },
+            { title: 'MIP 선크림 (쇼츠)', url: 'https://youtube.com/shorts/fmFOpMx0jMo', cat: '제품 광고', vid: 'fmFOpMx0jMo' },
+            { title: 'MIP 쉐이빙 로션 (쇼츠)', url: 'https://youtube.com/shorts/KTjHKOImSug', cat: '제품 광고', vid: 'KTjHKOImSug' },
+            { title: '바리안 마을 베틀가', url: 'https://youtu.be/bdjYh9NEU_0', cat: '브랜드 홍보', vid: 'bdjYh9NEU_0' },
+            { title: '밤깨비 농장', url: 'https://youtu.be/ba3QbhE1s08', cat: '브랜드 홍보', vid: 'ba3QbhE1s08' },
+            { title: '진주유치원', url: 'https://youtu.be/xw1FHU9_HdQ', cat: '브랜드 홍보', vid: 'xw1FHU9_HdQ' },
+            { title: '정치 홍보 영상', url: 'https://youtu.be/qNo3q8fIRR4', cat: '공공 캠페인', vid: 'qNo3q8fIRR4' },
+            { title: '정치 홍보 (인터뷰)', url: 'https://youtu.be/hzgDc2mUg9k', cat: '공공 캠페인', vid: 'hzgDc2mUg9k' },
+            { title: '정치 홍보 (쇼츠)', url: 'https://youtu.be/TfZKVnArQpU', cat: '공공 캠페인', vid: 'TfZKVnArQpU' },
+            { title: '거제 민주로드 아카이빙', url: 'https://youtu.be/gAvkm-g8AJ8', cat: '행사 아카이빙', vid: 'gAvkm-g8AJ8' },
+            { title: '진주 로컬크리에이터 워크숍', url: 'https://youtu.be/aEunZFVMH3c', cat: '행사 아카이빙', vid: 'aEunZFVMH3c' },
+            { title: '별난 주부 아카이빙', url: 'https://youtu.be/rUCV0mGn7oM', cat: '행사 아카이빙', vid: 'rUCV0mGn7oM' },
+            { title: '청년창업의날 1일차', url: 'https://youtu.be/8pZJkn1M3do', cat: '행사 아카이빙', vid: '8pZJkn1M3do' },
+            { title: '청년창업의날 2일차', url: 'https://youtu.be/4F0pGnSovIQ', cat: '행사 아카이빙', vid: '4F0pGnSovIQ' }
+        ]
+    }
+];
 
-    <div id="detail-modal" aria-hidden="true">
-        <button class="modal-close" id="modalCloseBtn" type="button">CLOSE GALLERY</button>
-        <div class="modal-inner" id="modalBackdrop">
-            <div class="modal-header">
-                <p class="modal-label" id="modal-label"></p>
-                <h2 id="modal-title">CATEGORY</h2>
-                <div class="modal-divider"></div>
-            </div>
-            <div class="modal-grid" id="modal-grid"></div>
-        </div>
-    </div>
+/* ═══════════════════════════════════════════
+   THREE.JS STATE
+═══════════════════════════════════════════ */
+let scene, camera, renderer, clock;
+let frameGroups = [], imageMeshes = [], interactables = [];
+let targetZ = 5, currentZ = 5;
+let isModalOpen = false;
+let touchStartY = 0;
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+// Bug fix: track drag vs click
+let pointerStartX = 0, pointerStartY = 0, isPointerDown = false;
+const DRAG_THRESHOLD = 8;
 
-    <script>
-        const ARTWORKS = [
-            {
-                id: 'hero',
-                title: '순간, 스튜디오',
-                sub: '찰나의 기록',
-                img: 'https://i.ibb.co/FbDwFTZx/1-1.jpg',
-                label: 'WELCOME',
-                gallery: [
-                    'https://i.ibb.co/FbDwFTZx/1-1.jpg',
-                    'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
-                    'https://i.ibb.co/XZ5py8NV/1-3.jpg'
-                ]
-            },
-            {
-                id: 'product',
-                title: 'Product',
-                sub: '제품 촬영',
-                img: 'https://i.ibb.co/394NT0hM/image.jpg',
-                label: 'COMMERCIAL',
-                gallery: [
-                    'https://i.ibb.co/394NT0hM/image.jpg',
-                    'https://i.ibb.co/Q7gdWbNN/vr.jpg',
-                    'https://i.ibb.co/gLPWMbw0/vr.jpg',
-                    'https://i.ibb.co/bj5Hvq1t/vr.jpg'
-                ]
-            },
-            {
-                id: 'promo',
-                title: 'Promotion',
-                sub: '홍보 촬영',
-                img: 'https://i.ibb.co/W4PFFG1T/6.jpg',
-                label: 'BRANDING',
-                gallery: [
-                    'https://i.ibb.co/W4PFFG1T/6.jpg',
-                    'https://i.ibb.co/8498hrMN/3.jpg',
-                    'https://i.ibb.co/60WVSVVY/5.jpg'
-                ]
-            },
-            {
-                id: 'profile',
-                title: 'Profile',
-                sub: '프로필 촬영',
-                img: 'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
-                label: 'PEOPLE',
-                gallery: [
-                    'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
-                    'https://i.ibb.co/XZ5py8NV/1-3.jpg',
-                    'https://i.ibb.co/S4ZpqSjt/1-4.jpg'
-                ]
-            },
-            {
-                id: 'interior',
-                title: 'Interior',
-                sub: '인테리어 촬영',
-                img: 'https://i.ibb.co/9kDFk5bS/3.jpg',
-                label: 'SPACE',
-                gallery: [
-                    'https://i.ibb.co/9kDFk5bS/3.jpg',
-                    'https://i.ibb.co/qYQ5W6fK/1.jpg',
-                    'https://i.ibb.co/HT55zCp8/2.jpg'
-                ]
-            },
-            {
-                id: 'food',
-                title: 'Food',
-                sub: '음식 촬영',
-                img: 'https://i.ibb.co/JwdN9TrW/image.jpg',
-                label: 'TASTE',
-                gallery: [
-                    'https://i.ibb.co/JwdN9TrW/image.jpg',
-                    'https://i.ibb.co/6VJXZd8/image.jpg',
-                    'https://i.ibb.co/1tmmNPZ1/image.jpg',
-                    'https://i.ibb.co/mCRvwztW/image.jpg'
-                ]
+// Proximity loading
+const loadedTextures = new Set();
+let loadedCount = 0;
+const TOTAL = ARTWORKS.length;
+const LOAD_DISTANCE = 32;   // 카메라 거리 32 이내면 텍스처 로드
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const textureLoader = new THREE.TextureLoader();
+
+// DOM
+const loaderEl   = document.getElementById('loader');
+const progressEl = document.getElementById('progress');
+const guideEl    = document.getElementById('guide');
+const hoverHint  = document.getElementById('hover-hint');
+const modalEl    = document.getElementById('detail-modal');
+const modalInner = document.getElementById('modalInner');
+const modalCloseBtn = document.getElementById('modalCloseBtn');
+const modalLabelEl  = document.getElementById('modal-label');
+const modalTitleEl  = document.getElementById('modal-title');
+const modalDescEl   = document.getElementById('modal-desc');
+const modalContent  = document.getElementById('modal-content');
+const homeBtn    = document.getElementById('homeBtn');
+const container  = document.getElementById('canvas-container');
+const roomCounter= document.getElementById('roomCounter');
+const lightboxEl = document.getElementById('lightbox');
+const lightboxImg= document.getElementById('lightbox-img');
+
+const ROOM_NAMES = ['ENTRANCE','COMMERCIAL','BRANDING','PEOPLE','TASTE Ⅰ','TASTE Ⅱ','MOTION'];
+
+/* ═══════════════════════════════════════════
+   UTILS
+═══════════════════════════════════════════ */
+function clamp(v, mn, mx) { return Math.min(mx, Math.max(mn, v)); }
+
+function getCameraLimits() {
+    return { maxZ: 5, minZ: (ARTWORKS.length - 1) * -12 - 5 };
+}
+
+function updateGuideVisibility() {
+    guideEl.classList.toggle('hidden', targetZ < 4);
+}
+
+function updateRoomCounter() {
+    // 카메라가 어느 프레임에 가장 가까운지 계산
+    let closest = 0, minDist = Infinity;
+    ARTWORKS.forEach((_, i) => {
+        const d = Math.abs(camera.position.z - (i * -12));
+        if (d < minDist) { minDist = d; closest = i; }
+    });
+    roomCounter.textContent = `ROOM ${String(closest + 1).padStart(2,'0')} — ${ROOM_NAMES[closest] || ''}`;
+}
+
+function updateProgress(n) {
+    loadedCount += n;
+    progressEl.style.width = (loadedCount / TOTAL * 100) + '%';
+    if (loadedCount >= TOTAL) {
+        setTimeout(() => loaderEl.classList.add('hidden'), 400);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   PROCEDURAL MARBLE TEXTURE (즉시 생성, 이미지 로드 불필요)
+═══════════════════════════════════════════ */
+function createMarbleTexture() {
+    const sz = 512;
+    const c = document.createElement('canvas');
+    c.width = c.height = sz;
+    const ctx = c.getContext('2d');
+
+    // 기본 어두운 배경
+    ctx.fillStyle = '#0c0b09';
+    ctx.fillRect(0, 0, sz, sz);
+
+    // 마블 결 (베지어 곡선)
+    for (let v = 0; v < 18; v++) {
+        ctx.save();
+        ctx.beginPath();
+        const x0 = Math.random() * sz, y0 = Math.random() * sz;
+        ctx.moveTo(x0, y0);
+        ctx.bezierCurveTo(
+            Math.random()*sz, Math.random()*sz,
+            Math.random()*sz, Math.random()*sz,
+            Math.random()*sz, Math.random()*sz
+        );
+        const alpha = 0.06 + Math.random() * 0.12;
+        const bright = 150 + Math.random() * 60;
+        ctx.strokeStyle = `rgba(${bright},${Math.floor(bright*0.9)},${Math.floor(bright*0.75)},${alpha})`;
+        ctx.lineWidth = Math.random() * 1.8 + 0.3;
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    // 타일 줄눈
+    ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+    ctx.lineWidth = 1;
+    [sz/2].forEach(pos => {
+        ctx.beginPath(); ctx.moveTo(pos,0); ctx.lineTo(pos,sz); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,pos); ctx.lineTo(sz,pos); ctx.stroke();
+    });
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(5, 50);
+    return tex;
+}
+
+/* ═══════════════════════════════════════════
+   LABEL PLAQUE CANVAS TEXTURE
+═══════════════════════════════════════════ */
+function createPlaque(art) {
+    const c = document.createElement('canvas');
+    c.width = 512; c.height = 140;
+    const ctx = c.getContext('2d');
+
+    ctx.fillStyle = '#0d0c09';
+    ctx.fillRect(0, 0, 512, 140);
+    ctx.strokeStyle = 'rgba(201,169,110,0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(3, 3, 506, 134);
+
+    // 금 라인 장식
+    ctx.fillStyle = 'rgba(201,169,110,0.7)';
+    ctx.fillRect(18, 28, 50, 1);
+
+    ctx.fillStyle = '#c9a96e';
+    ctx.font = '500 16px Cinzel, serif';
+    ctx.fillText(art.label, 18, 24);
+
+    ctx.fillStyle = '#e8e0d5';
+    ctx.font = 'bold 36px serif';
+    ctx.fillText(art.sub, 18, 78);
+
+    ctx.fillStyle = '#8a7d6b';
+    ctx.font = '18px serif';
+    ctx.fillText(art.title + ' Photography', 18, 112);
+
+    return new THREE.CanvasTexture(c);
+}
+
+/* ═══════════════════════════════════════════
+   RENDERER
+═══════════════════════════════════════════ */
+function createRenderer() {
+    renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: false,
+        logarithmicDepthBuffer: true,  // z-fighting 방지
+        powerPreference: 'high-performance'
+    });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    container.appendChild(renderer.domElement);
+}
+
+/* ═══════════════════════════════════════════
+   SCENE (미술관 환경)
+═══════════════════════════════════════════ */
+function initScene() {
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x080705);
+    scene.fog = new THREE.FogExp2(0x080705, 0.035);
+
+    camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 200);
+    camera.position.set(0, 0, 5);
+
+    clock = new THREE.Clock();
+
+    // 극도로 낮은 환경광 → 작품 조명이 돋보임
+    scene.add(new THREE.AmbientLight(0xfff8ee, 0.05));
+
+    // ── 대리석 바닥 ──
+    const marbleTex = createMarbleTexture();
+    const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(14, 110),
+        new THREE.MeshStandardMaterial({ map: marbleTex, roughness: 0.06, metalness: 0.28 })
+    );
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.set(0, -2.5, -47);
+    scene.add(floor);
+
+    // ── 천장 ──
+    const ceil = new THREE.Mesh(
+        new THREE.PlaneGeometry(14, 110),
+        new THREE.MeshStandardMaterial({ color: 0x0b0a08, roughness: 0.97 })
+    );
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.set(0, 4.5, -47);
+    scene.add(ceil);
+
+    // ── 벽 (양쪽) ──
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x100f0c, roughness: 0.95 });
+    const wallGeo = new THREE.PlaneGeometry(110, 7);
+
+    const leftWall = new THREE.Mesh(wallGeo, wallMat);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.position.set(-7, 1, -47);
+    scene.add(leftWall);
+
+    const rightWall = new THREE.Mesh(wallGeo, wallMat);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.position.set(7, 1, -47);
+    scene.add(rightWall);
+
+    // ── 끝 벽 ──
+    const endZ = (ARTWORKS.length - 1) * -12 - 8;
+    const backWall = new THREE.Mesh(
+        new THREE.PlaneGeometry(14, 7), wallMat
+    );
+    backWall.position.set(0, 1, endZ);
+    scene.add(backWall);
+
+    // ── 금 몰딩 (벽 수평 트림) ──
+    const goldTrimMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, metalness: 0.85, roughness: 0.15 });
+    const trimLen = 110;
+
+    [-6.97, 6.97].forEach(x => {
+        // 중간 트림
+        const trim = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.07, trimLen), goldTrimMat);
+        trim.position.set(x, 0.5, -47);
+        scene.add(trim);
+        // 상단 몰딩
+        const topTrim = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, trimLen), goldTrimMat);
+        topTrim.position.set(x, 4.3, -47);
+        scene.add(topTrim);
+    });
+
+    // ── 걸레받이 ──
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a1810, roughness: 0.7 });
+    [-6.96, 6.96].forEach(x => {
+        const base = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.22, trimLen), baseMat);
+        base.position.set(x, -2.39, -47);
+        scene.add(base);
+    });
+
+    // ── 천장 조명 패널 (복도 분위기) ──
+    addCorridorLights();
+}
+
+function addCorridorLights() {
+    const panelMat = new THREE.MeshBasicMaterial({
+        color: 0xfff8e8, transparent: true, opacity: 0.35
+    });
+    const totalLen = ARTWORKS.length * 12 + 10;
+    for (let i = 0; i < totalLen; i += 10) {
+        const z = 2 - i;
+        // 패널
+        const panel = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 0.12), panelMat);
+        panel.rotation.x = Math.PI / 2;
+        panel.position.set(0, 4.45, z);
+        scene.add(panel);
+        // 복도 주변광
+        const cl = new THREE.PointLight(0xfff5e0, 0.12, 12);
+        cl.position.set(0, 4.2, z);
+        scene.add(cl);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   TEXTURE OPTIMIZATION
+═══════════════════════════════════════════ */
+function optimizeTexture(tex) {
+    tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy?.() || 1);
+    tex.generateMipmaps = true;
+    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    tex.needsUpdate = true;
+}
+
+/* ═══════════════════════════════════════════
+   PROXIMITY-BASED TEXTURE LOADING
+   (핵심 성능 개선: 가까운 작품만 로드)
+═══════════════════════════════════════════ */
+function loadFrameTexture(index) {
+    if (loadedTextures.has(index)) return;
+    loadedTextures.add(index);
+
+    const art = ARTWORKS[index];
+    textureLoader.load(
+        art.img,
+        (tex) => {
+            optimizeTexture(tex);
+            if (imageMeshes[index]) {
+                imageMeshes[index].material.dispose();
+                imageMeshes[index].material = new THREE.MeshBasicMaterial({ map: tex });
             }
-        ];
+            updateProgress(1);
+        },
+        undefined,
+        () => updateProgress(1) // 실패해도 카운트
+    );
+}
 
-        let scene, camera, renderer, clock;
-        let interactables = [];
-        let frameGroups = [];
-        let targetZ = 5;
-        let currentZ = 5;
-        let isModalOpen = false;
-        let touchY = 0;
-        let isPointerDown = false;
-        let loadedCount = 0;
-
-        const raycaster = new THREE.Raycaster();
-        const mouse = new THREE.Vector2();
-        const textureLoader = new THREE.TextureLoader();
-
-        const loaderEl = document.getElementById('loader');
-        const progressEl = document.getElementById('progress');
-        const guideEl = document.getElementById('guide');
-        const modalEl = document.getElementById('detail-modal');
-        const modalGridEl = document.getElementById('modal-grid');
-        const modalLabelEl = document.getElementById('modal-label');
-        const modalTitleEl = document.getElementById('modal-title');
-        const modalCloseBtn = document.getElementById('modalCloseBtn');
-        const homeBtn = document.getElementById('homeBtn');
-        const container = document.getElementById('canvas-container');
-
-        function clamp(value, min, max) {
-            return Math.min(max, Math.max(min, value));
+function checkProximityLoads() {
+    for (let i = 0; i < ARTWORKS.length; i++) {
+        const frameZ = i * -12;
+        if (Math.abs(camera.position.z - frameZ) < LOAD_DISTANCE) {
+            loadFrameTexture(i);
         }
+    }
+}
 
-        function getCameraLimits() {
-            return {
-                maxZ: 5,
-                minZ: (ARTWORKS.length - 1) * -12 - 5
-            };
+/* ═══════════════════════════════════════════
+   FRAMES (미술관 액자 생성)
+═══════════════════════════════════════════ */
+function createFrames() {
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, metalness: 0.88, roughness: 0.12 });
+    const goldLightMat = new THREE.MeshStandardMaterial({ color: 0xe8c88a, metalness: 0.75, roughness: 0.22 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x0a0905 });
+
+    ARTWORKS.forEach((art, i) => {
+        const zPos = i * -12;
+        const side = i === 0 ? 0 : (i % 2 === 1 ? 4.2 : -4.2);
+        const rotY = i === 0 ? 0 : (i % 2 === 1 ? -0.42 : 0.42);
+
+        const group = new THREE.Group();
+        group.position.set(side, 0, zPos);
+        group.rotation.y = rotY;
+
+        // ── 1. 외곽 검정 틀 (배경판) ──
+        const back = new THREE.Mesh(new THREE.BoxGeometry(3.4, 4.4, 0.05), darkMat);
+        group.add(back);
+
+        // ── 2. 외곽 금 몰딩 (4면) ──
+        const W = 3.4, H = 4.4;
+        const barThick = 0.1, barDepth = 0.14;
+
+        const makeBar = (w, h) => {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, barDepth), goldMat);
+            m.position.z = 0.045;
+            return m;
+        };
+        const top = makeBar(W, barThick); top.position.y = H/2 - barThick/2; group.add(top);
+        const bot = makeBar(W, barThick); bot.position.y = -(H/2 - barThick/2); group.add(bot);
+        const lft = makeBar(barThick, H); lft.position.x = -(W/2 - barThick/2); group.add(lft);
+        const rgt = makeBar(barThick, H); rgt.position.x = (W/2 - barThick/2); group.add(rgt);
+
+        // ── 3. 안쪽 얇은 금 라인 ──
+        const iW = W - barThick*2, iH = H - barThick*2;
+        const lt = 0.04;
+        const iTop = new THREE.Mesh(new THREE.BoxGeometry(iW, lt, 0.10), goldLightMat);
+        iTop.position.set(0, H/2 - barThick - lt/2, 0.06); group.add(iTop);
+        const iBot = iTop.clone(); iBot.position.y = -(H/2 - barThick - lt/2); group.add(iBot);
+        const iLft = new THREE.Mesh(new THREE.BoxGeometry(lt, iH, 0.10), goldLightMat);
+        iLft.position.set(-(W/2 - barThick - lt/2), 0, 0.06); group.add(iLft);
+        const iRgt = iLft.clone(); iRgt.position.x = (W/2 - barThick - lt/2); group.add(iRgt);
+
+        // ── 4. 내부 매트 (어두운 패딩) ──
+        const mat = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.0, 4.0),
+            new THREE.MeshBasicMaterial({ color: 0x080706 })
+        );
+        mat.position.z = 0.04;
+        group.add(mat);
+
+        // ── 5. 이미지 플레이스홀더 (근접 시 텍스처 교체) ──
+        const imgMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.85, 3.82),
+            new THREE.MeshBasicMaterial({ color: 0x1c1a16 })
+        );
+        imgMesh.position.z = 0.07;
+        group.add(imgMesh);
+        imageMeshes.push(imgMesh);
+
+        // ── 6. 명판 (라벨) ──
+        const plaqueTex = createPlaque(art);
+        const plaque = new THREE.Mesh(
+            new THREE.PlaneGeometry(2.6, 0.58),
+            new THREE.MeshBasicMaterial({ map: plaqueTex })
+        );
+        plaque.position.set(0, -2.7, 0.08);
+        group.add(plaque);
+
+        // ── 7. 히트 박스 (클릭 감지) ──
+        const hitMesh = new THREE.Mesh(
+            new THREE.PlaneGeometry(3.0, 4.2),
+            new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, side: THREE.DoubleSide })
+        );
+        hitMesh.position.z = 0.12;
+        hitMesh.userData = art;
+        interactables.push(hitMesh);
+        group.add(hitMesh);
+
+        // ── 8. 작품 스포트라이트 (극적인 조명) ──
+        const spotlight = new THREE.PointLight(0xfff8e8, 2.8, 6.5);
+        spotlight.position.set(0, 3.5, 2.2);
+        group.add(spotlight);
+
+        // ── 9. 명판 아래 보조광 ──
+        const fillLight = new THREE.PointLight(0xc9a96e, 0.4, 3);
+        fillLight.position.set(0, -1.5, 1.5);
+        group.add(fillLight);
+
+        frameGroups.push(group);
+        scene.add(group);
+    });
+
+    // 처음 3개 프레임은 즉시 로드 (카메라 근처)
+    for (let i = 0; i < Math.min(3, ARTWORKS.length); i++) {
+        loadFrameTexture(i);
+    }
+}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+function openModal(art) {
+    isModalOpen = true;
+    document.body.style.overflow = 'hidden';
+
+    modalLabelEl.textContent = art.label;
+    modalTitleEl.textContent = art.sub;
+    modalDescEl.textContent = art.desc || '';
+
+    if (art.type === 'video') {
+        renderVideoModal(art);
+    } else {
+        renderPhotoModal(art);
+    }
+
+    modalEl.scrollTop = 0;
+    modalEl.classList.add('active');
+    modalEl.setAttribute('aria-hidden', 'false');
+}
+
+function renderPhotoModal(art) {
+    const imgs = art.gallery || [];
+    modalContent.innerHTML = `<div class="photo-grid">${
+        imgs.map((url, i) =>
+            `<img src="${url}" alt="${art.sub} ${i+1}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+        ).join('')
+    }</div>`;
+
+    modalContent.querySelectorAll('img').forEach(img => {
+        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+        img.addEventListener('click', () => openLightbox(img.src));
+    });
+}
+
+function renderVideoModal(art) {
+    // 카테고리별 그룹화
+    const cats = {};
+    art.videos.forEach(v => {
+        if (!cats[v.cat]) cats[v.cat] = [];
+        cats[v.cat].push(v);
+    });
+
+    let html = '';
+    Object.entries(cats).forEach(([cat, vids]) => {
+        html += `<div class="video-cat-label">${cat}</div><div class="video-grid">`;
+        vids.forEach(v => {
+            const thumb = `https://img.youtube.com/vi/${v.vid}/hqdefault.jpg`;
+            html += `
+                <div class="video-card" onclick="window.open('${v.url}','_blank')">
+                    <div class="video-thumb-wrap">
+                        <img src="${thumb}" alt="${v.title}" loading="lazy" decoding="async">
+                        <div class="play-btn"></div>
+                    </div>
+                    <div class="video-info">
+                        <span class="video-cat-badge">${cat}</span>
+                        <span class="video-title-text">${v.title}</span>
+                    </div>
+                </div>`;
+        });
+        html += `</div>`;
+    });
+    modalContent.innerHTML = html;
+
+    modalContent.querySelectorAll('.video-thumb-wrap img').forEach(img => {
+        img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
+        img.addEventListener('error', () => img.classList.add('loaded'), { once: true });
+    });
+}
+
+function closeModal() {
+    isModalOpen = false;
+    modalEl.classList.remove('active');
+    modalEl.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+}
+
+/* ─── Lightbox ─── */
+function openLightbox(src) {
+    lightboxImg.src = src;
+    lightboxEl.classList.add('active');
+}
+function closeLightbox() {
+    lightboxEl.classList.remove('active');
+    lightboxImg.src = '';
+}
+
+/* ═══════════════════════════════════════════
+   POINTER HANDLING (버그 수정: drag vs click)
+═══════════════════════════════════════════ */
+function handleSelect(clientX, clientY) {
+    if (isModalOpen) return;
+
+    mouse.x = (clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+
+    const hits = raycaster.intersectObjects(interactables, false);
+    if (hits.length > 0) {
+        const art = hits[0].object.userData;
+        if (art.type !== 'welcome') openModal(art);
+    }
+}
+
+function handleWheel(e) {
+    if (isModalOpen) return;
+    targetZ -= e.deltaY * 0.011;
+    const { minZ, maxZ } = getCameraLimits();
+    targetZ = clamp(targetZ, minZ, maxZ);
+    updateGuideVisibility();
+}
+
+function handleTouchStart(e) {
+    if (isModalOpen) return;
+    if (!e.touches?.length) return;
+    touchStartY = e.touches[0].clientY;
+}
+
+function handleTouchMove(e) {
+    if (isModalOpen) return;
+    if (!e.touches?.length) return;
+    e.preventDefault();
+    const delta = touchStartY - e.touches[0].clientY;
+    touchStartY = e.touches[0].clientY;
+    targetZ -= delta * 0.032;
+    const { minZ, maxZ } = getCameraLimits();
+    targetZ = clamp(targetZ, minZ, maxZ);
+    updateGuideVisibility();
+}
+
+/* ═══════════════════════════════════════════
+   HOVER DETECTION (마우스 올릴 때 힌트 표시)
+═══════════════════════════════════════════ */
+let hoverTimeout;
+function handleMouseMove(e) {
+    if (isModalOpen) return;
+    mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(interactables, false);
+    const over = hits.length > 0 && hits[0].object.userData.type !== 'welcome';
+    document.body.style.cursor = over ? 'pointer' : 'default';
+    hoverHint.classList.toggle('show', over);
+}
+
+/* ═══════════════════════════════════════════
+   RESIZE
+═══════════════════════════════════════════ */
+function handleResize() {
+    if (!camera || !renderer) return;
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+/* ═══════════════════════════════════════════
+   BIND EVENTS
+═══════════════════════════════════════════ */
+function bindEvents() {
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+
+    // 드래그 vs 클릭 판별
+    window.addEventListener('pointerdown', e => {
+        isPointerDown = true;
+        pointerStartX = e.clientX;
+        pointerStartY = e.clientY;
+    });
+    window.addEventListener('pointerup', e => {
+        if (!isPointerDown) return;
+        isPointerDown = false;
+        const dx = Math.abs(e.clientX - pointerStartX);
+        const dy = Math.abs(e.clientY - pointerStartY);
+        if (dx < DRAG_THRESHOLD && dy < DRAG_THRESHOLD) {
+            handleSelect(e.clientX, e.clientY);
         }
+    });
 
-        function updateGuideVisibility() {
-            if (targetZ < 4) {
-                guideEl.classList.add('hidden');
-            } else {
-                guideEl.classList.remove('hidden');
-            }
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: false });
+    window.addEventListener('resize', handleResize);
+
+    // 키보드
+    window.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+            if (lightboxEl.classList.contains('active')) closeLightbox();
+            else if (isModalOpen) closeModal();
         }
-
-        function updateLoader() {
-            loadedCount += 1;
-            const progress = (loadedCount / ARTWORKS.length) * 100;
-            progressEl.style.width = `${progress}%`;
-
-            if (loadedCount >= ARTWORKS.length) {
-                setTimeout(() => {
-                    loaderEl.classList.add('hidden');
-                }, 350);
-            }
+        if (!isModalOpen) {
+            if (e.key === 'ArrowDown' || e.key === 's') { targetZ -= 1.5; targetZ = clamp(targetZ, getCameraLimits().minZ, getCameraLimits().maxZ); updateGuideVisibility(); }
+            if (e.key === 'ArrowUp'  || e.key === 'w') { targetZ += 1.5; targetZ = clamp(targetZ, getCameraLimits().minZ, getCameraLimits().maxZ); updateGuideVisibility(); }
         }
+    });
 
-        function createFallbackMessage(message) {
-            document.body.innerHTML = `<div class="fallback">${message}</div>`;
+    // 모달 닫기
+    modalCloseBtn.addEventListener('click', e => { e.stopPropagation(); closeModal(); });
+    modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+    modalInner.addEventListener('click', e => e.stopPropagation());
+
+    // 라이트박스 닫기
+    document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+    lightboxEl.addEventListener('click', e => { if (e.target === lightboxEl) closeLightbox(); });
+
+    // 홈버튼
+    homeBtn.addEventListener('click', () => {
+        targetZ = 5;
+        closeModal();
+        closeLightbox();
+        updateGuideVisibility();
+    });
+}
+
+/* ═══════════════════════════════════════════
+   ANIMATE LOOP
+═══════════════════════════════════════════ */
+function animate() {
+    requestAnimationFrame(animate);
+
+    // 부드러운 카메라 이동
+    currentZ += (targetZ - currentZ) * 0.065;
+    camera.position.z = currentZ;
+
+    // 근접 텍스처 로딩 체크 (매 프레임 전체 체크 → 최적화)
+    checkProximityLoads();
+
+    // 룸 카운터 업데이트 (매 60프레임마다)
+    if (Math.floor(clock.getElapsedTime() * 60) % 60 === 0) {
+        updateRoomCounter();
+    }
+
+    const t = clock.getElapsedTime();
+
+    // 작품 프레임 미세 부유 애니메이션 (가까운 것만)
+    for (let i = 0; i < frameGroups.length; i++) {
+        const g = frameGroups[i];
+        const dist = Math.abs(camera.position.z - g.position.z);
+        if (dist < 35) {
+            g.position.y = Math.sin(t * 0.4 + i * 1.2) * 0.04;
         }
+    }
 
-        function createRenderer() {
-            try {
-                renderer = new THREE.WebGLRenderer({
-                    antialias: true,
-                    alpha: false,
-                    powerPreference: 'high-performance'
-                });
-            } catch (error) {
-                createFallbackMessage('이 브라우저에서는 3D 갤러리를 실행할 수 없습니다.');
-                throw error;
-            }
+    renderer.render(scene, camera);
+}
 
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            container.appendChild(renderer.domElement);
-        }
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+function init() {
+    if (!window.THREE) {
+        document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#e8e0d5;font-family:sans-serif;padding:24px;text-align:center">Three.js를 불러오지 못했습니다. 새로고침 해주세요.</div>';
+        return;
+    }
 
-        function optimizeTexture(tex) {
-            tex.encoding = THREE.sRGBEncoding;
-            tex.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy?.() || 1);
-            tex.generateMipmaps = true;
-            tex.minFilter = THREE.LinearMipmapLinearFilter;
-            tex.magFilter = THREE.LinearFilter;
-            tex.wrapS = THREE.ClampToEdgeWrapping;
-            tex.wrapT = THREE.ClampToEdgeWrapping;
-            tex.needsUpdate = true;
-        }
+    createRenderer();
+    initScene();
 
-        function preloadModalImages(urls) {
-            urls.forEach((url) => {
-                const img = new Image();
-                img.decoding = 'async';
-                img.loading = 'eager';
-                img.src = url;
-            });
-        }
+    // 폰트 로드 후 액자 생성 (명판 캔버스 텍스트 정확히 렌더링)
+    const afterFonts = () => {
+        createFrames();
+        bindEvents();
+        updateGuideVisibility();
+        animate();
+    };
 
-        function initScene() {
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x050505);
-            scene.fog = new THREE.FogExp2(0x050505, 0.08);
+    if (document.fonts?.ready) {
+        document.fonts.ready.then(afterFonts);
+    } else {
+        afterFonts();
+    }
+}
 
-            camera = new THREE.PerspectiveCamera(
-                60,
-                window.innerWidth / window.innerHeight,
-                0.1,
-                1000
-            );
-            camera.position.set(0, 0, 5);
-
-            clock = new THREE.Clock();
-
-            const ambient = new THREE.AmbientLight(0xffffff, 0.45);
-            scene.add(ambient);
-
-            const floorGeo = new THREE.PlaneGeometry(20, 200);
-            const floorMat = new THREE.MeshStandardMaterial({
-                color: 0x0a0a0a,
-                roughness: 0.14,
-                metalness: 0.45
-            });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
-            floor.rotation.x = -Math.PI / 2;
-            floor.position.y = -2.5;
-            scene.add(floor);
-        }
-
-        function createFrames() {
-            ARTWORKS.forEach((art, i) => {
-                const zPos = i * -12;
-                const side = i === 0 ? 0 : (i % 2 === 1 ? 4 : -4);
-
-                const group = new THREE.Group();
-                group.position.set(side, 0, zPos);
-
-                if (i !== 0) {
-                    group.rotation.y = side > 0 ? -0.5 : 0.5;
-                }
-
-                const frameGeo = new THREE.BoxGeometry(3.2, 4.2, 0.1);
-                const frameMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
-                const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-                group.add(frameMesh);
-
-                const hitGeo = new THREE.PlaneGeometry(3.5, 4.5);
-                const hitMat = new THREE.MeshBasicMaterial({
-                    transparent: true,
-                    opacity: 0,
-                    side: THREE.DoubleSide
-                });
-                const hitMesh = new THREE.Mesh(hitGeo, hitMat);
-                hitMesh.position.z = 0.08;
-                hitMesh.userData = art;
-                interactables.push(hitMesh);
-                group.add(hitMesh);
-
-                const light = new THREE.PointLight(0xc9a96e, 1.25, 8);
-                light.position.set(0, 3, 1);
-                group.add(light);
-
-                frameGroups.push(group);
-                scene.add(group);
-
-                textureLoader.load(
-                    art.img,
-                    (tex) => {
-                        optimizeTexture(tex);
-
-                        const imgGeo = new THREE.PlaneGeometry(3, 4);
-                        const imgMat = new THREE.MeshBasicMaterial({ map: tex });
-                        const imgMesh = new THREE.Mesh(imgGeo, imgMat);
-                        imgMesh.position.z = 0.06;
-                        group.add(imgMesh);
-
-                        preloadModalImages(art.gallery);
-                        updateLoader();
-                    },
-                    undefined,
-                    () => {
-                        console.warn('이미지 로드 실패:', art.img);
-
-                        const fallbackGeo = new THREE.PlaneGeometry(3, 4);
-                        const fallbackMat = new THREE.MeshBasicMaterial({
-                            color: 0x111111
-                        });
-                        const fallbackMesh = new THREE.Mesh(fallbackGeo, fallbackMat);
-                        fallbackMesh.position.z = 0.06;
-                        group.add(fallbackMesh);
-
-                        updateLoader();
-                    }
-                );
-            });
-        }
-
-        function openModal(data) {
-            isModalOpen = true;
-            document.body.classList.add('modal-open');
-            modalLabelEl.textContent = data.label;
-            modalTitleEl.textContent = data.sub;
-
-            modalGridEl.innerHTML = data.gallery.map((img, idx) => {
-                return `<img src="${img}" alt="${data.title} ${idx + 1}" loading="lazy" decoding="async" referrerpolicy="no-referrer">`;
-            }).join('');
-
-            modalGridEl.querySelectorAll('img').forEach((img) => {
-                img.addEventListener('load', () => img.classList.add('loaded'), { once: true });
-                img.addEventListener('error', () => {
-                    img.classList.add('loaded');
-                    img.alt = '이미지를 불러올 수 없습니다';
-                }, { once: true });
-            });
-
-            modalEl.classList.add('active');
-            modalEl.setAttribute('aria-hidden', 'false');
-        }
-
-        function closeModal() {
-            isModalOpen = false;
-            modalEl.classList.remove('active');
-            modalEl.setAttribute('aria-hidden', 'true');
-            document.body.classList.remove('modal-open');
-        }
-
-        function handlePointerSelect(clientX, clientY) {
-            if (isModalOpen) return;
-
-            mouse.x = (clientX / window.innerWidth) * 2 - 1;
-            mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(interactables, false);
-
-            if (intersects.length > 0) {
-                const data = intersects[0].object.userData;
-                if (data.id !== 'hero') {
-                    openModal(data);
-                }
-            }
-        }
-
-        function handleWheel(e) {
-            if (isModalOpen) return;
-
-            targetZ -= e.deltaY * 0.01;
-            const { minZ, maxZ } = getCameraLimits();
-            targetZ = clamp(targetZ, minZ, maxZ);
-            updateGuideVisibility();
-        }
-
-        function handleTouchStart(e) {
-            if (isModalOpen) return;
-            if (!e.touches || !e.touches.length) return;
-            touchY = e.touches[0].clientY;
-        }
-
-        function handleTouchMove(e) {
-            if (isModalOpen) return;
-            if (!e.touches || !e.touches.length) return;
-
-            e.preventDefault();
-            const currentTouchY = e.touches[0].clientY;
-            const delta = touchY - currentTouchY;
-            touchY = currentTouchY;
-
-            targetZ -= delta * 0.03;
-            const { minZ, maxZ } = getCameraLimits();
-            targetZ = clamp(targetZ, minZ, maxZ);
-            updateGuideVisibility();
-        }
-
-        function handleResize() {
-            if (!camera || !renderer) return;
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
-        }
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            currentZ += (targetZ - currentZ) * 0.06;
-            camera.position.z = currentZ;
-
-            const time = clock.getElapsedTime();
-
-            for (let i = 0; i < frameGroups.length; i++) {
-                const group = frameGroups[i];
-                const distance = Math.abs(camera.position.z - group.position.z);
-
-                if (distance < 28) {
-                    group.visible = true;
-                    group.position.y = Math.sin(time + i) * 0.05;
-                } else {
-                    group.visible = true;
-                    group.position.y = 0;
-                }
-            }
-
-            renderer.render(scene, camera);
-        }
-
-        function bindEvents() {
-            window.addEventListener('wheel', handleWheel, { passive: true });
-
-            window.addEventListener('pointerdown', () => {
-                isPointerDown = true;
-            });
-
-            window.addEventListener('pointerup', (e) => {
-                if (!isPointerDown) return;
-                isPointerDown = false;
-
-                if (e.pointerType === 'mouse' || e.pointerType === 'touch' || e.pointerType === 'pen') {
-                    handlePointerSelect(e.clientX, e.clientY);
-                }
-            });
-
-            window.addEventListener('touchstart', handleTouchStart, { passive: true });
-            window.addEventListener('touchmove', handleTouchMove, { passive: false });
-
-            window.addEventListener('resize', handleResize);
-
-            window.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && isModalOpen) {
-                    closeModal();
-                }
-            });
-
-            modalCloseBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                closeModal();
-            });
-
-            modalEl.addEventListener('click', (e) => {
-                if (e.target === modalEl || e.target.id === 'modalBackdrop') {
-                    closeModal();
-                }
-            });
-
-            modalEl.querySelector('.modal-inner').addEventListener('click', (e) => {
-                e.stopPropagation();
-            });
-
-            homeBtn.addEventListener('click', () => {
-                targetZ = 5;
-                closeModal();
-                updateGuideVisibility();
-            });
-        }
-
-        function init() {
-            if (!window.THREE) {
-                createFallbackMessage('Three.js를 불러오지 못했습니다.');
-                return;
-            }
-
-            createRenderer();
-            initScene();
-            createFrames();
-            bindEvents();
-            updateGuideVisibility();
-            animate();
-        }
-
-        init();
-    </script>
+init();
+</script>
 </body>
 </html>
