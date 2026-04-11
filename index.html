@@ -3,705 +3,382 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>순간, 스튜디오 — Scroll Museum Portfolio</title>
+  <title>순간, 스튜디오 — Mobile Gallery Walk</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://i.ibb.co" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <style>
-    :root {
-      --bg: #0a0a0a;
-      --bg-2: #101010;
-      --panel: rgba(255,255,255,0.04);
-      --line: rgba(255,255,255,0.08);
-      --line-strong: rgba(255,255,255,0.16);
-      --text: rgba(255,255,255,0.96);
-      --muted: rgba(255,255,255,0.58);
-      --muted-2: rgba(255,255,255,0.34);
-      --shadow: 0 30px 80px rgba(0,0,0,0.35);
-      --radius: 28px;
-      --radius-sm: 18px;
-      --max: 1440px;
+    :root{
+      --bg:#060606;
+      --panel:#0f0f0f;
+      --panel-2:#141414;
+      --line:rgba(255,255,255,.08);
+      --line-2:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.96);
+      --muted:rgba(255,255,255,.58);
+      --muted-2:rgba(255,255,255,.32);
+      --shadow:0 20px 60px rgba(0,0,0,.34);
+      --radius:24px;
+      --safe-top:max(18px, env(safe-area-inset-top));
+      --safe-bottom:max(18px, env(safe-area-inset-bottom));
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+    html,body{height:100%;}
+    html{scroll-behavior:smooth;background:var(--bg);}
+    body{
+      font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      overflow-x:hidden;
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
     }
 
-    img { display: block; max-width: 100%; }
-    button { font: inherit; }
-    a { color: inherit; text-decoration: none; }
+    img{display:block;max-width:100%;}
+    button,a{font:inherit;color:inherit;text-decoration:none;}
 
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:0;
       background:
-        radial-gradient(circle at 12% 10%, rgba(255,255,255,0.06), transparent 22%),
-        radial-gradient(circle at 80% 18%, rgba(255,255,255,0.04), transparent 22%),
-        radial-gradient(circle at 50% 100%, rgba(255,255,255,0.03), transparent 30%);
+        radial-gradient(circle at 12% 10%, rgba(255,255,255,.06), transparent 20%),
+        radial-gradient(circle at 84% 14%, rgba(255,255,255,.04), transparent 18%),
+        radial-gradient(circle at 50% 100%, rgba(255,255,255,.03), transparent 28%);
     }
 
-    .grain {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 1;
-      opacity: 0.045;
+    .grain{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:1;
+      opacity:.035;
       background-image:
-        radial-gradient(circle at 20% 20%, #fff 0.5px, transparent 0.6px),
-        radial-gradient(circle at 80% 40%, #fff 0.5px, transparent 0.6px),
-        radial-gradient(circle at 40% 80%, #fff 0.5px, transparent 0.6px);
-      background-size: 26px 26px, 30px 30px, 34px 34px;
-      mix-blend-mode: soft-light;
+        radial-gradient(circle at 20% 20%, #fff .5px, transparent .6px),
+        radial-gradient(circle at 80% 60%, #fff .5px, transparent .6px),
+        radial-gradient(circle at 50% 85%, #fff .5px, transparent .6px);
+      background-size:28px 28px, 34px 34px, 38px 38px;
     }
 
-    .page {
-      position: relative;
-      z-index: 2;
+    .topbar{
+      position:fixed;
+      top:0;left:0;right:0;
+      z-index:30;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      padding:var(--safe-top) 18px 14px;
+      background:linear-gradient(to bottom, rgba(6,6,6,.84), rgba(6,6,6,.26), transparent);
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
     }
 
-    .topbar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 20;
-      padding: 18px 22px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      background: linear-gradient(to bottom, rgba(8,8,8,0.72), rgba(8,8,8,0.18), transparent);
-    }
-
-    .brand {
-      font-size: 0.92rem;
-      font-weight: 700;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-    }
-
-    .topnav {
-      display: flex;
-      gap: 18px;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .topnav a {
-      position: relative;
-      transition: color .25s ease;
-    }
-
-    .topnav a:hover { color: var(--text); }
-
-    .side-indicator {
-      position: fixed;
-      right: 20px;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 20;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: flex-end;
-    }
-
-    .side-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22);
-      background: transparent;
-      transition: all .25s ease;
-      cursor: pointer;
-    }
-
-    .side-dot.active {
-      width: 30px;
-      background: rgba(255,255,255,0.9);
-      border-color: transparent;
-    }
-
-    .section {
-      position: relative;
-      min-height: 100vh;
-      padding: 110px 24px 32px;
-    }
-
-    .inner {
-      width: min(var(--max), 100%);
-      margin: 0 auto;
-    }
-
-    .hero {
-      min-height: 100svh;
-      display: grid;
-      align-items: end;
-      padding-bottom: 42px;
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.15fr 0.85fr;
-      gap: 26px;
-      align-items: stretch;
-    }
-
-    .hero-copy {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 20px;
-      padding: 18px 0;
-    }
-
-    .eyebrow {
-      font-size: 0.74rem;
-      letter-spacing: 0.24em;
-      color: var(--muted-2);
-      text-transform: uppercase;
-      margin-bottom: 14px;
-    }
-
-    h1 {
-      font-size: clamp(3rem, 8vw, 7.6rem);
-      line-height: 0.92;
-      letter-spacing: -0.06em;
-      font-weight: 700;
-      margin-bottom: 20px;
-    }
-
-    .hero-desc {
-      max-width: 560px;
-      font-size: 1rem;
-      line-height: 1.95;
-      color: var(--muted);
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 14px 18px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: transparent;
-      color: #fff;
-      transition: transform .25s ease, background .25s ease, border-color .25s ease;
-      cursor: pointer;
-    }
-
-    .btn:hover { transform: translateY(-1px); }
-
-    .btn.primary {
-      background: rgba(255,255,255,0.92);
-      color: #090909;
-      border-color: transparent;
-    }
-
-    .hero-visual {
-      position: relative;
-      min-height: 74svh;
-      border-radius: calc(var(--radius) + 8px);
-      overflow: hidden;
-      background: #111;
-      box-shadow: var(--shadow);
-    }
-
-    .hero-visual::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.58), rgba(0,0,0,0.08), transparent 52%);
-      pointer-events: none;
-    }
-
-    .hero-visual img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transform: scale(1.02);
-    }
-
-    .hero-note {
-      position: absolute;
-      left: 24px;
-      right: 24px;
-      bottom: 22px;
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      align-items: end;
-      z-index: 2;
-    }
-
-    .hero-note .title {
-      font-size: 1.2rem;
-      font-weight: 600;
-    }
-
-    .hero-note .sub {
-      font-size: 0.82rem;
-      line-height: 1.7;
-      color: rgba(255,255,255,0.68);
-      max-width: 280px;
-      text-align: right;
-    }
-
-    .split-room {
-      display: grid;
-      grid-template-columns: 0.82fr 1.18fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-
-    .room-copy,
-    .room-panel {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: var(--shadow);
-    }
-
-    .room-copy {
-      padding: 34px 28px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 28px;
-      min-height: 72svh;
-      position: sticky;
-      top: 96px;
-    }
-
-    .room-copy h2,
-    .room-header h2 {
-      font-size: clamp(2rem, 4.4vw, 4.8rem);
-      line-height: 0.98;
-      letter-spacing: -0.05em;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-
-    .room-copy p,
-    .room-header p {
-      color: var(--muted);
-      line-height: 1.95;
-      max-width: 520px;
-    }
-
-    .copy-meta {
-      display: grid;
-      gap: 10px;
-      padding-top: 20px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .meta-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      font-size: 0.82rem;
-      color: var(--muted);
-    }
-
-    .room-panel {
-      padding: 18px;
-      min-height: 180vh;
-    }
-
-    .vertical-stack {
-      display: grid;
-      gap: 16px;
-    }
-
-    .frame {
-      position: relative;
-      overflow: hidden;
-      border-radius: calc(var(--radius-sm) + 4px);
-      background: #111;
-      box-shadow: 0 18px 50px rgba(0,0,0,0.26);
-      isolation: isolate;
-      cursor: pointer;
-    }
-
-    .frame::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(to top, rgba(0,0,0,0.30), transparent 35%);
-      opacity: 0;
-      transition: opacity .25s ease;
-      pointer-events: none;
-    }
-
-    .frame:hover::after { opacity: 1; }
+    .brand{font-size:.9rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;}
+    .top-meta{font-size:.72rem;line-height:1.6;color:var(--muted);text-align:right;}
 
-    .frame img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      transition: transform .6s ease;
-    }
-
-    .frame:hover img { transform: scale(1.03); }
-
-    .tall { min-height: 76svh; }
-    .medium { min-height: 56svh; }
-    .wide { min-height: 48svh; }
-
-    .caption {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 16px;
-      z-index: 2;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: opacity .25s ease, transform .25s ease;
-    }
-
-    .frame:hover .caption {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .caption strong {
-      font-size: 0.98rem;
-      font-weight: 600;
-    }
-
-    .caption span {
-      font-size: 0.76rem;
-      color: rgba(255,255,255,0.74);
-      line-height: 1.6;
-      text-align: right;
-    }
-
-    .gallery-wall {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 16px;
-    }
-
-    .gallery-wall .frame:nth-child(1) { grid-column: span 7; min-height: 64svh; }
-    .gallery-wall .frame:nth-child(2) { grid-column: span 5; min-height: 64svh; }
-    .gallery-wall .frame:nth-child(3) { grid-column: span 4; min-height: 42svh; }
-    .gallery-wall .frame:nth-child(4) { grid-column: span 4; min-height: 42svh; }
-    .gallery-wall .frame:nth-child(5) { grid-column: span 4; min-height: 42svh; }
-    .gallery-wall .frame:nth-child(6) { grid-column: span 12; min-height: 72svh; }
-
-    .cross-room {
-      display: grid;
-      gap: 18px;
-    }
-
-    .cross-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items: stretch;
-    }
-
-    .section-header {
-      margin-bottom: 26px;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 18px;
-      align-items: end;
-    }
-
-    .section-header .small {
-      font-size: 0.82rem;
-      color: var(--muted);
-      line-height: 1.8;
-      max-width: 320px;
-      text-align: right;
-    }
-
-    .motion-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .video-card {
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      border: 1px solid rgba(255,255,255,0.06);
-      background: #111;
-      box-shadow: var(--shadow);
-      transition: transform .25s ease, border-color .25s ease;
-    }
-
-    .video-card:hover {
-      transform: translateY(-3px);
-      border-color: rgba(255,255,255,0.14);
-    }
-
-    .video-thumb {
-      position: relative;
-      aspect-ratio: 16 / 10;
-      overflow: hidden;
-    }
-
-    .video-thumb img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .play {
-      position: absolute;
-      inset: 0;
-      display: grid;
-      place-items: center;
-    }
-
-    .play::after {
-      content: '▶';
-      width: 56px;
-      height: 56px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: rgba(255,255,255,0.92);
-      color: #0a0a0a;
-      padding-left: 3px;
-      box-shadow: 0 14px 35px rgba(0,0,0,0.24);
-    }
-
-    .video-info {
-      padding: 16px;
-      display: grid;
-      gap: 6px;
-    }
-
-    .video-info strong {
-      font-size: 1rem;
-      font-weight: 600;
-    }
+    .page{position:relative;z-index:2;}
 
-    .video-info span {
-      font-size: 0.8rem;
-      color: var(--muted);
-      line-height: 1.7;
+    .hero{
+      min-height:100svh;
+      padding:calc(var(--safe-top) + 88px) 18px var(--safe-bottom);
+      display:grid;
+      align-items:end;
     }
 
-    .about-room {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items: stretch;
+    .hero-card{
+      border:1px solid var(--line);
+      border-radius:30px;
+      overflow:hidden;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
     }
 
-    .about-card,
-    .contact-card {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-      padding: 28px;
-      box-shadow: var(--shadow);
-    }
-
-    .about-card h3,
-    .contact-card h3 {
-      font-size: 1.7rem;
-      letter-spacing: -0.04em;
-      margin-bottom: 12px;
-    }
-
-    .about-card p,
-    .contact-card p {
-      color: var(--muted);
-      line-height: 1.9;
-    }
-
-    .quote {
-      margin-top: 28px;
-      padding-top: 22px;
-      border-top: 1px solid rgba(255,255,255,0.08);
-      font-size: 1.15rem;
-      line-height: 1.8;
-      color: rgba(255,255,255,0.86);
-    }
-
-    .contact-list {
-      margin-top: 24px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .contact-item {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      font-size: 0.9rem;
-    }
-
-    .contact-item span { color: var(--muted); }
-
-    .footer {
-      padding: 22px 24px 38px;
-      color: var(--muted-2);
-      font-size: 0.8rem;
-    }
+    .hero-media{
+      position:relative;
+      min-height:48svh;
+      background:#111;
+      overflow:hidden;
+    }
 
-    .reveal {
-      opacity: 0;
-      transform: translateY(26px);
-      transition: opacity .9s ease, transform .9s ease;
+    .hero-media img{
+      width:100%;height:100%;object-fit:cover;
+    }
+
+    .hero-media::after{
+      content:'';
+      position:absolute;inset:0;
+      background:linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,.18), transparent 56%);
+    }
+
+    .hero-copy{
+      padding:22px 18px 20px;
+      display:grid;
+      gap:16px;
+    }
+
+    .eyebrow{font-size:.72rem;letter-spacing:.24em;color:var(--muted-2);text-transform:uppercase;}
+    h1{font-size:clamp(2.8rem, 14vw, 5.8rem);line-height:.9;letter-spacing:-.07em;font-weight:700;}
+    .hero-desc{font-size:.94rem;line-height:1.9;color:var(--muted);max-width:34rem;}
+    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
+
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      min-height:46px;padding:0 16px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background:transparent;color:#fff;
+      cursor:pointer;transition:.25s ease;
     }
+    .btn.primary{background:rgba(255,255,255,.92);color:#090909;border-color:transparent;}
 
-    .reveal.in-view {
-      opacity: 1;
-      transform: translateY(0);
+    .hint-bar{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
     }
 
-    #lightbox {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: rgba(0,0,0,0.95);
+    .hint{
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:12px 14px;
+      background:rgba(255,255,255,.03);
+      font-size:.78rem;
+      color:var(--muted);
+      line-height:1.7;
     }
 
-    #lightbox.active { display: flex; }
+    .section{
+      min-height:100svh;
+      padding:calc(var(--safe-top) + 72px) 0 var(--safe-bottom);
+      display:grid;
+      align-items:center;
+    }
 
-    #lightbox img {
-      max-width: 92vw;
-      max-height: 92vh;
-      object-fit: contain;
-      border-radius: 12px;
-      box-shadow: 0 24px 90px rgba(0,0,0,0.55);
-    }
-
-    @media (max-width: 1100px) {
-      .hero-grid,
-      .split-room,
-      .about-room,
-      .cross-row,
-      .section-header,
-      .motion-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .room-copy {
-        position: relative;
-        top: auto;
-        min-height: auto;
-      }
-
-      .room-panel {
-        min-height: auto;
-      }
-
-      .gallery-wall .frame,
-      .gallery-wall .frame:nth-child(1),
-      .gallery-wall .frame:nth-child(2),
-      .gallery-wall .frame:nth-child(3),
-      .gallery-wall .frame:nth-child(4),
-      .gallery-wall .frame:nth-child(5),
-      .gallery-wall .frame:nth-child(6) {
-        grid-column: span 12;
-        min-height: 54svh;
-      }
-
-      .section-header .small { text-align: left; }
-    }
-
-    @media (max-width: 768px) {
-      .topnav,
-      .side-indicator {
-        display: none;
-      }
-
-      .topbar {
-        padding: 16px 18px;
-      }
-
-      .section {
-        padding: 96px 16px 22px;
-      }
-
-      .hero {
-        padding-bottom: 22px;
-      }
-
-      .hero-visual {
-        min-height: 54svh;
-      }
-
-      .hero-note {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .hero-note .sub {
-        text-align: left;
-      }
-
-      .room-copy,
-      .room-panel,
-      .about-card,
-      .contact-card {
-        padding: 20px;
-        border-radius: 22px;
-      }
-
-      .gallery-wall,
-      .vertical-stack,
-      .cross-room,
-      .motion-grid {
-        gap: 12px;
-      }
-
-      .tall,
-      .medium,
-      .wide,
-      .gallery-wall .frame,
-      .gallery-wall .frame:nth-child(1),
-      .gallery-wall .frame:nth-child(2),
-      .gallery-wall .frame:nth-child(3),
-      .gallery-wall .frame:nth-child(4),
-      .gallery-wall .frame:nth-child(5),
-      .gallery-wall .frame:nth-child(6) {
-        min-height: 34svh;
-      }
-
-      .caption {
-        opacity: 1;
-        transform: none;
-      }
+    .section-head{
+      padding:0 18px 14px;
+      display:grid;
+      gap:8px;
+    }
+
+    .section-head h2{
+      font-size:clamp(2rem, 10vw, 3.5rem);
+      line-height:.95;
+      letter-spacing:-.06em;
+      font-weight:700;
+    }
+
+    .section-head p{
+      color:var(--muted);
+      font-size:.92rem;
+      line-height:1.85;
+      max-width:34rem;
+    }
+
+    .section-map{
+      display:flex;
+      gap:8px;
+      padding:0 18px 14px;
+      flex-wrap:wrap;
+      color:var(--muted-2);
+      font-size:.72rem;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    .room{
+      overflow-x:auto;
+      overflow-y:hidden;
+      display:grid;
+      grid-auto-flow:column;
+      grid-auto-columns:88vw;
+      gap:14px;
+      padding:0 18px 10px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .room::-webkit-scrollbar{display:none;}
+
+    .wall{
+      position:relative;
+      scroll-snap-align:center;
+      min-height:62svh;
+      border-radius:28px;
+      overflow:hidden;
+      background:var(--panel);
+      border:1px solid var(--line);
+      box-shadow:var(--shadow);
+      display:grid;
+      grid-template-rows:1fr auto;
+    }
+
+    .wall.single{grid-auto-columns:92vw;}
+
+    .wall-image{
+      position:relative;
+      min-height:0;
+      background:#111;
+      overflow:hidden;
+    }
+
+    .wall-image img{
+      width:100%;height:100%;object-fit:cover;
+      content-visibility:auto;
+    }
+
+    .wall-image::after{
+      content:'';
+      position:absolute;inset:0;
+      background:linear-gradient(to top, rgba(0,0,0,.36), transparent 34%);
+      pointer-events:none;
+    }
+
+    .wall-info{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      padding:14px 14px 16px;
+      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.03));
+    }
+
+    .wall-title{font-size:1rem;font-weight:600;letter-spacing:-.02em;}
+    .wall-meta{font-size:.76rem;color:var(--muted);line-height:1.6;text-align:right;}
+
+    .room-note{
+      padding:0 18px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-top:12px;
+    }
+
+    .room-note span{font-size:.78rem;color:var(--muted);line-height:1.7;}
+
+    .dots{display:flex;gap:6px;align-items:center;}
+    .dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.18);}
+    .dot.active{width:24px;background:rgba(255,255,255,.94);}
+
+    .transition-room{
+      padding:calc(var(--safe-top) + 72px) 18px var(--safe-bottom);
+      min-height:72svh;
+      display:grid;
+      align-items:center;
+    }
+
+    .transition-card{
+      border:1px solid var(--line);
+      border-radius:30px;
+      padding:26px 18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow:var(--shadow);
+      display:grid;
+      gap:12px;
+    }
+
+    .transition-card h3{font-size:clamp(1.8rem,8vw,3rem);line-height:1;letter-spacing:-.05em;}
+    .transition-card p{font-size:.92rem;line-height:1.9;color:var(--muted);max-width:34rem;}
+
+    .motion-list{
+      overflow-x:auto;
+      display:grid;
+      grid-auto-flow:column;
+      grid-auto-columns:82vw;
+      gap:14px;
+      padding:0 18px 10px;
+      scroll-snap-type:x mandatory;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    .motion-list::-webkit-scrollbar{display:none;}
+
+    .video-card{
+      scroll-snap-align:center;
+      border:1px solid var(--line);
+      border-radius:24px;
+      overflow:hidden;
+      background:var(--panel);
+      box-shadow:var(--shadow);
+    }
+
+    .video-thumb{position:relative;aspect-ratio:16/10;background:#111;}
+    .video-thumb img{width:100%;height:100%;object-fit:cover;}
+    .play{
+      position:absolute;inset:0;display:grid;place-items:center;
+    }
+    .play::after{
+      content:'▶';width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
+      background:rgba(255,255,255,.92);color:#090909;padding-left:3px;
+      box-shadow:0 14px 30px rgba(0,0,0,.26);
+    }
+
+    .video-info{padding:16px;display:grid;gap:6px;}
+    .video-info strong{font-size:1rem;font-weight:600;}
+    .video-info span{font-size:.82rem;color:var(--muted);line-height:1.7;}
+
+    .about{
+      padding:calc(var(--safe-top) + 72px) 18px calc(var(--safe-bottom) + 24px);
+      min-height:100svh;
+      display:grid;
+      gap:14px;
+      align-content:center;
+    }
+
+    .panel{
+      border:1px solid var(--line);
+      border-radius:26px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      padding:22px 18px;
+      box-shadow:var(--shadow);
+    }
+
+    .panel h3{font-size:1.6rem;letter-spacing:-.04em;margin-bottom:10px;}
+    .panel p{font-size:.92rem;line-height:1.9;color:var(--muted);}
+    .contact-list{margin-top:18px;display:grid;gap:12px;}
+    .contact-item{display:flex;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.88rem;}
+    .contact-item span{color:var(--muted);}
+
+    .section-nav{
+      position:fixed;
+      right:14px;
+      bottom:calc(var(--safe-bottom) + 8px);
+      z-index:26;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .nav-pill{
+      min-width:42px;height:42px;padding:0 14px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(10,10,10,.56);
+      color:#fff;
+      backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);
+      display:inline-flex;align-items:center;justify-content:center;
+      font-size:.84rem;
+      cursor:pointer;
+    }
+
+    .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease, transform .7s ease;}
+    .reveal.in-view{opacity:1;transform:translateY(0);}
+
+    #lightbox{
+      position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
+      padding:18px;background:rgba(0,0,0,.95);
+    }
+    #lightbox.active{display:flex;}
+    #lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.55);}
+
+    @media (min-width: 900px){
+      .hero,.section,.transition-room,.about{max-width:560px;margin:0 auto;}
+      .section-nav{right:max(14px, calc(50vw - 380px));}
     }
   </style>
 </head>
@@ -710,300 +387,262 @@
 
   <header class="topbar">
     <div class="brand">MOMENT STUDIO</div>
-    <nav class="topnav">
-      <a href="#intro">Intro</a>
-      <a href="#commercial">Commercial</a>
-      <a href="#portrait">Portrait</a>
-      <a href="#food">Food</a>
-      <a href="#motion">Motion</a>
-      <a href="#about">About</a>
-    </nav>
+    <div class="top-meta">모바일 전시형 포트폴리오<br>세로 이동 + 가로 벽면 탐색</div>
   </header>
 
-  <div class="side-indicator" aria-hidden="true">
-    <div class="side-dot active" data-target="intro"></div>
-    <div class="side-dot" data-target="commercial"></div>
-    <div class="side-dot" data-target="portrait"></div>
-    <div class="side-dot" data-target="food"></div>
-    <div class="side-dot" data-target="motion"></div>
-    <div class="side-dot" data-target="about"></div>
-  </div>
-
   <main class="page">
-    <section class="section hero" id="intro" data-section="intro">
-      <div class="inner hero-grid">
-        <div class="hero-copy reveal">
-          <div>
-            <div class="eyebrow">Scroll Museum Portfolio</div>
-            <h1>순간을<br>걷는 웹 전시</h1>
-            <p class="hero-desc">직접 조작하는 3D 대신, 잘 설계된 화면과 스크롤 흐름 안에서 전시실을 이동하듯 감상하는 포트폴리오입니다. 사진이 중심에 서고, 공간감은 디자인으로 느껴지게 구성했습니다.</p>
-          </div>
+    <section class="hero reveal" id="intro">
+      <article class="hero-card">
+        <div class="hero-media">
+          <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="순간 스튜디오 대표 이미지" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer">
+        </div>
+        <div class="hero-copy">
+          <div class="eyebrow">Mobile Gallery Walk</div>
+          <h1>스크롤로<br>걷는 갤러리</h1>
+          <p class="hero-desc">한 방향으로만 내려가는 페이지가 아니라, 전시실마다 좌우로 벽을 넘겨보고 다시 아래로 내려가 다음 공간으로 이동하는 구조입니다. 모바일에서 실제로 갤러리를 도는 느낌에 더 가깝게 설계했습니다.</p>
           <div class="hero-actions">
-            <a class="btn primary" href="#commercial">전시 시작</a>
-            <a class="btn" href="#about">작가 소개</a>
+            <a class="btn primary" href="#room-commercial">전시 시작</a>
+            <a class="btn" href="#about">문의 보기</a>
+          </div>
+          <div class="hint-bar">
+            <div class="hint">위아래로 내리면 다음 전시실로 이동</div>
+            <div class="hint">각 전시실 안에서는 좌우로 넘겨 벽면 감상</div>
           </div>
         </div>
-
-        <div class="hero-visual reveal">
-          <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="Moment Studio hero" loading="eager" decoding="async" referrerpolicy="no-referrer">
-          <div class="hero-note">
-            <div class="title">빛과 표정, 공간의 결을 남기는 이미지</div>
-            <div class="sub">아래로 내려가며 다른 전시실로 이동하세요. 각 공간은 하나의 시리즈와 무드를 담고 있습니다.</div>
-          </div>
-        </div>
-      </div>
+      </article>
     </section>
 
-    <section class="section" id="commercial" data-section="commercial">
-      <div class="inner split-room">
-        <aside class="room-copy reveal">
-          <div>
-            <div class="eyebrow">Room 01</div>
-            <h2>Commercial<br>& Branding</h2>
-            <p>브랜드와 공간을 단순히 보여주는 것이 아니라, 그 브랜드가 가진 태도와 공기를 이미지 안에 정리합니다. 첫 번째 전시실은 가장 또렷한 상업적 인상을 남기는 시리즈로 구성했습니다.</p>
-          </div>
-          <div class="copy-meta">
-            <div class="meta-row"><span>Focus</span><strong>Product · Space · Mood</strong></div>
-            <div class="meta-row"><span>Approach</span><strong>Quiet Luxury Visual</strong></div>
-            <div class="meta-row"><span>Viewing</span><strong>Vertical Museum Flow</strong></div>
-          </div>
-        </aside>
-
-        <div class="room-panel reveal">
-          <div class="vertical-stack">
-            <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/bgVfDWBB/vr.jpg">
-              <img src="https://i.ibb.co/bgVfDWBB/vr.jpg" alt="Product visual" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <figcaption class="caption"><strong>Product Story</strong><span>형태와 표면을 브랜드의 인상으로 변환하는 장면</span></figcaption>
-            </figure>
-            <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/zhKgwjvF/vr.jpg">
-              <img src="https://i.ibb.co/zhKgwjvF/vr.jpg" alt="Commercial shot" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <figcaption class="caption"><strong>Product Detail</strong><span>질감과 기능이 동시에 보이도록 정리한 컷</span></figcaption>
-            </figure>
-            <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/spVX6587/1.jpg">
-              <img src="https://i.ibb.co/spVX6587/1.jpg" alt="Branding visual" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <figcaption class="caption"><strong>Branding Space</strong><span>공간의 분위기를 브랜드 기억으로 남기는 프레임</span></figcaption>
-            </figure>
-            <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/wZKZhKZd/2.jpg">
-              <img src="https://i.ibb.co/wZKZhKZd/2.jpg" alt="Branding space" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <figcaption class="caption"><strong>Spatial Mood</strong><span>빛과 거리감을 통해 공간의 깊이를 설계한 장면</span></figcaption>
-            </figure>
-          </div>
-        </div>
+    <section class="section reveal" id="room-commercial">
+      <div class="section-head">
+        <div class="eyebrow">Room 01</div>
+        <h2>Commercial</h2>
+        <p>첫 번째 전시실입니다. 좌우로 넘기면서 각 벽면을 보는 구조로 만들었습니다. 쓸데없는 설명은 빼고, 사진 자체와 카테고리만 보이게 정리했습니다.</p>
       </div>
-    </section>
-
-    <section class="section" id="portrait" data-section="portrait">
-      <div class="inner reveal">
-        <div class="section-header">
-          <div>
-            <div class="eyebrow">Room 02</div>
-            <h2>Portrait Hall</h2>
-            <p>두 번째 전시실은 인물 사진을 위한 공간입니다. 아래로만 내려가는 흐름 안에서도 좌우의 시선 이동이 느껴지도록 벽면 배열을 구성해, 실제 미술관 복도를 지나며 작품을 마주하는 감각을 살렸습니다.</p>
-          </div>
-          <div class="small">스크롤 방향은 하나지만, 레이아웃은 좌우로 흔들리며 다른 벽면으로 이동하는 듯한 리듬을 만듭니다.</div>
-        </div>
-
-        <div class="gallery-wall">
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/ks6QB1J7/1-1.jpg">
-            <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="Portrait 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Presence</strong><span>가장 자연스러운 표정이 남는 순간</span></figcaption>
-          </figure>
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/SX0XmQXR/1-2.jpg">
-            <img src="https://i.ibb.co/SX0XmQXR/1-2.jpg" alt="Portrait 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Balance</strong><span>빛과 표정의 균형이 맞는 컷</span></figcaption>
-          </figure>
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/DgpybcdJ/1-3.jpg">
-            <img src="https://i.ibb.co/DgpybcdJ/1-3.jpg" alt="Portrait 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Pause</strong><span>말보다 호흡이 먼저 느껴지는 장면</span></figcaption>
-          </figure>
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/G4tYPyXx/1-4.jpg">
-            <img src="https://i.ibb.co/G4tYPyXx/1-4.jpg" alt="Portrait 4" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Texture</strong><span>피부와 그림자의 결을 살린 프레임</span></figcaption>
-          </figure>
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/B2cTdydH/1-5.jpg">
-            <img src="https://i.ibb.co/B2cTdydH/1-5.jpg" alt="Portrait 5" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Gesture</strong><span>사소한 손짓과 시선까지 남기는 컷</span></figcaption>
-          </figure>
-          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/PGB80nj7/1-6.jpg">
-            <img src="https://i.ibb.co/PGB80nj7/1-6.jpg" alt="Portrait 6" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Afterglow</strong><span>촬영이 끝난 뒤에도 오래 남는 인상</span></figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="food" data-section="food">
-      <div class="inner cross-room reveal">
-        <div class="section-header">
-          <div>
-            <div class="eyebrow">Room 03</div>
-            <h2>Food & Night Taste</h2>
-            <p>세 번째 공간은 음식 촬영과 밤의 푸드 무드를 함께 담았습니다. 위아래로 이동하면서도 벽이 바뀌는 느낌을 주기 위해, 좌우 2개의 방을 번갈아 걷는 듯한 화면 전개를 만들었습니다.</p>
-          </div>
-          <div class="small">정갈한 푸드와 밤의 감성 푸드를 한 전시 안에 배치해 대비를 살렸습니다.</div>
-        </div>
-
-        <div class="cross-row">
-          <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg">
-            <img src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg" alt="Food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Fine Table</strong><span>음식의 온도와 정돈된 리듬이 보이는 이미지</span></figcaption>
-          </figure>
-          <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg">
-            <img src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg" alt="Food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Quiet Dish</strong><span>빛의 방향으로 맛의 결을 살린 컷</span></figcaption>
-          </figure>
-        </div>
-
-        <div class="cross-row">
-          <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/xdFXY4X/DSC08642.jpg">
-            <img src="https://i.ibb.co/xdFXY4X/DSC08642.jpg" alt="Night food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Night Steam</strong><span>밤의 공기와 식욕이 한 컷에 담기는 장면</span></figcaption>
-          </figure>
-          <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/BKKgggYn/DSC08650.jpg">
-            <img src="https://i.ibb.co/BKKgggYn/DSC08650.jpg" alt="Night food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Street Mood</strong><span>거리의 감성과 따뜻한 음식의 대비</span></figcaption>
-          </figure>
-        </div>
-
-        <div class="cross-row">
-          <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/ym59SLc5/1-3.jpg">
-            <img src="https://i.ibb.co/ym59SLc5/1-3.jpg" alt="Food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Texture Close-up</strong><span>가까이 볼수록 더 매력적인 디테일 컷</span></figcaption>
-          </figure>
-          <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg">
-            <img src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg" alt="Night food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <figcaption class="caption"><strong>Midnight Taste</strong><span>야식의 분위기를 감정으로 남기는 장면</span></figcaption>
-          </figure>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="motion" data-section="motion">
-      <div class="inner reveal">
-        <div class="section-header">
-          <div>
-            <div class="eyebrow">Room 04</div>
-            <h2>Motion Screening</h2>
-            <p>정지 이미지가 끝나는 지점에서 영상이 시작됩니다. 마지막 전시실은 작은 상영관처럼 느껴지도록 카드형 레이아웃으로 구성했습니다.</p>
-          </div>
-          <div class="small">영상은 외부 링크로 연결되며, 브랜드 스토리와 움직임의 리듬을 보여줍니다.</div>
-        </div>
-
-        <div class="motion-grid">
-          <a class="video-card" href="https://youtu.be/WEPXeWG6rE4" target="_blank" rel="noopener noreferrer">
-            <div class="video-thumb">
-              <img src="https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg" alt="DASHU 광고" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <div class="play"></div>
-            </div>
-            <div class="video-info">
-              <strong>DASHU 광고</strong>
-              <span>강한 인상과 템포로 브랜드 무드를 각인시키는 영상.</span>
-            </div>
-          </a>
-
-          <a class="video-card" href="https://youtu.be/b-_Sh5KLv2c" target="_blank" rel="noopener noreferrer">
-            <div class="video-thumb">
-              <img src="https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg" alt="MIP 립밤" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <div class="play"></div>
-            </div>
-            <div class="video-info">
-              <strong>MIP 립밤</strong>
-              <span>제품의 사용감과 감도를 함께 전하는 짧은 시네마.</span>
-            </div>
-          </a>
-
-          <a class="video-card" href="https://youtu.be/ba3QbhE1s08" target="_blank" rel="noopener noreferrer">
-            <div class="video-thumb">
-              <img src="https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg" alt="밤깨비 농장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <div class="play"></div>
-            </div>
-            <div class="video-info">
-              <strong>밤깨비 농장</strong>
-              <span>지역성과 서정성을 동시에 담아낸 브랜드 영상.</span>
-            </div>
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <section class="section" id="about" data-section="about">
-      <div class="inner about-room reveal">
-        <article class="about-card">
-          <div class="eyebrow">About the Artist</div>
-          <h3>순간을 기록하는 것이 아니라, 인상을 남깁니다.</h3>
-          <p>순간, 스튜디오는 인물, 브랜드, 공간, 음식이 가장 자기답게 보이는 장면을 찾고 정리합니다. 화려한 장치보다 이미지의 호흡과 균형을 먼저 생각하며, 오래 보아도 질리지 않는 화면을 지향합니다.</p>
-          <div class="quote">“좋은 사진은 설명보다 먼저 분위기를 남깁니다.”</div>
+      <div class="section-map"><span>left wall</span><span>center wall</span><span>right wall</span></div>
+      <div class="room" data-room>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/bgVfDWBB/vr.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/bgVfDWBB/vr.jpg" alt="commercial 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Product 01</div><div class="wall-meta">Commercial<br>Wall A</div></div>
         </article>
-
-        <article class="contact-card">
-          <div class="eyebrow">Contact</div>
-          <h3>프로젝트 문의</h3>
-          <p>브랜드 촬영, 공간 촬영, 인물 프로필, 음식 촬영, 영상 작업까지 목적에 맞는 톤으로 제안할 수 있습니다. 아래 정보를 실제 연락처로 교체해 사용하면 됩니다.</p>
-          <div class="contact-list">
-            <div class="contact-item"><span>Email</span><strong>momentstudio@example.com</strong></div>
-            <div class="contact-item"><span>Instagram</span><strong>@moment.studio</strong></div>
-            <div class="contact-item"><span>Location</span><strong>Jinju, Korea</strong></div>
-            <div class="contact-item"><span>Booking</span><strong>Open for Projects</strong></div>
-          </div>
-          <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
-            <a class="btn primary" href="mailto:momentstudio@example.com">이메일 보내기</a>
-            <a class="btn" href="#intro">맨 위로</a>
-          </div>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/zhKgwjvF/vr.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/zhKgwjvF/vr.jpg" alt="commercial 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Product 02</div><div class="wall-meta">Commercial<br>Wall B</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/spVX6587/1.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/spVX6587/1.jpg" alt="branding 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Branding 01</div><div class="wall-meta">Branding<br>Wall C</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/wZKZhKZd/2.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/wZKZhKZd/2.jpg" alt="branding 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Branding 02</div><div class="wall-meta">Branding<br>Wall D</div></div>
         </article>
       </div>
+      <div class="room-note"><span>좌우로 밀어 다른 벽면 보기</span><div class="dots"></div></div>
+    </section>
+
+    <section class="transition-room reveal">
+      <div class="transition-card">
+        <div class="eyebrow">Move Forward</div>
+        <h3>다음 전시실로 이동</h3>
+        <p>갤러리 복도를 지나듯 아래로 내려갑니다. 한 공간을 다 본 뒤 다음 주제로 넘어가는 흐름입니다.</p>
+      </div>
+    </section>
+
+    <section class="section reveal" id="room-portrait">
+      <div class="section-head">
+        <div class="eyebrow">Room 02</div>
+        <h2>Portrait</h2>
+        <p>인물 전시실은 하나의 벽면이 아니라 연속된 인물 프레임으로 구성했습니다. 모바일에서 좌우로 넘기면서 천천히 보는 방식이 가장 잘 맞습니다.</p>
+      </div>
+      <div class="section-map"><span>portrait wall 1</span><span>portrait wall 2</span><span>portrait wall 3</span></div>
+      <div class="room" data-room>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/ks6QB1J7/1-1.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="portrait 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 01</div><div class="wall-meta">People<br>Wall A</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/SX0XmQXR/1-2.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/SX0XmQXR/1-2.jpg" alt="portrait 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 02</div><div class="wall-meta">People<br>Wall B</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/DgpybcdJ/1-3.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/DgpybcdJ/1-3.jpg" alt="portrait 3" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 03</div><div class="wall-meta">People<br>Wall C</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/G4tYPyXx/1-4.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/G4tYPyXx/1-4.jpg" alt="portrait 4" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 04</div><div class="wall-meta">People<br>Wall D</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/B2cTdydH/1-5.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/B2cTdydH/1-5.jpg" alt="portrait 5" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 05</div><div class="wall-meta">People<br>Wall E</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/PGB80nj7/1-6.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/PGB80nj7/1-6.jpg" alt="portrait 6" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Portrait 06</div><div class="wall-meta">People<br>Wall F</div></div>
+        </article>
+      </div>
+      <div class="room-note"><span>옆으로 넘기며 인물 전시 감상</span><div class="dots"></div></div>
+    </section>
+
+    <section class="transition-room reveal">
+      <div class="transition-card">
+        <div class="eyebrow">Cross Hall</div>
+        <h3>다른 분위기의 방으로</h3>
+        <p>전시실 사이에 짧은 완충 구간을 둬서 실제 공간을 이동하는 느낌을 더했습니다.</p>
+      </div>
+    </section>
+
+    <section class="section reveal" id="room-food">
+      <div class="section-head">
+        <div class="eyebrow">Room 03</div>
+        <h2>Food & Night</h2>
+        <p>푸드와 야간 무드를 같은 방에서 이어지게 구성했습니다. 아래로 이동해 방을 바꾸고, 방 안에서는 좌우로 벽면을 넘깁니다.</p>
+      </div>
+      <div class="section-map"><span>food</span><span>night</span><span>detail</span></div>
+      <div class="room" data-room>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg" alt="food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Food 01</div><div class="wall-meta">Food<br>Wall A</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg" alt="food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Food 02</div><div class="wall-meta">Food<br>Wall B</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/xdFXY4X/DSC08642.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/xdFXY4X/DSC08642.jpg" alt="night food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Night 01</div><div class="wall-meta">Night Food<br>Wall C</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/BKKgggYn/DSC08650.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/BKKgggYn/DSC08650.jpg" alt="night food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Night 02</div><div class="wall-meta">Night Food<br>Wall D</div></div>
+        </article>
+        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg">
+          <div class="wall-image"><img src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg" alt="night food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
+          <div class="wall-info"><div class="wall-title">Night 03</div><div class="wall-meta">Night Food<br>Wall E</div></div>
+        </article>
+      </div>
+      <div class="room-note"><span>사진을 탭하면 전체 화면으로 확대</span><div class="dots"></div></div>
+    </section>
+
+    <section class="section reveal" id="room-motion">
+      <div class="section-head">
+        <div class="eyebrow">Room 04</div>
+        <h2>Motion</h2>
+        <p>마지막은 상영관처럼 좌우로 넘겨보는 영상 카드입니다.</p>
+      </div>
+      <div class="motion-list" data-room>
+        <a class="video-card" href="https://youtu.be/WEPXeWG6rE4" target="_blank" rel="noopener noreferrer">
+          <div class="video-thumb">
+            <img src="https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg" alt="DASHU 광고" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <div class="play"></div>
+          </div>
+          <div class="video-info"><strong>DASHU 광고</strong><span>Motion Screening 01</span></div>
+        </a>
+        <a class="video-card" href="https://youtu.be/b-_Sh5KLv2c" target="_blank" rel="noopener noreferrer">
+          <div class="video-thumb">
+            <img src="https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg" alt="MIP 립밤" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <div class="play"></div>
+          </div>
+          <div class="video-info"><strong>MIP 립밤</strong><span>Motion Screening 02</span></div>
+        </a>
+        <a class="video-card" href="https://youtu.be/ba3QbhE1s08" target="_blank" rel="noopener noreferrer">
+          <div class="video-thumb">
+            <img src="https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg" alt="밤깨비 농장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <div class="play"></div>
+          </div>
+          <div class="video-info"><strong>밤깨비 농장</strong><span>Motion Screening 03</span></div>
+        </a>
+      </div>
+      <div class="room-note"><span>영상은 유튜브 새 창으로 열림</span><div class="dots"></div></div>
+    </section>
+
+    <section class="about reveal" id="about">
+      <article class="panel">
+        <div class="eyebrow">About</div>
+        <h3>순간, 스튜디오</h3>
+        <p>이 페이지는 모바일 화면에서 전시를 관람하는 감각에 맞춰 설계했습니다. 과한 설명 대신, 방을 이동하고 벽을 넘겨보는 느낌에 집중했습니다.</p>
+      </article>
+      <article class="panel">
+        <div class="eyebrow">Contact</div>
+        <h3>프로젝트 문의</h3>
+        <p>아래 정보는 예시입니다. 실제 이메일, 인스타, 예약 링크로 교체해서 사용하면 됩니다.</p>
+        <div class="contact-list">
+          <div class="contact-item"><span>Email</span><strong>momentstudio@example.com</strong></div>
+          <div class="contact-item"><span>Instagram</span><strong>@moment.studio</strong></div>
+          <div class="contact-item"><span>Location</span><strong>Jinju, Korea</strong></div>
+        </div>
+        <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn primary" href="mailto:momentstudio@example.com">이메일</a>
+          <a class="btn" href="#intro">맨 위로</a>
+        </div>
+      </article>
     </section>
   </main>
 
-  <footer class="footer inner">© MOMENT STUDIO. Quietly composed, carefully framed.</footer>
-
-  <div id="lightbox">
-    <img id="lightbox-img" src="" alt="expanded artwork">
+  <div class="section-nav">
+    <button class="nav-pill" data-jump="intro">↑</button>
+    <button class="nav-pill" data-jump="room-commercial">1</button>
+    <button class="nav-pill" data-jump="room-portrait">2</button>
+    <button class="nav-pill" data-jump="room-food">3</button>
+    <button class="nav-pill" data-jump="room-motion">4</button>
   </div>
 
-  <script>
-    const sections = [...document.querySelectorAll('[data-section]')];
-    const dots = [...document.querySelectorAll('.side-dot')];
-    const reveals = [...document.querySelectorAll('.reveal')];
-    const lightbox = document.getElementById('lightbox');
-    const lightboxImg = document.getElementById('lightbox-img');
+  <div id="lightbox"><img id="lightbox-img" src="" alt="expanded artwork"></div>
 
+  <script>
     const revealObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) entry.target.classList.add('in-view');
       });
-    }, { threshold: 0.14 });
+    }, { threshold: 0.12 });
 
-    reveals.forEach(el => revealObserver.observe(el));
-
-    const sectionObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (!entry.isIntersecting) return;
-        const id = entry.target.dataset.section;
-        dots.forEach(dot => dot.classList.toggle('active', dot.dataset.target === id));
-      });
-    }, { threshold: 0.45 });
-
-    sections.forEach(section => sectionObserver.observe(section));
-
-    dots.forEach(dot => {
-      dot.addEventListener('click', () => {
-        const target = document.getElementById(dot.dataset.target);
-        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
 
     document.querySelectorAll('.lightbox-trigger').forEach(item => {
       item.addEventListener('click', () => {
         const src = item.dataset.src;
-        lightboxImg.src = src;
-        lightbox.classList.add('active');
+        const img = document.getElementById('lightbox-img');
+        img.src = src;
+        document.getElementById('lightbox').classList.add('active');
       });
     });
 
-    lightbox.addEventListener('click', () => {
-      lightbox.classList.remove('active');
-      lightboxImg.src = '';
+    document.getElementById('lightbox').addEventListener('click', () => {
+      document.getElementById('lightbox').classList.remove('active');
+      document.getElementById('lightbox-img').src = '';
     });
+
+    document.querySelectorAll('[data-jump]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.jump;
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    function setupRoomDots() {
+      document.querySelectorAll('[data-room]').forEach(room => {
+        const note = room.parentElement.querySelector('.dots');
+        if (!note) return;
+        const count = room.children.length;
+        note.innerHTML = '';
+        for (let i = 0; i < count; i++) {
+          const dot = document.createElement('div');
+          dot.className = 'dot' + (i === 0 ? ' active' : '');
+          note.appendChild(dot);
+        }
+
+        const dots = [...note.children];
+        const update = () => {
+          const index = Math.round(room.scrollLeft / room.clientWidth);
+          dots.forEach((d, i) => d.classList.toggle('active', i === Math.min(index, dots.length - 1)));
+        };
+
+        room.addEventListener('scroll', update, { passive: true });
+        update();
+      });
+    }
+
+    setupRoomDots();
   </script>
 </body>
 </html>
