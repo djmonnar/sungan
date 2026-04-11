@@ -1,648 +1,962 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>순간, 스튜디오 — Mobile Gallery Walk</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>순간, 스튜디오</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preconnect" href="https://i.ibb.co" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
   <style>
-    :root{
-      --bg:#060606;
-      --panel:#0f0f0f;
-      --panel-2:#141414;
-      --line:rgba(255,255,255,.08);
-      --line-2:rgba(255,255,255,.14);
-      --text:rgba(255,255,255,.96);
-      --muted:rgba(255,255,255,.58);
-      --muted-2:rgba(255,255,255,.32);
-      --shadow:0 20px 60px rgba(0,0,0,.34);
-      --radius:24px;
-      --safe-top:max(18px, env(safe-area-inset-top));
-      --safe-bottom:max(18px, env(safe-area-inset-bottom));
+    /* ── VARIABLES ─────────────────────────────────────────── */
+    :root {
+      --bg:      #070706;
+      --surface: #0f0f0e;
+      --border:  rgba(255,255,255,.08);
+      --border2: rgba(255,255,255,.14);
+      --text:    #f0ece6;
+      --muted:   rgba(240,236,230,.50);
+      --muted2:  rgba(240,236,230,.28);
+      --accent:  #c8a86c;
+      --radius:  22px;
+      --st: max(16px, env(safe-area-inset-top));
+      --sb: max(20px, env(safe-area-inset-bottom));
     }
 
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-    html,body{height:100%;}
-    html{scroll-behavior:smooth;background:var(--bg);}
-    body{
-      font-family:'Pretendard',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-      background:var(--bg);
-      color:var(--text);
-      overflow-x:hidden;
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
+    /* ── RESET ─────────────────────────────────────────────── */
+    *, *::before, *::after {
+      box-sizing: border-box; margin: 0; padding: 0;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    img{display:block;max-width:100%;}
-    button,a{font:inherit;color:inherit;text-decoration:none;}
-
-    body::before{
-      content:'';
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:0;
-      background:
-        radial-gradient(circle at 12% 10%, rgba(255,255,255,.06), transparent 20%),
-        radial-gradient(circle at 84% 14%, rgba(255,255,255,.04), transparent 18%),
-        radial-gradient(circle at 50% 100%, rgba(255,255,255,.03), transparent 28%);
+    html, body { height: 100%; overflow: hidden; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      user-select: none;
+      -webkit-user-select: none;
     }
+    img { display: block; width: 100%; pointer-events: none; }
+    button { font: inherit; background: none; border: none; color: inherit; cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
 
-    .grain{
-      position:fixed;
-      inset:0;
-      pointer-events:none;
-      z-index:1;
-      opacity:.035;
+    /* ── GRAIN OVERLAY ─────────────────────────────────────── */
+    .grain {
+      position: fixed; inset: 0; z-index: 200;
+      pointer-events: none; opacity: .03;
       background-image:
         radial-gradient(circle at 20% 20%, #fff .5px, transparent .6px),
         radial-gradient(circle at 80% 60%, #fff .5px, transparent .6px),
         radial-gradient(circle at 50% 85%, #fff .5px, transparent .6px);
-      background-size:28px 28px, 34px 34px, 38px 38px;
+      background-size: 32px 32px, 38px 38px, 44px 44px;
     }
 
-    .topbar{
-      position:fixed;
-      top:0;left:0;right:0;
-      z-index:30;
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-start;
-      gap:16px;
-      padding:var(--safe-top) 18px 14px;
-      background:linear-gradient(to bottom, rgba(6,6,6,.84), rgba(6,6,6,.26), transparent);
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
+    /* ── DOORS (입장 애니메이션) ────────────────────────────── */
+    #doors {
+      position: fixed; inset: 0; z-index: 500;
+      display: flex;
+      perspective: 1400px;
+      transition: opacity .6s ease;
+    }
+    #doors.faded { opacity: 0; pointer-events: none; }
+
+    /* 왼쪽 문 / 오른쪽 문 */
+    .door {
+      flex: 1; height: 100%;
+      position: relative;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      will-change: transform;
+      transition: transform 1.05s cubic-bezier(.7, 0, .28, 1);
+      /* 나무결 느낌의 수직 그라디언트 */
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0px, transparent 38px,
+          rgba(255,255,255,.013) 38px, rgba(255,255,255,.013) 39px
+        ),
+        linear-gradient(180deg, #0c0b0a 0%, #070706 100%);
+    }
+    .door-l {
+      transform-origin: left center;
+      border-right: 1px solid rgba(200,168,108,.18);
+    }
+    .door-r {
+      transform-origin: right center;
+      border-left: 1px solid rgba(200,168,108,.18);
     }
 
-    .brand{font-size:.9rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;}
-    .top-meta{font-size:.72rem;line-height:1.6;color:var(--muted);text-align:right;}
+    /* 문이 열릴 때 */
+    #doors.opening .door-l { transform: rotateY(-92deg); }
+    #doors.opening .door-r { transform: rotateY( 92deg); }
 
-    .page{position:relative;z-index:2;}
+    /* 문 손잡이 */
+    .door-l::after, .door-r::before {
+      content: '';
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 5px; height: 44px; border-radius: 3px;
+      background: linear-gradient(180deg,
+        rgba(200,168,108,.5), rgba(200,168,108,.25));
+      box-shadow: 0 0 12px rgba(200,168,108,.12);
+    }
+    .door-l::after  { right: 22px; }
+    .door-r::before { left:  22px; }
 
-    .hero{
-      min-height:100svh;
-      padding:calc(var(--safe-top) + 88px) 18px var(--safe-bottom);
-      display:grid;
-      align-items:end;
+    /* 문 위의 로고 (두 문 중앙에 걸쳐 표시) */
+    #door-logo {
+      position: fixed; inset: 0; z-index: 501;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
+      pointer-events: none;
+      transition: opacity .5s ease;
+    }
+    #door-logo.faded { opacity: 0; }
+
+    .pre-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.4rem; font-weight: 300; letter-spacing: .08em;
+      opacity: 0; animation: fadeUp .9s .2s forwards;
+    }
+    .pre-sub {
+      font-size: .68rem; letter-spacing: .32em; text-transform: uppercase;
+      color: var(--muted); opacity: 0; animation: fadeUp .9s .5s forwards;
+    }
+    /* 문 중앙 금빛 선 */
+    .pre-line {
+      width: 36px; height: 1px;
+      background: var(--accent); opacity: 0;
+      animation: fadeUp .6s .7s forwards;
     }
 
-    .hero-card{
-      border:1px solid var(--line);
-      border-radius:30px;
-      overflow:hidden;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .hero-media{
-      position:relative;
-      min-height:48svh;
-      background:#111;
-      overflow:hidden;
+    /* ── HEADER ────────────────────────────────────────────── */
+    #hdr {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 40;
+      padding: var(--st) 20px 14px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      background: linear-gradient(to bottom,
+        rgba(7,7,6,.88) 0%, rgba(7,7,6,.38) 65%, transparent);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
+    .hdr-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem; font-weight: 300; letter-spacing: .07em;
+    }
+    .hdr-idx {
+      font-family: 'Cormorant Garamond', serif; font-style: italic;
+      font-size: .72rem; letter-spacing: .2em; color: var(--muted);
     }
 
-    .hero-media img{
-      width:100%;height:100%;object-fit:cover;
+    /* ── STAGE / CAROUSEL ──────────────────────────────────── */
+    #stage {
+      position: fixed; inset: 0;
+      perspective: 1500px;
+      perspective-origin: 50% 50%;
+      /* overflow visible → adjacent cards peek from screen edges */
+    }
+    #track {
+      position: absolute; inset: 0;
     }
 
-    .hero-media::after{
-      content:'';
-      position:absolute;inset:0;
-      background:linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,.18), transparent 56%);
+    /* ── CATEGORY CARDS ────────────────────────────────────── */
+    .c-card {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 88vw; left: 6vw;
+      border-radius: var(--radius);
+      overflow: hidden;
+      will-change: transform, opacity;
+      transition: transform .55s cubic-bezier(.25,.46,.45,.94),
+                  opacity  .45s ease;
+    }
+    /* Inset border ring for premium look */
+    .c-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: var(--radius);
+      border: 1px solid var(--border2);
+      z-index: 3; pointer-events: none;
     }
 
-    .hero-copy{
-      padding:22px 18px 20px;
-      display:grid;
-      gap:16px;
+    .c-img-wrap {
+      position: absolute; inset: 0; overflow: hidden;
+    }
+    .c-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .4s ease;
+      will-change: transform;
+    }
+    /* Multi-layer gradient for depth */
+    .c-img-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(to top,
+          rgba(0,0,0,.88) 0%,
+          rgba(0,0,0,.32) 42%,
+          rgba(0,0,0,.08) 68%,
+          transparent 100%),
+        linear-gradient(to bottom,
+          rgba(0,0,0,.28) 0%,
+          transparent 28%);
     }
 
-    .eyebrow{font-size:.72rem;letter-spacing:.24em;color:var(--muted-2);text-transform:uppercase;}
-    h1{font-size:clamp(2.8rem, 14vw, 5.8rem);line-height:.9;letter-spacing:-.07em;font-weight:700;}
-    .hero-desc{font-size:.94rem;line-height:1.9;color:var(--muted);max-width:34rem;}
-    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;}
-
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;
-      min-height:46px;padding:0 16px;border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
-      background:transparent;color:#fff;
-      cursor:pointer;transition:.25s ease;
+    .c-body {
+      position: absolute; bottom: 0; left: 0; right: 0; z-index: 2;
+      padding: 0 22px calc(var(--sb) + 80px);
     }
-    .btn.primary{background:rgba(255,255,255,.92);color:#090909;border-color:transparent;}
-
-    .hint-bar{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
+    .c-room {
+      font-size: .66rem; letter-spacing: .28em; text-transform: uppercase;
+      font-family: 'Cormorant Garamond', serif; font-style: italic;
+      color: var(--accent); margin-bottom: 8px;
     }
-
-    .hint{
-      border:1px solid var(--line);
-      border-radius:18px;
-      padding:12px 14px;
-      background:rgba(255,255,255,.03);
-      font-size:.78rem;
-      color:var(--muted);
-      line-height:1.7;
+    .c-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 13vw, 5.5rem);
+      line-height: .88; font-weight: 300; letter-spacing: -.02em;
     }
-
-    .section{
-      min-height:100svh;
-      padding:calc(var(--safe-top) + 72px) 0 var(--safe-bottom);
-      display:grid;
-      align-items:center;
+    .c-ko {
+      font-size: .78rem; letter-spacing: .12em; color: var(--muted);
+      margin-top: 8px;
     }
+    .c-count {
+      font-size: .68rem; color: var(--muted2); margin-top: 4px;
+      letter-spacing: .1em;
+    }
+    .c-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
 
-    .section-head{
-      padding:0 18px 14px;
-      display:grid;
-      gap:8px;
+    .btn-more {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 44px; padding: 0 20px; border-radius: 999px;
+      border: 1px solid var(--border2);
+      background: rgba(255,255,255,.09);
+      font-size: .82rem; letter-spacing: .06em;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background .2s, transform .15s;
+    }
+    .btn-more:active { transform: scale(.97); background: rgba(255,255,255,.16); }
+    .btn-more.gold {
+      background: var(--accent); border-color: transparent;
+      color: #18120a; font-weight: 700;
     }
 
-    .section-head h2{
-      font-size:clamp(2rem, 10vw, 3.5rem);
-      line-height:.95;
-      letter-spacing:-.06em;
-      font-weight:700;
+    /* About card special styling */
+    .about-lines { margin-top: 18px; display: grid; gap: 0; }
+    .about-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.07);
+      font-size: .84rem; gap: 12px;
+    }
+    .about-row span { color: var(--muted); flex-shrink: 0; }
+    .about-row strong { text-align: right; font-weight: 500; }
+
+    /* ── HUD / DOTS ─────────────────────────────────────────── */
+    #hud {
+      position: fixed; bottom: calc(var(--sb) + 16px);
+      left: 0; right: 0; z-index: 40;
+      display: flex; flex-direction: column; align-items: center; gap: 9px;
+      pointer-events: none;
+    }
+    .hud-dots { display: flex; gap: 7px; align-items: center; }
+    .hud-dot {
+      height: 5px; border-radius: 999px;
+      background: rgba(255,255,255,.22);
+      transition: width .35s ease, background .35s;
+      width: 5px;
+    }
+    .hud-dot.on { width: 26px; background: var(--text); }
+    .hud-tip {
+      font-size: .64rem; letter-spacing: .2em;
+      color: var(--muted2); text-transform: uppercase;
     }
 
-    .section-head p{
-      color:var(--muted);
-      font-size:.92rem;
-      line-height:1.85;
-      max-width:34rem;
+    /* ── SIDE ARROWS ─────────────────────────────────────────── */
+    .arr-wrap {
+      position: fixed; bottom: calc(var(--sb) + 62px);
+      left: 0; right: 0; z-index: 40;
+      display: flex; justify-content: space-between; padding: 0 8px;
+      pointer-events: none;
+    }
+    .arr {
+      pointer-events: all;
+      width: 38px; height: 38px; border-radius: 50%;
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      display: grid; place-items: center;
+      font-size: 1.2rem; line-height: 1;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      transition: opacity .3s, background .2s;
+    }
+    .arr:active { background: rgba(255,255,255,.13); }
+    .arr.hide { opacity: 0; pointer-events: none; }
+
+    /* ── DETAIL OVERLAY ──────────────────────────────────────── */
+    #detail {
+      position: fixed; inset: 0; z-index: 60;
+      background: var(--bg);
+      transform: translateY(100%);
+      transition: transform .52s cubic-bezier(.32,.72,0,1);
+      overflow-y: auto; overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+    }
+    #detail.open { transform: translateY(0); }
+
+    .d-header {
+      position: sticky; top: 0; z-index: 10;
+      padding: var(--st) 18px 14px;
+      display: flex; justify-content: space-between; align-items: flex-end;
+      background: linear-gradient(to bottom, var(--bg) 75%, transparent);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .d-back {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .8rem; color: var(--muted); padding: 6px 0;
+    }
+    .d-back svg { width: 15px; height: 15px; }
+    .d-cat-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem; font-weight: 300; letter-spacing: .08em;
+      color: var(--muted);
     }
 
-    .section-map{
-      display:flex;
-      gap:8px;
-      padding:0 18px 14px;
-      flex-wrap:wrap;
-      color:var(--muted-2);
-      font-size:.72rem;
-      letter-spacing:.14em;
-      text-transform:uppercase;
+    .d-body { padding: 4px 14px calc(var(--sb) + 48px); }
+
+    .d-head {
+      padding: 12px 4px 22px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .d-head h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.5rem, 17vw, 6.5rem);
+      line-height: .86; font-weight: 300; letter-spacing: -.03em;
+    }
+    .d-head p {
+      margin-top: 14px; font-size: .88rem;
+      line-height: 1.88; color: var(--muted);
     }
 
-    .room{
-      overflow-x:auto;
-      overflow-y:hidden;
-      display:grid;
-      grid-auto-flow:column;
-      grid-auto-columns:88vw;
-      gap:14px;
-      padding:0 18px 10px;
-      scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
+    /* Photo grid – masonry-style 2 col */
+    .photo-grid { columns: 2; column-gap: 8px; }
+    .p-item {
+      break-inside: avoid; margin-bottom: 8px;
+      border-radius: 14px; overflow: hidden;
+      position: relative; cursor: pointer;
+      border: 1px solid var(--border);
     }
-    .room::-webkit-scrollbar{display:none;}
-
-    .wall{
-      position:relative;
-      scroll-snap-align:center;
-      min-height:62svh;
-      border-radius:28px;
-      overflow:hidden;
-      background:var(--panel);
-      border:1px solid var(--line);
-      box-shadow:var(--shadow);
-      display:grid;
-      grid-template-rows:1fr auto;
+    .p-item img { width: 100%; display: block; transition: transform .4s ease; }
+    .p-item:active img { transform: scale(.97); }
+    .p-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 28px 10px 10px;
+      background: linear-gradient(to top, rgba(0,0,0,.72), transparent);
+      font-size: .7rem; letter-spacing: .08em;
+      color: rgba(255,255,255,.82);
     }
 
-    .wall.single{grid-auto-columns:92vw;}
-
-    .wall-image{
-      position:relative;
-      min-height:0;
-      background:#111;
-      overflow:hidden;
+    /* Video cards */
+    .video-grid { display: grid; gap: 12px; }
+    .v-card {
+      border: 1px solid var(--border); border-radius: 18px;
+      overflow: hidden; background: var(--surface);
+    }
+    .v-thumb { position: relative; aspect-ratio: 16 / 10; overflow: hidden; }
+    .v-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .v-play {
+      position: absolute; inset: 0;
+      display: grid; place-items: center;
+      background: rgba(0,0,0,.28);
+    }
+    .v-circle {
+      width: 54px; height: 54px; border-radius: 50%;
+      background: rgba(255,255,255,.92);
+      display: grid; place-items: center;
+      box-shadow: 0 10px 36px rgba(0,0,0,.45);
+    }
+    .v-circle svg { width: 18px; height: 18px; fill: #0a0a09; margin-left: 3px; }
+    .v-meta { padding: 14px 16px; }
+    .v-meta strong { font-size: .95rem; font-weight: 600; }
+    .v-meta span {
+      display: block; margin-top: 3px;
+      font-size: .78rem; color: var(--muted);
     }
 
-    .wall-image img{
-      width:100%;height:100%;object-fit:cover;
-      content-visibility:auto;
+    /* ── LIGHTBOX ─────────────────────────────────────────────── */
+    #lb {
+      position: fixed; inset: 0; z-index: 80;
+      background: rgba(0,0,0,.97);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
     }
+    #lb.open { display: flex; }
 
-    .wall-image::after{
-      content:'';
-      position:absolute;inset:0;
-      background:linear-gradient(to top, rgba(0,0,0,.36), transparent 34%);
-      pointer-events:none;
+    .lb-close {
+      position: fixed; top: calc(var(--st) + 4px); right: 16px;
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,.1);
+      display: grid; place-items: center;
+      font-size: 1rem; z-index: 5;
+      transition: background .2s;
     }
+    .lb-close:active { background: rgba(255,255,255,.2); }
 
-    .wall-info{
-      display:flex;
-      justify-content:space-between;
-      align-items:flex-end;
-      gap:12px;
-      padding:14px 14px 16px;
-      background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.03));
+    #lb-wrap {
+      flex: 1; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 8px; overflow: hidden;
     }
-
-    .wall-title{font-size:1rem;font-weight:600;letter-spacing:-.02em;}
-    .wall-meta{font-size:.76rem;color:var(--muted);line-height:1.6;text-align:right;}
-
-    .room-note{
-      padding:0 18px;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-top:12px;
+    #lb-img {
+      max-width: 100%; max-height: 84svh;
+      object-fit: contain; border-radius: 8px;
+      transition: opacity .22s ease;
     }
+    #lb-img.dim { opacity: 0; }
 
-    .room-note span{font-size:.78rem;color:var(--muted);line-height:1.7;}
-
-    .dots{display:flex;gap:6px;align-items:center;}
-    .dot{width:7px;height:7px;border-radius:999px;background:rgba(255,255,255,.18);}
-    .dot.active{width:24px;background:rgba(255,255,255,.94);}
-
-    .transition-room{
-      padding:calc(var(--safe-top) + 72px) 18px var(--safe-bottom);
-      min-height:72svh;
-      display:grid;
-      align-items:center;
+    .lb-foot {
+      width: 100%;
+      padding: 12px 20px calc(var(--sb) + 6px);
+      display: flex; align-items: center; justify-content: space-between;
     }
-
-    .transition-card{
-      border:1px solid var(--line);
-      border-radius:30px;
-      padding:26px 18px;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      box-shadow:var(--shadow);
-      display:grid;
-      gap:12px;
+    #lb-ctr { font-size: .76rem; color: var(--muted); letter-spacing: .14em; }
+    .lb-navs { display: flex; gap: 8px; }
+    .lb-navs button {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: rgba(255,255,255,.08);
+      border: 1px solid var(--border2);
+      font-size: 1.4rem; display: grid; place-items: center;
+      transition: background .2s;
     }
-
-    .transition-card h3{font-size:clamp(1.8rem,8vw,3rem);line-height:1;letter-spacing:-.05em;}
-    .transition-card p{font-size:.92rem;line-height:1.9;color:var(--muted);max-width:34rem;}
-
-    .motion-list{
-      overflow-x:auto;
-      display:grid;
-      grid-auto-flow:column;
-      grid-auto-columns:82vw;
-      gap:14px;
-      padding:0 18px 10px;
-      scroll-snap-type:x mandatory;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;
-    }
-    .motion-list::-webkit-scrollbar{display:none;}
-
-    .video-card{
-      scroll-snap-align:center;
-      border:1px solid var(--line);
-      border-radius:24px;
-      overflow:hidden;
-      background:var(--panel);
-      box-shadow:var(--shadow);
-    }
-
-    .video-thumb{position:relative;aspect-ratio:16/10;background:#111;}
-    .video-thumb img{width:100%;height:100%;object-fit:cover;}
-    .play{
-      position:absolute;inset:0;display:grid;place-items:center;
-    }
-    .play::after{
-      content:'▶';width:56px;height:56px;border-radius:50%;display:grid;place-items:center;
-      background:rgba(255,255,255,.92);color:#090909;padding-left:3px;
-      box-shadow:0 14px 30px rgba(0,0,0,.26);
-    }
-
-    .video-info{padding:16px;display:grid;gap:6px;}
-    .video-info strong{font-size:1rem;font-weight:600;}
-    .video-info span{font-size:.82rem;color:var(--muted);line-height:1.7;}
-
-    .about{
-      padding:calc(var(--safe-top) + 72px) 18px calc(var(--safe-bottom) + 24px);
-      min-height:100svh;
-      display:grid;
-      gap:14px;
-      align-content:center;
-    }
-
-    .panel{
-      border:1px solid var(--line);
-      border-radius:26px;
-      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      padding:22px 18px;
-      box-shadow:var(--shadow);
-    }
-
-    .panel h3{font-size:1.6rem;letter-spacing:-.04em;margin-bottom:10px;}
-    .panel p{font-size:.92rem;line-height:1.9;color:var(--muted);}
-    .contact-list{margin-top:18px;display:grid;gap:12px;}
-    .contact-item{display:flex;justify-content:space-between;gap:10px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06);font-size:.88rem;}
-    .contact-item span{color:var(--muted);}
-
-    .section-nav{
-      position:fixed;
-      right:14px;
-      bottom:calc(var(--safe-bottom) + 8px);
-      z-index:26;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
-    .nav-pill{
-      min-width:42px;height:42px;padding:0 14px;
-      border-radius:999px;
-      border:1px solid var(--line);
-      background:rgba(10,10,10,.56);
-      color:#fff;
-      backdrop-filter:blur(12px);
-      -webkit-backdrop-filter:blur(12px);
-      display:inline-flex;align-items:center;justify-content:center;
-      font-size:.84rem;
-      cursor:pointer;
-    }
-
-    .reveal{opacity:0;transform:translateY(20px);transition:opacity .7s ease, transform .7s ease;}
-    .reveal.in-view{opacity:1;transform:translateY(0);}
-
-    #lightbox{
-      position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;
-      padding:18px;background:rgba(0,0,0,.95);
-    }
-    #lightbox.active{display:flex;}
-    #lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.55);}
-
-    @media (min-width: 900px){
-      .hero,.section,.transition-room,.about{max-width:560px;margin:0 auto;}
-      .section-nav{right:max(14px, calc(50vw - 380px));}
-    }
+    .lb-navs button:active { background: rgba(255,255,255,.16); }
+    .lb-navs button:disabled { opacity: .3; }
   </style>
 </head>
 <body>
-  <div class="grain"></div>
 
-  <header class="topbar">
-    <div class="brand">MOMENT STUDIO</div>
-    <div class="top-meta">모바일 전시형 포트폴리오<br>세로 이동 + 가로 벽면 탐색</div>
-  </header>
+<div class="grain"></div>
 
-  <main class="page">
-    <section class="hero reveal" id="intro">
-      <article class="hero-card">
-        <div class="hero-media">
-          <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="순간 스튜디오 대표 이미지" fetchpriority="high" loading="eager" decoding="async" referrerpolicy="no-referrer">
-        </div>
-        <div class="hero-copy">
-          <div class="eyebrow">Mobile Gallery Walk</div>
-          <h1>스크롤로<br>걷는 갤러리</h1>
-          <p class="hero-desc">한 방향으로만 내려가는 페이지가 아니라, 전시실마다 좌우로 벽을 넘겨보고 다시 아래로 내려가 다음 공간으로 이동하는 구조입니다. 모바일에서 실제로 갤러리를 도는 느낌에 더 가깝게 설계했습니다.</p>
-          <div class="hero-actions">
-            <a class="btn primary" href="#room-commercial">전시 시작</a>
-            <a class="btn" href="#about">문의 보기</a>
-          </div>
-          <div class="hint-bar">
-            <div class="hint">위아래로 내리면 다음 전시실로 이동</div>
-            <div class="hint">각 전시실 안에서는 좌우로 넘겨 벽면 감상</div>
-          </div>
-        </div>
-      </article>
-    </section>
+<!-- DOORS (입장 애니메이션) -->
+<div id="doors">
+  <div class="door door-l"></div>
+  <div class="door door-r"></div>
+</div>
+<!-- 문 위 로고 (별도 레이어로 문과 함께 페이드) -->
+<div id="door-logo">
+  <div class="pre-line"></div>
+  <div class="pre-logo">순간, 스튜디오</div>
+  <div class="pre-sub">Moment Studio · Jinju</div>
+  <div class="pre-line"></div>
+</div>
 
-    <section class="section reveal" id="room-commercial">
-      <div class="section-head">
-        <div class="eyebrow">Room 01</div>
-        <h2>Commercial</h2>
-        <p>첫 번째 전시실입니다. 좌우로 넘기면서 각 벽면을 보는 구조로 만들었습니다. 쓸데없는 설명은 빼고, 사진 자체와 카테고리만 보이게 정리했습니다.</p>
-      </div>
-      <div class="section-map"><span>left wall</span><span>center wall</span><span>right wall</span></div>
-      <div class="room" data-room>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/bgVfDWBB/vr.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/bgVfDWBB/vr.jpg" alt="commercial 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Product 01</div><div class="wall-meta">Commercial<br>Wall A</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/zhKgwjvF/vr.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/zhKgwjvF/vr.jpg" alt="commercial 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Product 02</div><div class="wall-meta">Commercial<br>Wall B</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/spVX6587/1.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/spVX6587/1.jpg" alt="branding 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Branding 01</div><div class="wall-meta">Branding<br>Wall C</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/wZKZhKZd/2.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/wZKZhKZd/2.jpg" alt="branding 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Branding 02</div><div class="wall-meta">Branding<br>Wall D</div></div>
-        </article>
-      </div>
-      <div class="room-note"><span>좌우로 밀어 다른 벽면 보기</span><div class="dots"></div></div>
-    </section>
+<!-- HEADER -->
+<header id="hdr">
+  <div class="hdr-logo">순간, 스튜디오</div>
+  <div class="hdr-idx" id="hdr-idx">01 / 05</div>
+</header>
 
-    <section class="transition-room reveal">
-      <div class="transition-card">
-        <div class="eyebrow">Move Forward</div>
-        <h3>다음 전시실로 이동</h3>
-        <p>갤러리 복도를 지나듯 아래로 내려갑니다. 한 공간을 다 본 뒤 다음 주제로 넘어가는 흐름입니다.</p>
-      </div>
-    </section>
+<!-- STAGE (3D Carousel) -->
+<div id="stage">
+  <div id="track"><!-- JS로 카드 생성 --></div>
+</div>
 
-    <section class="section reveal" id="room-portrait">
-      <div class="section-head">
-        <div class="eyebrow">Room 02</div>
-        <h2>Portrait</h2>
-        <p>인물 전시실은 하나의 벽면이 아니라 연속된 인물 프레임으로 구성했습니다. 모바일에서 좌우로 넘기면서 천천히 보는 방식이 가장 잘 맞습니다.</p>
-      </div>
-      <div class="section-map"><span>portrait wall 1</span><span>portrait wall 2</span><span>portrait wall 3</span></div>
-      <div class="room" data-room>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/ks6QB1J7/1-1.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="portrait 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 01</div><div class="wall-meta">People<br>Wall A</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/SX0XmQXR/1-2.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/SX0XmQXR/1-2.jpg" alt="portrait 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 02</div><div class="wall-meta">People<br>Wall B</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/DgpybcdJ/1-3.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/DgpybcdJ/1-3.jpg" alt="portrait 3" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 03</div><div class="wall-meta">People<br>Wall C</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/G4tYPyXx/1-4.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/G4tYPyXx/1-4.jpg" alt="portrait 4" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 04</div><div class="wall-meta">People<br>Wall D</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/B2cTdydH/1-5.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/B2cTdydH/1-5.jpg" alt="portrait 5" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 05</div><div class="wall-meta">People<br>Wall E</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/PGB80nj7/1-6.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/PGB80nj7/1-6.jpg" alt="portrait 6" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Portrait 06</div><div class="wall-meta">People<br>Wall F</div></div>
-        </article>
-      </div>
-      <div class="room-note"><span>옆으로 넘기며 인물 전시 감상</span><div class="dots"></div></div>
-    </section>
+<!-- SIDE ARROWS -->
+<div class="arr-wrap">
+  <button class="arr hide" id="arr-l">‹</button>
+  <button class="arr" id="arr-r">›</button>
+</div>
 
-    <section class="transition-room reveal">
-      <div class="transition-card">
-        <div class="eyebrow">Cross Hall</div>
-        <h3>다른 분위기의 방으로</h3>
-        <p>전시실 사이에 짧은 완충 구간을 둬서 실제 공간을 이동하는 느낌을 더했습니다.</p>
-      </div>
-    </section>
+<!-- BOTTOM HUD -->
+<div id="hud">
+  <div class="hud-dots" id="dots"></div>
+  <div class="hud-tip">좌우로 넘기기</div>
+</div>
 
-    <section class="section reveal" id="room-food">
-      <div class="section-head">
-        <div class="eyebrow">Room 03</div>
-        <h2>Food & Night</h2>
-        <p>푸드와 야간 무드를 같은 방에서 이어지게 구성했습니다. 아래로 이동해 방을 바꾸고, 방 안에서는 좌우로 벽면을 넘깁니다.</p>
-      </div>
-      <div class="section-map"><span>food</span><span>night</span><span>detail</span></div>
-      <div class="room" data-room>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg" alt="food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Food 01</div><div class="wall-meta">Food<br>Wall A</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg" alt="food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Food 02</div><div class="wall-meta">Food<br>Wall B</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/xdFXY4X/DSC08642.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/xdFXY4X/DSC08642.jpg" alt="night food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Night 01</div><div class="wall-meta">Night Food<br>Wall C</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/BKKgggYn/DSC08650.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/BKKgggYn/DSC08650.jpg" alt="night food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Night 02</div><div class="wall-meta">Night Food<br>Wall D</div></div>
-        </article>
-        <article class="wall lightbox-trigger" data-src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg">
-          <div class="wall-image"><img src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg" alt="night food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer"></div>
-          <div class="wall-info"><div class="wall-title">Night 03</div><div class="wall-meta">Night Food<br>Wall E</div></div>
-        </article>
-      </div>
-      <div class="room-note"><span>사진을 탭하면 전체 화면으로 확대</span><div class="dots"></div></div>
-    </section>
-
-    <section class="section reveal" id="room-motion">
-      <div class="section-head">
-        <div class="eyebrow">Room 04</div>
-        <h2>Motion</h2>
-        <p>마지막은 상영관처럼 좌우로 넘겨보는 영상 카드입니다.</p>
-      </div>
-      <div class="motion-list" data-room>
-        <a class="video-card" href="https://youtu.be/WEPXeWG6rE4" target="_blank" rel="noopener noreferrer">
-          <div class="video-thumb">
-            <img src="https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg" alt="DASHU 광고" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <div class="play"></div>
-          </div>
-          <div class="video-info"><strong>DASHU 광고</strong><span>Motion Screening 01</span></div>
-        </a>
-        <a class="video-card" href="https://youtu.be/b-_Sh5KLv2c" target="_blank" rel="noopener noreferrer">
-          <div class="video-thumb">
-            <img src="https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg" alt="MIP 립밤" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <div class="play"></div>
-          </div>
-          <div class="video-info"><strong>MIP 립밤</strong><span>Motion Screening 02</span></div>
-        </a>
-        <a class="video-card" href="https://youtu.be/ba3QbhE1s08" target="_blank" rel="noopener noreferrer">
-          <div class="video-thumb">
-            <img src="https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg" alt="밤깨비 농장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-            <div class="play"></div>
-          </div>
-          <div class="video-info"><strong>밤깨비 농장</strong><span>Motion Screening 03</span></div>
-        </a>
-      </div>
-      <div class="room-note"><span>영상은 유튜브 새 창으로 열림</span><div class="dots"></div></div>
-    </section>
-
-    <section class="about reveal" id="about">
-      <article class="panel">
-        <div class="eyebrow">About</div>
-        <h3>순간, 스튜디오</h3>
-        <p>이 페이지는 모바일 화면에서 전시를 관람하는 감각에 맞춰 설계했습니다. 과한 설명 대신, 방을 이동하고 벽을 넘겨보는 느낌에 집중했습니다.</p>
-      </article>
-      <article class="panel">
-        <div class="eyebrow">Contact</div>
-        <h3>프로젝트 문의</h3>
-        <p>아래 정보는 예시입니다. 실제 이메일, 인스타, 예약 링크로 교체해서 사용하면 됩니다.</p>
-        <div class="contact-list">
-          <div class="contact-item"><span>Email</span><strong>momentstudio@example.com</strong></div>
-          <div class="contact-item"><span>Instagram</span><strong>@moment.studio</strong></div>
-          <div class="contact-item"><span>Location</span><strong>Jinju, Korea</strong></div>
-        </div>
-        <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;">
-          <a class="btn primary" href="mailto:momentstudio@example.com">이메일</a>
-          <a class="btn" href="#intro">맨 위로</a>
-        </div>
-      </article>
-    </section>
-  </main>
-
-  <div class="section-nav">
-    <button class="nav-pill" data-jump="intro">↑</button>
-    <button class="nav-pill" data-jump="room-commercial">1</button>
-    <button class="nav-pill" data-jump="room-portrait">2</button>
-    <button class="nav-pill" data-jump="room-food">3</button>
-    <button class="nav-pill" data-jump="room-motion">4</button>
+<!-- DETAIL OVERLAY -->
+<div id="detail">
+  <div class="d-header">
+    <button class="d-back" id="d-back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+      돌아가기
+    </button>
+    <div class="d-cat-name" id="d-name"></div>
   </div>
+  <div class="d-body" id="d-body"></div>
+</div>
 
-  <div id="lightbox"><img id="lightbox-img" src="" alt="expanded artwork"></div>
+<!-- LIGHTBOX -->
+<div id="lb">
+  <button class="lb-close" id="lb-close">✕</button>
+  <div id="lb-wrap"><img id="lb-img" src="" alt="갤러리 이미지"></div>
+  <div class="lb-foot">
+    <div id="lb-ctr">1 / 1</div>
+    <div class="lb-navs">
+      <button id="lb-p">‹</button>
+      <button id="lb-n">›</button>
+    </div>
+  </div>
+</div>
 
-  <script>
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) entry.target.classList.add('in-view');
-      });
-    }, { threshold: 0.12 });
+<script>
+/* ════════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════════ */
+const CATS = [
+  {
+    id: 'commercial', en: 'Commercial', ko: '상업 사진', room: 'Room 01',
+    desc: '제품, 브랜딩, 광고 촬영을 담았습니다. 브랜드의 본질을 한 장면에 압축합니다.',
+    feat: 'https://i.ibb.co/bgVfDWBB/vr.jpg',
+    type: 'photo',
+    items: [
+      { src: 'https://i.ibb.co/bgVfDWBB/vr.jpg',    title: 'Product 01' },
+      { src: 'https://i.ibb.co/zhKgwjvF/vr.jpg',    title: 'Product 02' },
+      { src: 'https://i.ibb.co/spVX6587/1.jpg',     title: 'Branding 01' },
+      { src: 'https://i.ibb.co/wZKZhKZd/2.jpg',     title: 'Branding 02' },
+    ]
+  },
+  {
+    id: 'portrait', en: 'Portrait', ko: '인물 사진', room: 'Room 02',
+    desc: '사람의 순간을 담는 일이 스튜디오의 가장 큰 즐거움입니다.',
+    feat: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+    type: 'photo',
+    items: [
+      { src: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',   title: 'Portrait 01' },
+      { src: 'https://i.ibb.co/SX0XmQXR/1-2.jpg',   title: 'Portrait 02' },
+      { src: 'https://i.ibb.co/DgpybcdJ/1-3.jpg',   title: 'Portrait 03' },
+      { src: 'https://i.ibb.co/G4tYPyXx/1-4.jpg',   title: 'Portrait 04' },
+      { src: 'https://i.ibb.co/B2cTdydH/1-5.jpg',   title: 'Portrait 05' },
+      { src: 'https://i.ibb.co/PGB80nj7/1-6.jpg',   title: 'Portrait 06' },
+    ]
+  },
+  {
+    id: 'food', en: 'Food & Night', ko: '푸드 & 야간', room: 'Room 03',
+    desc: '음식과 빛, 야간의 분위기를 하나의 프레임에 담습니다.',
+    feat: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg',
+    type: 'photo',
+    items: [
+      { src: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg', title: 'Food 01' },
+      { src: 'https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg', title: 'Food 02' },
+      { src: 'https://i.ibb.co/xdFXY4X/DSC08642.jpg',    title: 'Night 01' },
+      { src: 'https://i.ibb.co/BKKgggYn/DSC08650.jpg',   title: 'Night 02' },
+      { src: 'https://i.ibb.co/tPkTZDnX/DSC08652.jpg',   title: 'Night 03' },
+    ]
+  },
+  {
+    id: 'motion', en: 'Motion', ko: '영상', room: 'Room 04',
+    desc: '움직이는 이미지로 브랜드를 이야기합니다.',
+    feat: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+    type: 'video',
+    items: [
+      { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',   sub: 'Motion 01' },
+      { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
+        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',    sub: 'Motion 02' },
+      { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
+        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장',   sub: 'Motion 03' },
+    ]
+  },
+  {
+    id: 'about', en: 'Contact', ko: '문의', room: 'About',
+    feat: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+    type: 'about',
+  }
+];
 
-    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+/* ════════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════════ */
+let cur = 0;
+const N = CATS.length;
 
-    document.querySelectorAll('.lightbox-trigger').forEach(item => {
-      item.addEventListener('click', () => {
-        const src = item.dataset.src;
-        const img = document.getElementById('lightbox-img');
-        img.src = src;
-        document.getElementById('lightbox').classList.add('active');
-      });
-    });
+/* ════════════════════════════════════════════════════
+   ELEMENTS
+════════════════════════════════════════════════════ */
+const track   = document.getElementById('track');
+const hdrIdx  = document.getElementById('hdr-idx');
+const dotsEl  = document.getElementById('dots');
+const arrL    = document.getElementById('arr-l');
+const arrR    = document.getElementById('arr-r');
+const detail  = document.getElementById('detail');
+const dName   = document.getElementById('d-name');
+const dBody   = document.getElementById('d-body');
+const dBack   = document.getElementById('d-back');
+const lb      = document.getElementById('lb');
+const lbImg   = document.getElementById('lb-img');
+const lbCtr   = document.getElementById('lb-ctr');
+const lbClose = document.getElementById('lb-close');
+const lbP     = document.getElementById('lb-p');
+const lbN     = document.getElementById('lb-n');
 
-    document.getElementById('lightbox').addEventListener('click', () => {
-      document.getElementById('lightbox').classList.remove('active');
-      document.getElementById('lightbox-img').src = '';
-    });
+/* ════════════════════════════════════════════════════
+   BUILD CARDS
+════════════════════════════════════════════════════ */
+function buildCards() {
+  CATS.forEach((cat, i) => {
+    const card = document.createElement('div');
+    card.className = 'c-card';
+    card.dataset.i = i;
 
-    document.querySelectorAll('[data-jump]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.jump;
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    });
+    let bodyHTML = '';
 
-    function setupRoomDots() {
-      document.querySelectorAll('[data-room]').forEach(room => {
-        const note = room.parentElement.querySelector('.dots');
-        if (!note) return;
-        const count = room.children.length;
-        note.innerHTML = '';
-        for (let i = 0; i < count; i++) {
-          const dot = document.createElement('div');
-          dot.className = 'dot' + (i === 0 ? ' active' : '');
-          note.appendChild(dot);
-        }
-
-        const dots = [...note.children];
-        const update = () => {
-          const index = Math.round(room.scrollLeft / room.clientWidth);
-          dots.forEach((d, i) => d.classList.toggle('active', i === Math.min(index, dots.length - 1)));
-        };
-
-        room.addEventListener('scroll', update, { passive: true });
-        update();
-      });
+    if (cat.type === 'about') {
+      bodyHTML = `
+        <div class="c-room">${cat.room}</div>
+        <div class="c-title">${cat.en}</div>
+        <div class="about-lines">
+          <div class="about-row"><span>Email</span><strong>momentstudio@example.com</strong></div>
+          <div class="about-row"><span>Instagram</span><strong>@moment.studio</strong></div>
+          <div class="about-row"><span>Location</span><strong>경남 진주시</strong></div>
+        </div>
+        <div class="c-actions">
+          <a class="btn-more gold" href="mailto:momentstudio@example.com">이메일 문의</a>
+        </div>`;
+    } else {
+      bodyHTML = `
+        <div class="c-room">${cat.room}</div>
+        <div class="c-title">${cat.en}</div>
+        <div class="c-ko">${cat.ko}</div>
+        <div class="c-count">${cat.items.length}점 수록</div>
+        <div class="c-actions">
+          <button class="btn-more gold" data-open="${cat.id}">전체 보기</button>
+        </div>`;
     }
 
-    setupRoomDots();
-  </script>
+    card.innerHTML = `
+      <div class="c-img-wrap">
+        <img
+          src="${cat.feat}"
+          alt="${cat.en}"
+          loading="${i === 0 ? 'eager' : 'lazy'}"
+          fetchpriority="${i === 0 ? 'high' : 'auto'}"
+          referrerpolicy="no-referrer"
+          decoding="async">
+      </div>
+      <div class="c-body">${bodyHTML}</div>`;
+
+    track.appendChild(card);
+  });
+
+  /* Bind 전체 보기 buttons */
+  track.querySelectorAll('[data-open]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      openDetail(btn.dataset.open);
+    });
+  });
+
+  setPositions(false);
+  buildDots();
+  updateNav();
+}
+
+/* ════════════════════════════════════════════════════
+   CAROUSEL POSITIONING  (3D coverflow)
+════════════════════════════════════════════════════ */
+function setPositions(animate = true) {
+  const cards = track.querySelectorAll('.c-card');
+  cards.forEach((card, i) => {
+    const off    = i - cur;
+    const absOff = Math.abs(off);
+
+    /* 3D transform values */
+    const tx      = off * 80;               /* vw  – adjacent cards peek ±14vw */
+    const rotY    = off * -14;              /* deg – coverflow tilt */
+    const scale   = 1 - absOff * 0.085;    /* scale down non-active */
+    const opacity = absOff === 0 ? 1 : absOff === 1 ? 0.6 : 0.15;
+
+    if (!animate) {
+      card.style.transition = 'none';
+    }
+
+    card.style.transform =
+      `translateX(${tx}vw) rotateY(${rotY}deg) scale(${scale})`;
+    card.style.opacity      = opacity;
+    card.style.zIndex       = 10 - absOff;
+    card.style.pointerEvents = off === 0 ? 'auto' : 'none';
+
+    if (!animate) {
+      /* Force reflow so transition: none takes effect, then restore */
+      void card.offsetHeight;
+      card.style.transition = '';
+    }
+  });
+
+  updateDots();
+  updateHeader();
+  updateNav();
+}
+
+/* ════════════════════════════════════════════════════
+   DOTS / HEADER / ARROWS
+════════════════════════════════════════════════════ */
+function buildDots() {
+  dotsEl.innerHTML = '';
+  CATS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'hud-dot' + (i === 0 ? ' on' : '');
+    dotsEl.appendChild(d);
+  });
+}
+function updateDots() {
+  dotsEl.querySelectorAll('.hud-dot')
+    .forEach((d, i) => d.classList.toggle('on', i === cur));
+}
+function updateHeader() {
+  hdrIdx.textContent =
+    `${String(cur + 1).padStart(2,'0')} / ${String(N).padStart(2,'0')}`;
+}
+function updateNav() {
+  arrL.classList.toggle('hide', cur === 0);
+  arrR.classList.toggle('hide', cur === N - 1);
+}
+
+/* ════════════════════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════════════════════ */
+function goTo(n) {
+  if (n < 0 || n >= N) return;
+  cur = n;
+  setPositions(true);
+}
+
+arrL.addEventListener('click', () => goTo(cur - 1));
+arrR.addEventListener('click', () => goTo(cur + 1));
+
+/* ════════════════════════════════════════════════════
+   TOUCH / SWIPE  (carousel)
+════════════════════════════════════════════════════ */
+let tsX = 0, tsY = 0, swipeDir = null, swiping = false;
+
+document.getElementById('stage').addEventListener('touchstart', e => {
+  if (detail.classList.contains('open') || lb.classList.contains('open')) return;
+  tsX = e.touches[0].clientX;
+  tsY = e.touches[0].clientY;
+  swiping = true;
+  swipeDir = null;
+}, { passive: true });
+
+document.getElementById('stage').addEventListener('touchmove', e => {
+  if (!swiping) return;
+  const dx = e.touches[0].clientX - tsX;
+  const dy = e.touches[0].clientY - tsY;
+  if (!swipeDir) swipeDir = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
+  if (swipeDir === 'h') e.preventDefault();
+}, { passive: false });
+
+document.getElementById('stage').addEventListener('touchend', e => {
+  if (!swiping || swipeDir !== 'h') { swiping = false; return; }
+  const dx = e.changedTouches[0].clientX - tsX;
+  swiping = false; swipeDir = null;
+  if (Math.abs(dx) < 40) return;
+  goTo(dx < 0 ? cur + 1 : cur - 1);
+});
+
+/* ════════════════════════════════════════════════════
+   KEYBOARD
+════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (lb.classList.contains('open')) {
+    if (e.key === 'Escape')      closeLightbox();
+    if (e.key === 'ArrowLeft')   lbStep(-1);
+    if (e.key === 'ArrowRight')  lbStep(1);
+    return;
+  }
+  if (detail.classList.contains('open')) {
+    if (e.key === 'Escape') closeDetail();
+    return;
+  }
+  if (e.key === 'ArrowLeft')  goTo(cur - 1);
+  if (e.key === 'ArrowRight') goTo(cur + 1);
+});
+
+/* ════════════════════════════════════════════════════
+   GYROSCOPE PARALLAX  (active card image)
+════════════════════════════════════════════════════ */
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', e => {
+    if (detail.classList.contains('open')) return;
+    const gx = Math.max(-1, Math.min(1, (e.gamma || 0) / 22));
+    const gy = Math.max(-1, Math.min(1, ((e.beta || 0) - 30) / 36));
+    const cards = track.querySelectorAll('.c-card');
+    const active = cards[cur];
+    if (!active) return;
+    const img = active.querySelector('img');
+    if (img) img.style.transform = `translate(${gx * 12}px, ${gy * 7}px) scale(1.07)`;
+  }, { passive: true });
+}
+
+/* ════════════════════════════════════════════════════
+   DETAIL PAGE
+════════════════════════════════════════════════════ */
+function openDetail(id) {
+  const cat = CATS.find(c => c.id === id);
+  if (!cat) return;
+
+  dName.textContent = cat.ko;
+  dBody.innerHTML   = '';
+
+  /* Heading */
+  const head = document.createElement('div');
+  head.className = 'd-head';
+  head.innerHTML = `<h2>${cat.en}</h2><p>${cat.desc || ''}</p>`;
+  dBody.appendChild(head);
+
+  if (cat.type === 'photo') {
+    const grid = document.createElement('div');
+    grid.className = 'photo-grid';
+    const srcs = cat.items.map(it => it.src);
+
+    cat.items.forEach((item, idx) => {
+      const div = document.createElement('div');
+      div.className = 'p-item';
+      div.innerHTML = `
+        <img src="${item.src}" alt="${item.title}"
+             loading="lazy" referrerpolicy="no-referrer" decoding="async">
+        <div class="p-label">${item.title}</div>`;
+      div.addEventListener('click', () => openLightbox(srcs, idx));
+      grid.appendChild(div);
+    });
+    dBody.appendChild(grid);
+
+  } else if (cat.type === 'video') {
+    const grid = document.createElement('div');
+    grid.className = 'video-grid';
+    cat.items.forEach(item => {
+      const a = document.createElement('a');
+      a.className = 'v-card';
+      a.href = item.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.innerHTML = `
+        <div class="v-thumb">
+          <img src="${item.thumb}" alt="${item.title}"
+               loading="lazy" referrerpolicy="no-referrer" decoding="async">
+          <div class="v-play">
+            <div class="v-circle">
+              <svg viewBox="0 0 24 24"><polygon points="5,3 19,12 5,21"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="v-meta">
+          <strong>${item.title}</strong>
+          <span>${item.sub}</span>
+        </div>`;
+      grid.appendChild(a);
+    });
+    dBody.appendChild(grid);
+  }
+
+  detail.scrollTop = 0;
+  detail.classList.add('open');
+}
+
+function closeDetail() { detail.classList.remove('open'); }
+dBack.addEventListener('click', closeDetail);
+
+/* ════════════════════════════════════════════════════
+   LIGHTBOX
+════════════════════════════════════════════════════ */
+let lbSrcs = [], lbIdx = 0, lbTsX = 0;
+
+function openLightbox(srcs, idx) {
+  lbSrcs = srcs; lbIdx = idx;
+  renderLb(false);
+  lb.classList.add('open');
+}
+function closeLightbox() { lb.classList.remove('open'); }
+
+function renderLb(fade = true) {
+  if (fade) {
+    lbImg.classList.add('dim');
+    setTimeout(() => { lbImg.src = lbSrcs[lbIdx]; lbImg.classList.remove('dim'); }, 200);
+  } else {
+    lbImg.src = lbSrcs[lbIdx];
+  }
+  lbCtr.textContent   = `${lbIdx + 1} / ${lbSrcs.length}`;
+  lbP.disabled        = lbIdx === 0;
+  lbN.disabled        = lbIdx === lbSrcs.length - 1;
+}
+
+function lbStep(dir) {
+  const next = lbIdx + dir;
+  if (next < 0 || next >= lbSrcs.length) return;
+  lbIdx = next; renderLb(true);
+}
+
+lbClose.addEventListener('click', closeLightbox);
+lbP.addEventListener('click', () => lbStep(-1));
+lbN.addEventListener('click', () => lbStep(1));
+
+/* Tap outside image → close */
+lb.addEventListener('click', e => {
+  if (e.target === lb || e.target === document.getElementById('lb-wrap')) closeLightbox();
+});
+
+/* Swipe in lightbox */
+lb.addEventListener('touchstart', e => { lbTsX = e.touches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - lbTsX;
+  if (Math.abs(dx) < 40) return;
+  lbStep(dx < 0 ? 1 : -1);
+});
+
+/* ════════════════════════════════════════════════════
+   DOOR OPENING SEQUENCE
+   ① 이미지 로드 완료 OR 최소 대기(1.4s) → 둘 다 준비되면 문 열기
+   ② 문 스윙 애니메이션 1.05s
+   ③ 로고 + 문 페이드아웃 → display:none
+════════════════════════════════════════════════════ */
+const doors    = document.getElementById('doors');
+const doorLogo = document.getElementById('door-logo');
+
+let imgReady  = false;
+let timeReady = false;
+
+function tryOpen() {
+  if (!imgReady || !timeReady) return;
+  /* 1. 문 열기 */
+  doors.classList.add('opening');
+  doorLogo.classList.add('faded');
+
+  /* 2. 스윙 거의 완료 후 (0.85s) → 전체 페이드 */
+  setTimeout(() => {
+    doors.classList.add('faded');
+  }, 850);
+
+  /* 3. 완전히 사라진 후 DOM 제거 */
+  setTimeout(() => {
+    doors.style.display    = 'none';
+    doorLogo.style.display = 'none';
+  }, 1500);
+}
+
+/* 최소 대기: 로고 애니메이션이 보이도록 1400ms */
+setTimeout(() => { timeReady = true; tryOpen(); }, 1400);
+
+/* 첫 이미지 로드 감지 */
+const heroProbe = new Image();
+heroProbe.onload = heroProbe.onerror = () => { imgReady = true; tryOpen(); };
+heroProbe.referrerPolicy = 'no-referrer';
+heroProbe.src = CATS[0].feat;
+
+/* 절대 폴백: 4초 후 강제 열기 */
+setTimeout(() => { imgReady = timeReady = true; tryOpen(); }, 4000);
+
+/* ════════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════════ */
+buildCards();
+</script>
 </body>
 </html>
