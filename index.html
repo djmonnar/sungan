@@ -1,1333 +1,1009 @@
-<!DOCTYPE html><html lang="ko">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>순간, 스튜디오 — Cinematic Portfolio</title>
+  <title>순간, 스튜디오 — Scroll Museum Portfolio</title>
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://i.ibb.co" crossorigin>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
   <style>
     :root {
-      --bg: #090909;
-      --bg-soft: rgba(255,255,255,0.04);
-      --panel: rgba(10,10,10,0.52);
+      --bg: #0a0a0a;
+      --bg-2: #101010;
+      --panel: rgba(255,255,255,0.04);
       --line: rgba(255,255,255,0.08);
       --line-strong: rgba(255,255,255,0.16);
       --text: rgba(255,255,255,0.96);
-      --muted: rgba(255,255,255,0.48);
-      --muted-2: rgba(255,255,255,0.30);
-      --shadow: 0 20px 60px rgba(0,0,0,0.35);
-    }* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  user-select: none;
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.05), transparent 22%),
-    radial-gradient(circle at 80% 20%, rgba(255,255,255,0.03), transparent 20%),
-    radial-gradient(circle at 50% 100%, rgba(255,255,255,0.02), transparent 35%);
-  z-index: 1;
-}
-
-#canvas-container {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-}
-
-#hud {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 24px;
-}
-
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
-}
-
-.brand-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
-}
-
-.brand {
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-}
-
-.brand-caption {
-  font-size: 0.78rem;
-  line-height: 1.7;
-  color: var(--muted);
-  font-weight: 400;
-}
-
-.meta-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-  text-align: right;
-}
-
-.meta-line {
-  font-size: 0.73rem;
-  color: var(--muted-2);
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-}
-
-.meta-help {
-  font-size: 0.8rem;
-  color: var(--muted);
-  line-height: 1.65;
-}
-
-.bottombar {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 20px;
-}
-
-.story-pill {
-  pointer-events: auto;
-  display: inline-flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: var(--shadow);
-  max-width: 360px;
-  opacity: 0;
-  transform: translateY(12px);
-  transition: opacity .45s ease, transform .45s ease, border-color .35s ease;
-}
-
-.story-pill.show {
-  opacity: 1;
-  transform: translateY(0);
-  border-color: var(--line-strong);
-}
-
-.story-kicker {
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  color: var(--muted-2);
-  text-transform: uppercase;
-}
-
-.story-title {
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.story-sub {
-  font-size: 0.78rem;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-.section-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-.section-text {
-  font-size: 0.72rem;
-  letter-spacing: 0.16em;
-  color: var(--muted-2);
-  text-transform: uppercase;
-}
-
-.section-bar {
-  width: 120px;
-  height: 1px;
-  background: rgba(255,255,255,0.10);
-  position: relative;
-  overflow: hidden;
-}
-
-.section-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 0%;
-  background: rgba(255,255,255,0.86);
-  transition: width .35s ease;
-}
-
-#joystick-zone {
-  position: fixed;
-  left: 20px;
-  bottom: 24px;
-  width: 98px;
-  height: 98px;
-  border-radius: 50%;
-  display: none;
-  pointer-events: auto;
-  z-index: 12;
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(255,255,255,0.06);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.24);
-  touch-action: none;
-}
-
-#joystick-knob {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.18);
-  transform: translate(-50%, -50%);
-  transition: transform .08s linear;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
-}
-
-#touch-look-zone {
-  position: fixed;
-  right: 0;
-  top: 0;
-  width: 54%;
-  height: 100%;
-  z-index: 11;
-  touch-action: none;
-  display: none;
-}
-
-#enter-note {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 30;
-  width: min(680px, calc(100vw - 40px));
-  padding: 32px 28px;
-  background: rgba(6,6,6,0.62);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 28px;
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
-  text-align: center;
-  transition: opacity .6s ease, transform .6s ease;
-}
-
-#enter-note.hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, calc(-50% + 10px));
-}
-
-.enter-label {
-  font-size: 0.72rem;
-  letter-spacing: 0.24em;
-  color: var(--muted-2);
-  text-transform: uppercase;
-  margin-bottom: 14px;
-}
-
-.enter-title {
-  font-size: clamp(2rem, 4.8vw, 4rem);
-  line-height: 1.05;
-  font-weight: 700;
-  letter-spacing: -0.04em;
-  margin-bottom: 12px;
-}
-
-.enter-copy {
-  max-width: 540px;
-  margin: 0 auto 24px;
-  color: var(--muted);
-  line-height: 1.8;
-  font-size: 0.96rem;
-}
-
-.enter-actions {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.ghost-btn, .solid-btn {
-  pointer-events: auto;
-  border-radius: 999px;
-  padding: 12px 18px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.10);
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  transition: transform .25s ease, background .25s ease, border-color .25s ease, opacity .25s ease;
-}
-
-.solid-btn {
-  background: rgba(255,255,255,0.92);
-  color: #0b0b0b;
-  border-color: transparent;
-}
-
-.ghost-btn:hover, .solid-btn:hover {
-  transform: translateY(-1px);
-}
-
-#modal {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: none;
-  opacity: 0;
-  transition: opacity .35s ease;
-  background: rgba(7,7,7,0.96);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  overflow-y: auto;
-}
-
-#modal.active {
-  display: block;
-  opacity: 1;
-}
-
-.modal-shell {
-  width: min(1320px, calc(100% - 36px));
-  margin: 34px auto 48px;
-}
-
-.modal-close {
-  position: sticky;
-  top: 18px;
-  margin-left: auto;
-  z-index: 2;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #fff;
-  font-size: 1.4rem;
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  backdrop-filter: blur(12px);
-}
-
-.modal-hero {
-  display: grid;
-  grid-template-columns: 1.15fr .85fr;
-  gap: 26px;
-  align-items: end;
-  margin-top: 10px;
-  margin-bottom: 28px;
-}
-
-.modal-kicker {
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  color: var(--muted-2);
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-
-.modal-title {
-  font-size: clamp(2rem, 5vw, 4.8rem);
-  line-height: 0.95;
-  font-weight: 700;
-  letter-spacing: -0.05em;
-  margin-bottom: 14px;
-}
-
-.modal-desc {
-  color: var(--muted);
-  line-height: 1.9;
-  font-size: 0.97rem;
-  max-width: 640px;
-}
-
-.modal-side {
-  border-top: 1px solid rgba(255,255,255,0.08);
-  padding-top: 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modal-meta {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  font-size: 0.78rem;
-  color: var(--muted);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  padding-bottom: 10px;
-}
-
-.grid-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 14px;
-  margin-bottom: 40px;
-}
-
-.grid-item,
-.video-card {
-  width: 100%;
-  background: #141414;
-  border-radius: 18px;
-  overflow: hidden;
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity .45s ease, transform .45s ease, filter .3s ease, border-color .3s ease;
-  border: 1px solid rgba(255,255,255,0.05);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.24);
-}
-
-.grid-item {
-  aspect-ratio: 3 / 4;
-  object-fit: cover;
-  cursor: pointer;
-}
-
-.video-card {
-  cursor: pointer;
-}
-
-.grid-item.loaded,
-.video-card.loaded {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.grid-item:hover,
-.video-card:hover {
-  filter: brightness(1.06);
-  border-color: rgba(255,255,255,0.12);
-}
-
-.video-thumb {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  background: #0f0f0f;
-}
-
-.video-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.play-icon {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-}
-
-.play-icon::after {
-  content: '▶';
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  display: grid;
-  place-items: center;
-  padding-left: 4px;
-  color: #090909;
-  background: rgba(255,255,255,0.92);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.26);
-  font-size: 16px;
-}
-
-.video-info {
-  padding: 14px 16px 16px;
-  font-size: 0.94rem;
-  font-weight: 500;
-}
-
-#lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  display: none;
-  background: rgba(0,0,0,0.96);
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-}
-
-#lightbox.active { display: flex; }
-
-#lightbox img {
-  max-width: 92vw;
-  max-height: 92vh;
-  object-fit: contain;
-  border-radius: 10px;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.45);
-}
-
-#loader {
-  position: fixed;
-  inset: 0;
-  z-index: 80;
-  background: #060606;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 18px;
-  transition: opacity .7s ease, visibility .7s ease;
-}
-
-#loader.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.loader-brand {
-  font-size: 1rem;
-  letter-spacing: 0.28em;
-  font-weight: 700;
-  color: rgba(255,255,255,0.92);
-}
-
-.loader-copy {
-  font-size: 0.8rem;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-}
-
-.loader-track {
-  width: min(260px, 70vw);
-  height: 1px;
-  background: rgba(255,255,255,0.12);
-  overflow: hidden;
-  position: relative;
-}
-
-.loader-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 0%;
-  background: rgba(255,255,255,0.95);
-  transition: width .28s ease;
-}
-
-@media (max-width: 900px) {
-  .modal-hero {
-    grid-template-columns: 1fr;
-  }
-  .meta-panel {
-    display: none;
-  }
-  .story-pill {
-    max-width: calc(100vw - 40px);
-  }
-}
-
-@media (max-width: 768px) {
-  #hud {
-    padding: 18px;
-  }
-  #joystick-zone,
-  #touch-look-zone {
-    display: block;
-  }
-  .brand {
-    font-size: 0.86rem;
-  }
-  .brand-caption {
-    font-size: 0.75rem;
-    max-width: 240px;
-  }
-  .bottombar {
-    align-items: flex-start;
-  }
-  .section-indicator {
-    display: none;
-  }
-  #enter-note {
-    padding: 28px 20px;
-  }
-  .enter-copy {
-    font-size: 0.9rem;
-  }
-  .grid-container {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
+      --muted: rgba(255,255,255,0.58);
+      --muted-2: rgba(255,255,255,0.34);
+      --shadow: 0 30px 80px rgba(0,0,0,0.35);
+      --radius: 28px;
+      --radius-sm: 18px;
+      --max: 1440px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    img { display: block; max-width: 100%; }
+    button { font: inherit; }
+    a { color: inherit; text-decoration: none; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(255,255,255,0.06), transparent 22%),
+        radial-gradient(circle at 80% 18%, rgba(255,255,255,0.04), transparent 22%),
+        radial-gradient(circle at 50% 100%, rgba(255,255,255,0.03), transparent 30%);
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.045;
+      background-image:
+        radial-gradient(circle at 20% 20%, #fff 0.5px, transparent 0.6px),
+        radial-gradient(circle at 80% 40%, #fff 0.5px, transparent 0.6px),
+        radial-gradient(circle at 40% 80%, #fff 0.5px, transparent 0.6px);
+      background-size: 26px 26px, 30px 30px, 34px 34px;
+      mix-blend-mode: soft-light;
+    }
+
+    .page {
+      position: relative;
+      z-index: 2;
+    }
+
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(to bottom, rgba(8,8,8,0.72), rgba(8,8,8,0.18), transparent);
+    }
+
+    .brand {
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+    }
+
+    .topnav {
+      display: flex;
+      gap: 18px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .topnav a {
+      position: relative;
+      transition: color .25s ease;
+    }
+
+    .topnav a:hover { color: var(--text); }
+
+    .side-indicator {
+      position: fixed;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    .side-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.22);
+      background: transparent;
+      transition: all .25s ease;
+      cursor: pointer;
+    }
+
+    .side-dot.active {
+      width: 30px;
+      background: rgba(255,255,255,0.9);
+      border-color: transparent;
+    }
+
+    .section {
+      position: relative;
+      min-height: 100vh;
+      padding: 110px 24px 32px;
+    }
+
+    .inner {
+      width: min(var(--max), 100%);
+      margin: 0 auto;
+    }
+
+    .hero {
+      min-height: 100svh;
+      display: grid;
+      align-items: end;
+      padding-bottom: 42px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    .hero-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 18px 0;
+    }
+
+    .eyebrow {
+      font-size: 0.74rem;
+      letter-spacing: 0.24em;
+      color: var(--muted-2);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: clamp(3rem, 8vw, 7.6rem);
+      line-height: 0.92;
+      letter-spacing: -0.06em;
+      font-weight: 700;
+      margin-bottom: 20px;
+    }
+
+    .hero-desc {
+      max-width: 560px;
+      font-size: 1rem;
+      line-height: 1.95;
+      color: var(--muted);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: #fff;
+      transition: transform .25s ease, background .25s ease, border-color .25s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn.primary {
+      background: rgba(255,255,255,0.92);
+      color: #090909;
+      border-color: transparent;
+    }
+
+    .hero-visual {
+      position: relative;
+      min-height: 74svh;
+      border-radius: calc(var(--radius) + 8px);
+      overflow: hidden;
+      background: #111;
+      box-shadow: var(--shadow);
+    }
+
+    .hero-visual::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.58), rgba(0,0,0,0.08), transparent 52%);
+      pointer-events: none;
+    }
+
+    .hero-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.02);
+    }
+
+    .hero-note {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      z-index: 2;
+    }
+
+    .hero-note .title {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .hero-note .sub {
+      font-size: 0.82rem;
+      line-height: 1.7;
+      color: rgba(255,255,255,0.68);
+      max-width: 280px;
+      text-align: right;
+    }
+
+    .split-room {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .room-copy,
+    .room-panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: var(--shadow);
+    }
+
+    .room-copy {
+      padding: 34px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 28px;
+      min-height: 72svh;
+      position: sticky;
+      top: 96px;
+    }
+
+    .room-copy h2,
+    .room-header h2 {
+      font-size: clamp(2rem, 4.4vw, 4.8rem);
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .room-copy p,
+    .room-header p {
+      color: var(--muted);
+      line-height: 1.95;
+      max-width: 520px;
+    }
+
+    .copy-meta {
+      display: grid;
+      gap: 10px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    .room-panel {
+      padding: 18px;
+      min-height: 180vh;
+    }
+
+    .vertical-stack {
+      display: grid;
+      gap: 16px;
+    }
+
+    .frame {
+      position: relative;
+      overflow: hidden;
+      border-radius: calc(var(--radius-sm) + 4px);
+      background: #111;
+      box-shadow: 0 18px 50px rgba(0,0,0,0.26);
+      isolation: isolate;
+      cursor: pointer;
+    }
+
+    .frame::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.30), transparent 35%);
+      opacity: 0;
+      transition: opacity .25s ease;
+      pointer-events: none;
+    }
+
+    .frame:hover::after { opacity: 1; }
+
+    .frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform .6s ease;
+    }
+
+    .frame:hover img { transform: scale(1.03); }
+
+    .tall { min-height: 76svh; }
+    .medium { min-height: 56svh; }
+    .wide { min-height: 48svh; }
+
+    .caption {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      z-index: 2;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity .25s ease, transform .25s ease;
+    }
+
+    .frame:hover .caption {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .caption strong {
+      font-size: 0.98rem;
+      font-weight: 600;
+    }
+
+    .caption span {
+      font-size: 0.76rem;
+      color: rgba(255,255,255,0.74);
+      line-height: 1.6;
+      text-align: right;
+    }
+
+    .gallery-wall {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+
+    .gallery-wall .frame:nth-child(1) { grid-column: span 7; min-height: 64svh; }
+    .gallery-wall .frame:nth-child(2) { grid-column: span 5; min-height: 64svh; }
+    .gallery-wall .frame:nth-child(3) { grid-column: span 4; min-height: 42svh; }
+    .gallery-wall .frame:nth-child(4) { grid-column: span 4; min-height: 42svh; }
+    .gallery-wall .frame:nth-child(5) { grid-column: span 4; min-height: 42svh; }
+    .gallery-wall .frame:nth-child(6) { grid-column: span 12; min-height: 72svh; }
+
+    .cross-room {
+      display: grid;
+      gap: 18px;
+    }
+
+    .cross-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .section-header {
+      margin-bottom: 26px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: end;
+    }
+
+    .section-header .small {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.8;
+      max-width: 320px;
+      text-align: right;
+    }
+
+    .motion-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .video-card {
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.06);
+      background: #111;
+      box-shadow: var(--shadow);
+      transition: transform .25s ease, border-color .25s ease;
+    }
+
+    .video-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255,255,255,0.14);
+    }
+
+    .video-thumb {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      overflow: hidden;
+    }
+
+    .video-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .play {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .play::after {
+      content: '▶';
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.92);
+      color: #0a0a0a;
+      padding-left: 3px;
+      box-shadow: 0 14px 35px rgba(0,0,0,0.24);
+    }
+
+    .video-info {
+      padding: 16px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .video-info strong {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .video-info span {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .about-room {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .about-card,
+    .contact-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .about-card h3,
+    .contact-card h3 {
+      font-size: 1.7rem;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+    }
+
+    .about-card p,
+    .contact-card p {
+      color: var(--muted);
+      line-height: 1.9;
+    }
+
+    .quote {
+      margin-top: 28px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.86);
+    }
+
+    .contact-list {
+      margin-top: 24px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .contact-item {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      font-size: 0.9rem;
+    }
+
+    .contact-item span { color: var(--muted); }
+
+    .footer {
+      padding: 22px 24px 38px;
+      color: var(--muted-2);
+      font-size: 0.8rem;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(26px);
+      transition: opacity .9s ease, transform .9s ease;
+    }
+
+    .reveal.in-view {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(0,0,0,0.95);
+    }
+
+    #lightbox.active { display: flex; }
+
+    #lightbox img {
+      max-width: 92vw;
+      max-height: 92vh;
+      object-fit: contain;
+      border-radius: 12px;
+      box-shadow: 0 24px 90px rgba(0,0,0,0.55);
+    }
+
+    @media (max-width: 1100px) {
+      .hero-grid,
+      .split-room,
+      .about-room,
+      .cross-row,
+      .section-header,
+      .motion-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .room-copy {
+        position: relative;
+        top: auto;
+        min-height: auto;
+      }
+
+      .room-panel {
+        min-height: auto;
+      }
+
+      .gallery-wall .frame,
+      .gallery-wall .frame:nth-child(1),
+      .gallery-wall .frame:nth-child(2),
+      .gallery-wall .frame:nth-child(3),
+      .gallery-wall .frame:nth-child(4),
+      .gallery-wall .frame:nth-child(5),
+      .gallery-wall .frame:nth-child(6) {
+        grid-column: span 12;
+        min-height: 54svh;
+      }
+
+      .section-header .small { text-align: left; }
+    }
+
+    @media (max-width: 768px) {
+      .topnav,
+      .side-indicator {
+        display: none;
+      }
+
+      .topbar {
+        padding: 16px 18px;
+      }
+
+      .section {
+        padding: 96px 16px 22px;
+      }
+
+      .hero {
+        padding-bottom: 22px;
+      }
+
+      .hero-visual {
+        min-height: 54svh;
+      }
+
+      .hero-note {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hero-note .sub {
+        text-align: left;
+      }
+
+      .room-copy,
+      .room-panel,
+      .about-card,
+      .contact-card {
+        padding: 20px;
+        border-radius: 22px;
+      }
+
+      .gallery-wall,
+      .vertical-stack,
+      .cross-room,
+      .motion-grid {
+        gap: 12px;
+      }
+
+      .tall,
+      .medium,
+      .wide,
+      .gallery-wall .frame,
+      .gallery-wall .frame:nth-child(1),
+      .gallery-wall .frame:nth-child(2),
+      .gallery-wall .frame:nth-child(3),
+      .gallery-wall .frame:nth-child(4),
+      .gallery-wall .frame:nth-child(5),
+      .gallery-wall .frame:nth-child(6) {
+        min-height: 34svh;
+      }
+
+      .caption {
+        opacity: 1;
+        transform: none;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id="canvas-container"></div>
-  <div id="touch-look-zone"></div>  <div id="loader">
-    <div class="loader-brand">MOMENT STUDIO</div>
-    <div class="loader-copy">A quiet space for light, texture, and presence.</div>
-    <div class="loader-track"><div id="progress-bar" class="loader-fill"></div></div>
-  </div>  <div id="enter-note">
-    <div class="enter-label">Cinematic Portfolio</div>
-    <div class="enter-title">순간을 걷는 전시</div>
-    <div class="enter-copy">빛이 머무는 짧은 순간, 사람과 공간과 사물이 가장 아름답게 정리되는 장면을 천천히 감상하세요.</div>
-    <div class="enter-actions">
-      <button id="enter-btn" class="solid-btn">전시 시작</button>
-      <button id="focus-btn" class="ghost-btn">대표작 보기</button>
-    </div>
-  </div>  <div id="hud">
-    <div class="topbar">
-      <div class="brand-block">
-        <div class="brand">MOMENT STUDIO</div>
-        <div class="brand-caption">사진작가의 포트폴리오를 전시장처럼 감상하는 시네마틱 갤러리.</div>
-      </div><div class="meta-panel">
-    <div class="meta-line">Portfolio Experience</div>
-    <div class="meta-help">PC · 드래그로 시선 회전 / W A S D 이동<br>Mobile · 오른쪽 화면 시선 / 왼쪽 조이스틱 이동</div>
-  </div>
-</div>
+  <div class="grain"></div>
 
-<div class="bottombar">
-  <div id="story-pill" class="story-pill">
-    <div id="story-kicker" class="story-kicker">Series</div>
-    <div id="story-title" class="story-title">Title</div>
-    <div id="story-sub" class="story-sub">탭하거나 클릭해 시리즈 전체를 엽니다.</div>
+  <header class="topbar">
+    <div class="brand">MOMENT STUDIO</div>
+    <nav class="topnav">
+      <a href="#intro">Intro</a>
+      <a href="#commercial">Commercial</a>
+      <a href="#portrait">Portrait</a>
+      <a href="#food">Food</a>
+      <a href="#motion">Motion</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <div class="side-indicator" aria-hidden="true">
+    <div class="side-dot active" data-target="intro"></div>
+    <div class="side-dot" data-target="commercial"></div>
+    <div class="side-dot" data-target="portrait"></div>
+    <div class="side-dot" data-target="food"></div>
+    <div class="side-dot" data-target="motion"></div>
+    <div class="side-dot" data-target="about"></div>
   </div>
 
-  <div class="section-indicator">
-    <div id="section-text" class="section-text">Entrance</div>
-    <div class="section-bar"><div id="section-fill" class="section-fill"></div></div>
-  </div>
-</div>
-
-  </div>  <div id="joystick-zone"><div id="joystick-knob"></div></div>  <div id="modal">
-    <div class="modal-shell">
-      <button class="modal-close" id="modal-close" aria-label="닫기">×</button><section class="modal-hero">
-    <div>
-      <div id="modal-kicker" class="modal-kicker">Series</div>
-      <h2 id="modal-title" class="modal-title">Title</h2>
-      <p id="modal-desc" class="modal-desc">Description</p>
-    </div>
-    <div class="modal-side">
-      <div class="modal-meta"><span>Type</span><span id="modal-type">Photo Series</span></div>
-      <div class="modal-meta"><span>Works</span><span id="modal-count">0</span></div>
-      <div class="modal-meta"><span>Experience</span><span>Full Screen Viewing</span></div>
-    </div>
-  </section>
-
-  <div id="modal-grid" class="grid-container"></div>
-</div>
-
-  </div>  <div id="lightbox">
-    <img id="lightbox-img" src="" alt="expanded artwork" />
-  </div>  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>  <script>
-    const ARTWORKS = [
-      {
-        id: 'product',
-        title: 'Product',
-        cat: 'Commercial',
-        img: 'https://i.ibb.co/bgVfDWBB/vr.jpg',
-        desc: '브랜드의 기능을 넘어 질감과 태도를 함께 보여주는 커머셜 사진 시리즈.',
-        gallery: [
-          'https://i.ibb.co/bgVfDWBB/vr.jpg','https://i.ibb.co/zhKgwjvF/vr.jpg','https://i.ibb.co/MxT40KMm/image.jpg','https://i.ibb.co/Mxshn8y8/image.jpg','https://i.ibb.co/k233w2PJ/image.jpg','https://i.ibb.co/xqj1mSVc/image.jpg','https://i.ibb.co/SXFyLRV0/image.jpg','https://i.ibb.co/m5HZtywB/image.jpg'
-        ],
-        type: 'photo',
-        frame: { w: 3.8, h: 2.4 },
-        wallText: '형태와 표면, 그리고 브랜드의 태도를 담습니다.'
-      },
-      {
-        id: 'branding',
-        title: 'Branding',
-        cat: 'Promotion',
-        img: 'https://i.ibb.co/spVX6587/1.jpg',
-        desc: '공간이 가진 분위기와 결을 읽고, 브랜드가 기억되는 장면으로 정리합니다.',
-        gallery: [
-          'https://i.ibb.co/spVX6587/1.jpg','https://i.ibb.co/cXpL9nmp/3.jpg','https://i.ibb.co/ymBmW1rY/4.jpg','https://i.ibb.co/Ldd3TPnK/3.jpg','https://i.ibb.co/Txpr3kcB/4.jpg','https://i.ibb.co/wZKZhKZd/2.jpg'
-        ],
-        type: 'photo',
-        frame: { w: 3.2, h: 2.2 },
-        wallText: '매장의 무드와 브랜드의 인상을 하나의 이미지로.'
-      },
-      {
-        id: 'people',
-        title: 'People',
-        cat: 'Portrait',
-        img: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
-        desc: '가장 자연스러운 표정과 호흡이 드러나는 인물 사진 시리즈.',
-        gallery: [
-          'https://i.ibb.co/ks6QB1J7/1-1.jpg','https://i.ibb.co/SX0XmQXR/1-2.jpg','https://i.ibb.co/DgpybcdJ/1-3.jpg','https://i.ibb.co/G4tYPyXx/1-4.jpg','https://i.ibb.co/B2cTdydH/1-5.jpg','https://i.ibb.co/PGB80nj7/1-6.jpg'
-        ],
-        type: 'photo',
-        frame: { w: 2.4, h: 3.5 },
-        wallText: '사람이 가장 사람답게 보이는 한순간.'
-      },
-      {
-        id: 'food',
-        title: 'Food',
-        cat: 'Taste',
-        img: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg',
-        desc: '정갈한 조명과 밀도 있는 구도로 음식의 온도와 결을 살립니다.',
-        gallery: [
-          'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg','https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg','https://i.ibb.co/ym59SLc5/1-3.jpg','https://i.ibb.co/RJ8Yw4b/1.jpg','https://i.ibb.co/6RbtBJ5g/2.jpg','https://i.ibb.co/r2zDC11M/3.jpg'
-        ],
-        type: 'photo',
-        frame: { w: 3.1, h: 2.25 },
-        wallText: '보기 전부터 맛이 느껴지는 음식 사진.'
-      },
-      {
-        id: 'nightfood',
-        title: 'Night Food',
-        cat: 'Taste',
-        img: 'https://i.ibb.co/xdFXY4X/DSC08642.jpg',
-        desc: '밤의 밀도와 거리의 공기를 담아낸 감성 푸드 시리즈.',
-        gallery: [
-          'https://i.ibb.co/xdFXY4X/DSC08642.jpg','https://i.ibb.co/BKKgggYn/DSC08650.jpg','https://i.ibb.co/tPkTZDnX/DSC08652.jpg','https://i.ibb.co/DPVc0Q80/DSC08669.jpg'
-        ],
-        type: 'photo',
-        frame: { w: 3.4, h: 2.25 },
-        wallText: '어두운 밤에도 선명하게 남는 식욕의 장면.'
-      },
-      {
-        id: 'motion',
-        title: 'Motion',
-        cat: 'Cinema',
-        img: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
-        desc: '정지된 이미지를 넘어 브랜드의 리듬과 흐름을 영상으로 전달합니다.',
-        videos: [
-          { title:'DASHU 광고', vid:'WEPXeWG6rE4' },
-          { title:'MIP 립밤', vid:'b-_Sh5KLv2c' },
-          { title:'밤깨비 농장', vid:'ba3QbhE1s08' }
-        ],
-        type: 'video',
-        frame: { w: 3.9, h: 2.2 },
-        wallText: '움직이는 이미지로 완성되는 서사.'
-      }
-    ];
-
-    let scene, camera, renderer;
-    let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-    let pitch = -0.03, yaw = 0;
-    let isDragging = false;
-    let previousPointer = { x: 0, y: 0 };
-    let currentLookAt = null;
-    let hasEntered = false;
-    let interactableMeshes = [];
-    let artworkEntries = [];
-
-    const ROOM_LIMIT = 15.8;
-    const PLAYER_HEIGHT = 1.62;
-    const MOVE_SPEED = 0.07;
-    const DAMPING = 0.84;
-    const MAX_DISTANCE = 7.5;
-    const velocity = new THREE.Vector3();
-    const direction = new THREE.Vector3();
-    const raycaster = new THREE.Raycaster();
-    const centerVector = new THREE.Vector2(0, 0);
-
-    const elLoader = document.getElementById('loader');
-    const elProgress = document.getElementById('progress-bar');
-    const elEnter = document.getElementById('enter-note');
-    const elStory = document.getElementById('story-pill');
-    const elStoryKicker = document.getElementById('story-kicker');
-    const elStoryTitle = document.getElementById('story-title');
-    const elStorySub = document.getElementById('story-sub');
-    const elSectionText = document.getElementById('section-text');
-    const elSectionFill = document.getElementById('section-fill');
-    const elModal = document.getElementById('modal');
-    const elModalTitle = document.getElementById('modal-title');
-    const elModalKicker = document.getElementById('modal-kicker');
-    const elModalDesc = document.getElementById('modal-desc');
-    const elModalType = document.getElementById('modal-type');
-    const elModalCount = document.getElementById('modal-count');
-    const elModalGrid = document.getElementById('modal-grid');
-    const elLightbox = document.getElementById('lightbox');
-    const elLightboxImg = document.getElementById('lightbox-img');
-
-    function init() {
-      scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x090909);
-      scene.fog = new THREE.Fog(0x090909, 7.5, 29);
-
-      camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 120);
-      camera.position.set(0, PLAYER_HEIGHT, 7.4);
-      camera.rotation.order = 'YXZ';
-      camera.rotation.set(pitch, yaw, 0);
-
-      renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.8));
-      renderer.outputEncoding = THREE.sRGBEncoding;
-      renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 1.06;
-      renderer.shadowMap.enabled = false;
-      document.getElementById('canvas-container').appendChild(renderer.domElement);
-
-      createArchitecture();
-      placeArtworks();
-      setupControls();
-      bindUI();
-      preloadHeroTextures();
-      animate();
-    }
-
-    function createArchitecture() {
-      const floor = new THREE.Mesh(
-        new THREE.PlaneGeometry(40, 40),
-        new THREE.MeshStandardMaterial({ color: 0x141414, roughness: 0.46, metalness: 0.04 })
-      );
-      floor.rotation.x = -Math.PI / 2;
-      floor.position.y = 0;
-      scene.add(floor);
-
-      const ceiling = new THREE.Mesh(
-        new THREE.PlaneGeometry(40, 40),
-        new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 1 })
-      );
-      ceiling.rotation.x = Math.PI / 2;
-      ceiling.position.y = 6;
-      scene.add(ceiling);
-
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.96 });
-      const wallGeoNS = new THREE.PlaneGeometry(36, 6);
-      const wallGeoEW = new THREE.PlaneGeometry(40, 6);
-
-      const north = new THREE.Mesh(wallGeoNS, wallMat);
-      north.position.set(0, 3, -16);
-      scene.add(north);
-
-      const south = new THREE.Mesh(wallGeoNS, wallMat);
-      south.position.set(0, 3, 16);
-      south.rotation.y = Math.PI;
-      scene.add(south);
-
-      const east = new THREE.Mesh(wallGeoEW, wallMat);
-      east.position.set(18, 3, 0);
-      east.rotation.y = -Math.PI / 2;
-      scene.add(east);
-
-      const west = new THREE.Mesh(wallGeoEW, wallMat);
-      west.position.set(-18, 3, 0);
-      west.rotation.y = Math.PI / 2;
-      scene.add(west);
-
-      const dividerMat = new THREE.MeshStandardMaterial({ color: 0x121212, roughness: 0.9 });
-      const divider = new THREE.Mesh(new THREE.BoxGeometry(1.2, 6, 8), dividerMat);
-      divider.position.set(0, 3, -5.5);
-      scene.add(divider);
-
-      const pedestal = new THREE.Mesh(
-        new THREE.CylinderGeometry(1.1, 1.16, 1, 32),
-        new THREE.MeshStandardMaterial({ color: 0x1b1b1b, roughness: 0.8 })
-      );
-      pedestal.position.set(0, 0.5, 2);
-      scene.add(pedestal);
-
-      const heroPlate = new THREE.Mesh(
-        new THREE.BoxGeometry(1.45, 0.04, 1.45),
-        new THREE.MeshStandardMaterial({ color: 0x202020, roughness: 0.42 })
-      );
-      heroPlate.position.set(0, 1.02, 2);
-      scene.add(heroPlate);
-
-      const ambient = new THREE.AmbientLight(0xffffff, 0.34);
-      scene.add(ambient);
-
-      const softTop = new THREE.PointLight(0xffffff, 0.55, 22, 2);
-      softTop.position.set(0, 5.2, 2);
-      scene.add(softTop);
-
-      const aisleLight1 = new THREE.PointLight(0xfff8ef, 0.35, 16, 2);
-      aisleLight1.position.set(-9, 4.6, 4);
-      scene.add(aisleLight1);
-
-      const aisleLight2 = new THREE.PointLight(0xfff8ef, 0.3, 16, 2);
-      aisleLight2.position.set(9, 4.6, 4);
-      scene.add(aisleLight2);
-    }
-
-    function placeArtworks() {
-      const placements = [
-        { x: -17.45, z: 6.4, ry: Math.PI / 2 },
-        { x: -17.45, z: -2.2, ry: Math.PI / 2 },
-        { x: -8.3, z: -15.45, ry: 0 },
-        { x: 7.9, z: -15.45, ry: 0 },
-        { x: 17.45, z: -2.2, ry: -Math.PI / 2 },
-        { x: 17.45, z: 6.4, ry: -Math.PI / 2 }
-      ];
-
-      ARTWORKS.forEach((art, index) => {
-        const p = placements[index];
-        if (!p) return;
-
-        const group = new THREE.Group();
-        group.position.set(p.x, 2.55, p.z);
-        group.rotation.y = p.ry;
-
-        const w = art.frame?.w || 3.2;
-        const h = art.frame?.h || 2.25;
-
-        const backing = new THREE.Mesh(
-          new THREE.PlaneGeometry(w + 0.28, h + 0.28),
-          new THREE.MeshBasicMaterial({ color: 0x060606, transparent: true, opacity: 0.98 })
-        );
-        backing.position.z = -0.02;
-        group.add(backing);
-
-        const matte = new THREE.Mesh(
-          new THREE.PlaneGeometry(w + 0.12, h + 0.12),
-          new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95 })
-        );
-        matte.position.z = -0.01;
-        group.add(matte);
-
-        const plane = new THREE.Mesh(
-          new THREE.PlaneGeometry(w, h),
-          new THREE.MeshBasicMaterial({ color: 0x2c2c2c })
-        );
-        plane.userData = art;
-        group.add(plane);
-        interactableMeshes.push(plane);
-        artworkEntries.push({ mesh: plane, art });
-
-        const label = createWallLabel(art);
-        label.position.set(0, -h / 2 - 0.32, 0.03);
-        group.add(label);
-
-        scene.add(group);
-
-        const lx = p.x === -17.45 ? p.x + 2.8 : (p.x === 17.45 ? p.x - 2.8 : p.x);
-        const lz = p.z === -15.45 ? p.z + 2.8 : p.z;
-        const spot = new THREE.SpotLight(0xfff9f0, index === 5 ? 1.8 : 1.35, 12, 0.48, 0.4, 1.2);
-        spot.position.set(lx, 5.2, lz);
-        spot.target = group;
-        scene.add(spot);
-        scene.add(spot.target);
-      });
-    }
-
-    function createWallLabel(art) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1024;
-      canvas.height = 220;
-      const ctx = canvas.getContext('2d');
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(255,255,255,0.25)';
-      ctx.font = '500 32px Pretendard';
-      ctx.letterSpacing = '2px';
-      ctx.fillText(art.cat.toUpperCase(), 0, 52);
-
-      ctx.fillStyle = 'rgba(255,255,255,0.96)';
-      ctx.font = '700 64px Pretendard';
-      ctx.fillText(art.title, 0, 130);
-
-      ctx.fillStyle = 'rgba(255,255,255,0.42)';
-      ctx.font = '400 28px Pretendard';
-      ctx.fillText(art.wallText || '', 0, 188);
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.encoding = THREE.sRGBEncoding;
-      const mat = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.63), mat);
-      return mesh;
-    }
-
-    function preloadHeroTextures() {
-      const loader = new THREE.TextureLoader();
-      loader.crossOrigin = 'anonymous';
-      let loaded = 0;
-
-      ARTWORKS.forEach((art) => {
-        loader.load(
-          art.img,
-          (texture) => {
-            texture.encoding = THREE.sRGBEncoding;
-            texture.minFilter = THREE.LinearFilter;
-            art.texture = texture;
-            loaded += 1;
-            elProgress.style.width = ((loaded / ARTWORKS.length) * 100).toFixed(2) + '%';
-            if (loaded === ARTWORKS.length) {
-              applyTextures();
-              setTimeout(() => elLoader.classList.add('hidden'), 350);
-            }
-          },
-          undefined,
-          () => {
-            loaded += 1;
-            elProgress.style.width = ((loaded / ARTWORKS.length) * 100).toFixed(2) + '%';
-            if (loaded === ARTWORKS.length) {
-              applyTextures();
-              setTimeout(() => elLoader.classList.add('hidden'), 350);
-            }
-          }
-        );
-      });
-    }
-
-    function applyTextures() {
-      artworkEntries.forEach(({ mesh, art }) => {
-        if (!art.texture) return;
-        mesh.material.map = art.texture;
-        mesh.material.needsUpdate = true;
-      });
-    }
-
-    function setupControls() {
-      document.addEventListener('keydown', (e) => {
-        switch (e.code) {
-          case 'KeyW': case 'ArrowUp': moveForward = true; break;
-          case 'KeyS': case 'ArrowDown': moveBackward = true; break;
-          case 'KeyA': case 'ArrowLeft': moveLeft = true; break;
-          case 'KeyD': case 'ArrowRight': moveRight = true; break;
-          case 'Enter':
-            if (currentLookAt && !elModal.classList.contains('active')) openModal(currentLookAt);
-            break;
-          case 'Escape':
-            closeModal();
-            closeLightbox();
-            break;
-        }
-      });
-
-      document.addEventListener('keyup', (e) => {
-        switch (e.code) {
-          case 'KeyW': case 'ArrowUp': moveForward = false; break;
-          case 'KeyS': case 'ArrowDown': moveBackward = false; break;
-          case 'KeyA': case 'ArrowLeft': moveLeft = false; break;
-          case 'KeyD': case 'ArrowRight': moveRight = false; break;
-        }
-      });
-
-      document.addEventListener('mousedown', (e) => {
-        if (elModal.classList.contains('active')) return;
-        if (e.target.closest('#enter-note')) return;
-        isDragging = true;
-        previousPointer = { x: e.clientX, y: e.clientY };
-      });
-
-      document.addEventListener('mousemove', (e) => {
-        if (!isDragging || elModal.classList.contains('active')) return;
-        handleLook(e.clientX, e.clientY);
-      });
-
-      document.addEventListener('mouseup', () => { isDragging = false; });
-      document.addEventListener('mouseleave', () => { isDragging = false; });
-
-      const lookZone = document.getElementById('touch-look-zone');
-      let lookTouchId = null;
-      lookZone.addEventListener('touchstart', (e) => {
-        if (elModal.classList.contains('active')) return;
-        const touch = e.changedTouches[0];
-        lookTouchId = touch.identifier;
-        previousPointer = { x: touch.clientX, y: touch.clientY };
-      }, { passive: true });
-
-      lookZone.addEventListener('touchmove', (e) => {
-        if (elModal.classList.contains('active')) return;
-        for (const touch of e.changedTouches) {
-          if (touch.identifier === lookTouchId) {
-            e.preventDefault();
-            handleLook(touch.clientX, touch.clientY);
-          }
-        }
-      }, { passive: false });
-
-      lookZone.addEventListener('touchend', (e) => {
-        for (const touch of e.changedTouches) {
-          if (touch.identifier === lookTouchId) lookTouchId = null;
-        }
-      });
-
-      const joyZone = document.getElementById('joystick-zone');
-      const joyKnob = document.getElementById('joystick-knob');
-      let joyTouchId = null;
-      const joyState = { x: 0, y: 0 };
-
-      joyZone.addEventListener('touchstart', (e) => {
-        const touch = e.changedTouches[0];
-        joyTouchId = touch.identifier;
-        updateJoystick(touch);
-      }, { passive: true });
-
-      joyZone.addEventListener('touchmove', (e) => {
-        for (const touch of e.changedTouches) {
-          if (touch.identifier === joyTouchId) {
-            e.preventDefault();
-            updateJoystick(touch);
-          }
-        }
-      }, { passive: false });
-
-      joyZone.addEventListener('touchend', (e) => {
-        for (const touch of e.changedTouches) {
-          if (touch.identifier === joyTouchId) {
-            joyTouchId = null;
-            joyState.x = 0;
-            joyState.y = 0;
-            joyKnob.style.transform = 'translate(-50%, -50%)';
-            moveForward = moveBackward = moveLeft = moveRight = false;
-          }
-        }
-      });
-
-      function updateJoystick(touch) {
-        const rect = joyZone.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const max = rect.width / 2 - 18;
-
-        let dx = touch.clientX - cx;
-        let dy = touch.clientY - cy;
-        const dist = Math.min(max, Math.hypot(dx, dy));
-        const angle = Math.atan2(dy, dx);
-        const knobX = Math.cos(angle) * dist;
-        const knobY = Math.sin(angle) * dist;
-
-        joyKnob.style.transform = `translate(calc(-50% + ${knobX}px), calc(-50% + ${knobY}px))`;
-
-        joyState.x = knobX / max;
-        joyState.y = knobY / max;
-
-        // 위로 밀면 전진, 아래로 밀면 후진
-        moveForward = joyState.y < -0.28;
-        moveBackward = joyState.y > 0.28;
-        moveLeft = joyState.x < -0.28;
-        moveRight = joyState.x > 0.28;
-      }
-
-      window.addEventListener('resize', onResize);
-    }
-
-    function handleLook(clientX, clientY) {
-      const dx = clientX - previousPointer.x;
-      const dy = clientY - previousPointer.y;
-      yaw -= dx * 0.0042;
-      pitch -= dy * 0.0036;
-      pitch = Math.max(-0.55, Math.min(0.38, pitch));
-      previousPointer = { x: clientX, y: clientY };
-    }
-
-    function bindUI() {
-      document.getElementById('enter-btn').addEventListener('click', () => {
-        hasEntered = true;
-        elEnter.classList.add('hidden');
-      });
-
-      document.getElementById('focus-btn').addEventListener('click', () => {
-        hasEntered = true;
-        elEnter.classList.add('hidden');
-        const art = ARTWORKS[0];
-        openModal(art);
-      });
-
-      elStory.addEventListener('click', () => {
-        if (currentLookAt) openModal(currentLookAt);
-      });
-
-      document.getElementById('modal-close').addEventListener('click', closeModal);
-
-      elModal.addEventListener('click', (e) => {
-        if (e.target === elModal) closeModal();
-      });
-
-      elLightbox.addEventListener('click', closeLightbox);
-    }
-
-    function onResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    function animate() {
-      requestAnimationFrame(animate);
-
-      updateCamera();
-      updateLookDetection();
-      updateSectionIndicator();
-
-      camera.rotation.set(pitch, yaw, 0);
-      renderer.render(scene, camera);
-    }
-
-    function updateCamera() {
-      if (!hasEntered || elModal.classList.contains('active')) {
-        velocity.x *= 0.8;
-        velocity.z *= 0.8;
-        return;
-      }
-
-      direction.z = Number(moveForward) - Number(moveBackward);
-      direction.x = Number(moveRight) - Number(moveLeft);
-      direction.normalize();
-
-      const accel = MOVE_SPEED * 0.18;
-      velocity.x = velocity.x * DAMPING + direction.x * accel;
-      velocity.z = velocity.z * DAMPING + direction.z * accel;
-
-      const forwardX = Math.sin(yaw) * velocity.z;
-      const forwardZ = -Math.cos(yaw) * velocity.z;
-      const rightX = Math.cos(yaw) * velocity.x;
-      const rightZ = Math.sin(yaw) * velocity.x;
-
-      let nextX = camera.position.x + forwardX + rightX;
-      let nextZ = camera.position.z + forwardZ + rightZ;
-
-      nextX = Math.max(-ROOM_LIMIT, Math.min(ROOM_LIMIT, nextX));
-      nextZ = Math.max(-ROOM_LIMIT, Math.min(ROOM_LIMIT, nextZ));
-
-      camera.position.x = nextX;
-      camera.position.z = nextZ;
-      camera.position.y = PLAYER_HEIGHT + Math.sin(performance.now() * 0.0038) * Math.min(0.012, Math.abs(velocity.z) * 0.6);
-    }
-
-    function updateLookDetection() {
-      if (elModal.classList.contains('active') || !hasEntered) {
-        elStory.classList.remove('show');
-        currentLookAt = null;
-        return;
-      }
-
-      raycaster.setFromCamera(centerVector, camera);
-      const hits = raycaster.intersectObjects(interactableMeshes);
-
-      if (hits.length && hits[0].distance < MAX_DISTANCE) {
-        const art = hits[0].object.userData;
-        if (currentLookAt !== art) {
-          currentLookAt = art;
-          elStoryKicker.textContent = art.cat;
-          elStoryTitle.textContent = art.title;
-          elStorySub.textContent = art.type === 'video'
-            ? '탭하거나 클릭해 영상 시리즈를 엽니다.'
-            : '탭하거나 클릭해 전체 작품을 엽니다.';
-          elStory.classList.add('show');
-        }
-      } else {
-        currentLookAt = null;
-        elStory.classList.remove('show');
-      }
-    }
-
-    function updateSectionIndicator() {
-      const z = camera.position.z;
-      const x = camera.position.x;
-      let label = 'Entrance';
-      let progress = 8;
-
-      if (z < 1 && Math.abs(x) < 8) {
-        label = 'Central Gallery';
-        progress = 38;
-      }
-      if (z < -7) {
-        label = 'Signature Wall';
-        progress = 68;
-      }
-      if (x < -8) {
-        label = 'Left Wing';
-        progress = 84;
-      }
-      if (x > 8) {
-        label = 'Right Wing';
-        progress = 100;
-      }
-
-      elSectionText.textContent = label;
-      elSectionFill.style.width = progress + '%';
-    }
-
-    function openModal(art) {
-      elModalKicker.textContent = art.cat;
-      elModalTitle.textContent = art.title;
-      elModalDesc.textContent = art.desc;
-      elModalType.textContent = art.type === 'video' ? 'Motion Series' : 'Photo Series';
-      elModalCount.textContent = art.type === 'video' ? art.videos.length : art.gallery.length;
-      elModalGrid.innerHTML = '';
-
-      if (art.type === 'photo') {
-        art.gallery.forEach((url, index) => {
-          const img = new Image();
-          img.src = url;
-          img.alt = `${art.title} ${index + 1}`;
-          img.className = 'grid-item';
-          img.loading = 'lazy';
-          img.decoding = 'async';
-          img.referrerPolicy = 'no-referrer';
-          img.onload = () => requestAnimationFrame(() => img.classList.add('loaded'));
-          img.addEventListener('click', () => openLightbox(url));
-          elModalGrid.appendChild(img);
-        });
-      } else {
-        art.videos.forEach((item, index) => {
-          const card = document.createElement('article');
-          card.className = 'video-card';
-          card.innerHTML = `
+  <main class="page">
+    <section class="section hero" id="intro" data-section="intro">
+      <div class="inner hero-grid">
+        <div class="hero-copy reveal">
+          <div>
+            <div class="eyebrow">Scroll Museum Portfolio</div>
+            <h1>순간을<br>걷는 웹 전시</h1>
+            <p class="hero-desc">직접 조작하는 3D 대신, 잘 설계된 화면과 스크롤 흐름 안에서 전시실을 이동하듯 감상하는 포트폴리오입니다. 사진이 중심에 서고, 공간감은 디자인으로 느껴지게 구성했습니다.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn primary" href="#commercial">전시 시작</a>
+            <a class="btn" href="#about">작가 소개</a>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal">
+          <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="Moment Studio hero" loading="eager" decoding="async" referrerpolicy="no-referrer">
+          <div class="hero-note">
+            <div class="title">빛과 표정, 공간의 결을 남기는 이미지</div>
+            <div class="sub">아래로 내려가며 다른 전시실로 이동하세요. 각 공간은 하나의 시리즈와 무드를 담고 있습니다.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="commercial" data-section="commercial">
+      <div class="inner split-room">
+        <aside class="room-copy reveal">
+          <div>
+            <div class="eyebrow">Room 01</div>
+            <h2>Commercial<br>& Branding</h2>
+            <p>브랜드와 공간을 단순히 보여주는 것이 아니라, 그 브랜드가 가진 태도와 공기를 이미지 안에 정리합니다. 첫 번째 전시실은 가장 또렷한 상업적 인상을 남기는 시리즈로 구성했습니다.</p>
+          </div>
+          <div class="copy-meta">
+            <div class="meta-row"><span>Focus</span><strong>Product · Space · Mood</strong></div>
+            <div class="meta-row"><span>Approach</span><strong>Quiet Luxury Visual</strong></div>
+            <div class="meta-row"><span>Viewing</span><strong>Vertical Museum Flow</strong></div>
+          </div>
+        </aside>
+
+        <div class="room-panel reveal">
+          <div class="vertical-stack">
+            <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/bgVfDWBB/vr.jpg">
+              <img src="https://i.ibb.co/bgVfDWBB/vr.jpg" alt="Product visual" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <figcaption class="caption"><strong>Product Story</strong><span>형태와 표면을 브랜드의 인상으로 변환하는 장면</span></figcaption>
+            </figure>
+            <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/zhKgwjvF/vr.jpg">
+              <img src="https://i.ibb.co/zhKgwjvF/vr.jpg" alt="Commercial shot" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <figcaption class="caption"><strong>Product Detail</strong><span>질감과 기능이 동시에 보이도록 정리한 컷</span></figcaption>
+            </figure>
+            <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/spVX6587/1.jpg">
+              <img src="https://i.ibb.co/spVX6587/1.jpg" alt="Branding visual" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <figcaption class="caption"><strong>Branding Space</strong><span>공간의 분위기를 브랜드 기억으로 남기는 프레임</span></figcaption>
+            </figure>
+            <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/wZKZhKZd/2.jpg">
+              <img src="https://i.ibb.co/wZKZhKZd/2.jpg" alt="Branding space" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <figcaption class="caption"><strong>Spatial Mood</strong><span>빛과 거리감을 통해 공간의 깊이를 설계한 장면</span></figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="portrait" data-section="portrait">
+      <div class="inner reveal">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Room 02</div>
+            <h2>Portrait Hall</h2>
+            <p>두 번째 전시실은 인물 사진을 위한 공간입니다. 아래로만 내려가는 흐름 안에서도 좌우의 시선 이동이 느껴지도록 벽면 배열을 구성해, 실제 미술관 복도를 지나며 작품을 마주하는 감각을 살렸습니다.</p>
+          </div>
+          <div class="small">스크롤 방향은 하나지만, 레이아웃은 좌우로 흔들리며 다른 벽면으로 이동하는 듯한 리듬을 만듭니다.</div>
+        </div>
+
+        <div class="gallery-wall">
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/ks6QB1J7/1-1.jpg">
+            <img src="https://i.ibb.co/ks6QB1J7/1-1.jpg" alt="Portrait 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Presence</strong><span>가장 자연스러운 표정이 남는 순간</span></figcaption>
+          </figure>
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/SX0XmQXR/1-2.jpg">
+            <img src="https://i.ibb.co/SX0XmQXR/1-2.jpg" alt="Portrait 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Balance</strong><span>빛과 표정의 균형이 맞는 컷</span></figcaption>
+          </figure>
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/DgpybcdJ/1-3.jpg">
+            <img src="https://i.ibb.co/DgpybcdJ/1-3.jpg" alt="Portrait 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Pause</strong><span>말보다 호흡이 먼저 느껴지는 장면</span></figcaption>
+          </figure>
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/G4tYPyXx/1-4.jpg">
+            <img src="https://i.ibb.co/G4tYPyXx/1-4.jpg" alt="Portrait 4" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Texture</strong><span>피부와 그림자의 결을 살린 프레임</span></figcaption>
+          </figure>
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/B2cTdydH/1-5.jpg">
+            <img src="https://i.ibb.co/B2cTdydH/1-5.jpg" alt="Portrait 5" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Gesture</strong><span>사소한 손짓과 시선까지 남기는 컷</span></figcaption>
+          </figure>
+          <figure class="frame lightbox-trigger" data-src="https://i.ibb.co/PGB80nj7/1-6.jpg">
+            <img src="https://i.ibb.co/PGB80nj7/1-6.jpg" alt="Portrait 6" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Afterglow</strong><span>촬영이 끝난 뒤에도 오래 남는 인상</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="food" data-section="food">
+      <div class="inner cross-room reveal">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Room 03</div>
+            <h2>Food & Night Taste</h2>
+            <p>세 번째 공간은 음식 촬영과 밤의 푸드 무드를 함께 담았습니다. 위아래로 이동하면서도 벽이 바뀌는 느낌을 주기 위해, 좌우 2개의 방을 번갈아 걷는 듯한 화면 전개를 만들었습니다.</p>
+          </div>
+          <div class="small">정갈한 푸드와 밤의 감성 푸드를 한 전시 안에 배치해 대비를 살렸습니다.</div>
+        </div>
+
+        <div class="cross-row">
+          <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg">
+            <img src="https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg" alt="Food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Fine Table</strong><span>음식의 온도와 정돈된 리듬이 보이는 이미지</span></figcaption>
+          </figure>
+          <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg">
+            <img src="https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg" alt="Food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Quiet Dish</strong><span>빛의 방향으로 맛의 결을 살린 컷</span></figcaption>
+          </figure>
+        </div>
+
+        <div class="cross-row">
+          <figure class="frame medium lightbox-trigger" data-src="https://i.ibb.co/xdFXY4X/DSC08642.jpg">
+            <img src="https://i.ibb.co/xdFXY4X/DSC08642.jpg" alt="Night food 1" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Night Steam</strong><span>밤의 공기와 식욕이 한 컷에 담기는 장면</span></figcaption>
+          </figure>
+          <figure class="frame tall lightbox-trigger" data-src="https://i.ibb.co/BKKgggYn/DSC08650.jpg">
+            <img src="https://i.ibb.co/BKKgggYn/DSC08650.jpg" alt="Night food 2" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Street Mood</strong><span>거리의 감성과 따뜻한 음식의 대비</span></figcaption>
+          </figure>
+        </div>
+
+        <div class="cross-row">
+          <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/ym59SLc5/1-3.jpg">
+            <img src="https://i.ibb.co/ym59SLc5/1-3.jpg" alt="Food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Texture Close-up</strong><span>가까이 볼수록 더 매력적인 디테일 컷</span></figcaption>
+          </figure>
+          <figure class="frame wide lightbox-trigger" data-src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg">
+            <img src="https://i.ibb.co/tPkTZDnX/DSC08652.jpg" alt="Night food 3" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+            <figcaption class="caption"><strong>Midnight Taste</strong><span>야식의 분위기를 감정으로 남기는 장면</span></figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="motion" data-section="motion">
+      <div class="inner reveal">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow">Room 04</div>
+            <h2>Motion Screening</h2>
+            <p>정지 이미지가 끝나는 지점에서 영상이 시작됩니다. 마지막 전시실은 작은 상영관처럼 느껴지도록 카드형 레이아웃으로 구성했습니다.</p>
+          </div>
+          <div class="small">영상은 외부 링크로 연결되며, 브랜드 스토리와 움직임의 리듬을 보여줍니다.</div>
+        </div>
+
+        <div class="motion-grid">
+          <a class="video-card" href="https://youtu.be/WEPXeWG6rE4" target="_blank" rel="noopener noreferrer">
             <div class="video-thumb">
-              <img src="https://img.youtube.com/vi/${item.vid}/hqdefault.jpg" alt="${item.title}" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-              <div class="play-icon"></div>
+              <img src="https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg" alt="DASHU 광고" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <div class="play"></div>
             </div>
-            <div class="video-info">${item.title}</div>
-          `;
-          setTimeout(() => card.classList.add('loaded'), 70 + index * 45);
-          card.addEventListener('click', () => window.open(`https://youtu.be/${item.vid}`, '_blank', 'noopener,noreferrer'));
-          elModalGrid.appendChild(card);
-        });
-      }
+            <div class="video-info">
+              <strong>DASHU 광고</strong>
+              <span>강한 인상과 템포로 브랜드 무드를 각인시키는 영상.</span>
+            </div>
+          </a>
 
-      elModal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
+          <a class="video-card" href="https://youtu.be/b-_Sh5KLv2c" target="_blank" rel="noopener noreferrer">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg" alt="MIP 립밤" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <div class="play"></div>
+            </div>
+            <div class="video-info">
+              <strong>MIP 립밤</strong>
+              <span>제품의 사용감과 감도를 함께 전하는 짧은 시네마.</span>
+            </div>
+          </a>
 
-    function closeModal() {
-      elModal.classList.remove('active');
-      document.body.style.overflow = 'hidden';
-    }
+          <a class="video-card" href="https://youtu.be/ba3QbhE1s08" target="_blank" rel="noopener noreferrer">
+            <div class="video-thumb">
+              <img src="https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg" alt="밤깨비 농장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+              <div class="play"></div>
+            </div>
+            <div class="video-info">
+              <strong>밤깨비 농장</strong>
+              <span>지역성과 서정성을 동시에 담아낸 브랜드 영상.</span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
 
-    function openLightbox(url) {
-      elLightboxImg.src = url;
-      elLightbox.classList.add('active');
-    }
+    <section class="section" id="about" data-section="about">
+      <div class="inner about-room reveal">
+        <article class="about-card">
+          <div class="eyebrow">About the Artist</div>
+          <h3>순간을 기록하는 것이 아니라, 인상을 남깁니다.</h3>
+          <p>순간, 스튜디오는 인물, 브랜드, 공간, 음식이 가장 자기답게 보이는 장면을 찾고 정리합니다. 화려한 장치보다 이미지의 호흡과 균형을 먼저 생각하며, 오래 보아도 질리지 않는 화면을 지향합니다.</p>
+          <div class="quote">“좋은 사진은 설명보다 먼저 분위기를 남깁니다.”</div>
+        </article>
 
-    function closeLightbox() {
-      elLightbox.classList.remove('active');
-      elLightboxImg.src = '';
-    }
+        <article class="contact-card">
+          <div class="eyebrow">Contact</div>
+          <h3>프로젝트 문의</h3>
+          <p>브랜드 촬영, 공간 촬영, 인물 프로필, 음식 촬영, 영상 작업까지 목적에 맞는 톤으로 제안할 수 있습니다. 아래 정보를 실제 연락처로 교체해 사용하면 됩니다.</p>
+          <div class="contact-list">
+            <div class="contact-item"><span>Email</span><strong>momentstudio@example.com</strong></div>
+            <div class="contact-item"><span>Instagram</span><strong>@moment.studio</strong></div>
+            <div class="contact-item"><span>Location</span><strong>Jinju, Korea</strong></div>
+            <div class="contact-item"><span>Booking</span><strong>Open for Projects</strong></div>
+          </div>
+          <div style="margin-top:24px; display:flex; gap:12px; flex-wrap:wrap;">
+            <a class="btn primary" href="mailto:momentstudio@example.com">이메일 보내기</a>
+            <a class="btn" href="#intro">맨 위로</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
 
-    init();
-  </script></body>
+  <footer class="footer inner">© MOMENT STUDIO. Quietly composed, carefully framed.</footer>
+
+  <div id="lightbox">
+    <img id="lightbox-img" src="" alt="expanded artwork">
+  </div>
+
+  <script>
+    const sections = [...document.querySelectorAll('[data-section]')];
+    const dots = [...document.querySelectorAll('.side-dot')];
+    const reveals = [...document.querySelectorAll('.reveal')];
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.classList.add('in-view');
+      });
+    }, { threshold: 0.14 });
+
+    reveals.forEach(el => revealObserver.observe(el));
+
+    const sectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.dataset.section;
+        dots.forEach(dot => dot.classList.toggle('active', dot.dataset.target === id));
+      });
+    }, { threshold: 0.45 });
+
+    sections.forEach(section => sectionObserver.observe(section));
+
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => {
+        const target = document.getElementById(dot.dataset.target);
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    document.querySelectorAll('.lightbox-trigger').forEach(item => {
+      item.addEventListener('click', () => {
+        const src = item.dataset.src;
+        lightboxImg.src = src;
+        lightbox.classList.add('active');
+      });
+    });
+
+    lightbox.addEventListener('click', () => {
+      lightbox.classList.remove('active');
+      lightboxImg.src = '';
+    });
+  </script>
+</body>
 </html>
