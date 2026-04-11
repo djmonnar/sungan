@@ -5,648 +5,250 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>순간, 스튜디오 — 전문사진촬영, 처리</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --bg-card: #141414;
-    --text: #e8e4df;
-    --text-muted: #888;
-    --accent: #c9a96e;
-    --accent-light: #dfc799;
-    --white: #fff;
-    --serif: 'Cormorant Garamond', serif;
-    --sans: 'Noto Sans KR', sans-serif;
-    --display: 'Bebas Neue', sans-serif;
-  }
+:root {
+  --bg: #0c0c0c;
+  --bg2: #111;
+  --bg-card: #161616;
+  --text: #e0dcd6;
+  --muted: #777;
+  --accent: #c9a96e;
+  --white: #fff;
+  --sans: 'Noto Sans KR', sans-serif;
+  --display: 'Bebas Neue', sans-serif;
+  --serif: 'Cormorant Garamond', serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
+/* ── PRELOADER ── */
+.preloader{position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .8s,visibility .8s}
+.preloader.hide{opacity:0;visibility:hidden;pointer-events:none}
+.preloader-text{font-family:var(--sans);font-weight:700;font-size:clamp(1.5rem,5vw,3rem);letter-spacing:.1em;color:var(--accent);animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.3}50%{opacity:1}}
 
-  /* ─── PRELOADER ─── */
-  .preloader {
-    position: fixed; inset: 0; z-index: 9999;
-    background: var(--bg);
-    display: flex; align-items: center; justify-content: center;
-    transition: opacity 0.8s ease, visibility 0.8s ease;
-  }
-  .preloader.hide { opacity: 0; visibility: hidden; pointer-events: none; }
-  .preloader-text {
-    font-family: var(--sans);
-    font-weight: 700;
-    font-size: clamp(1.5rem, 5vw, 3.5rem);
-    letter-spacing: 0.15em;
-    color: var(--accent);
-    animation: pulse 1.5s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
-  }
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;background:rgba(12,12,12,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(201,169,110,.08);transition:transform .4s}
+nav.hidden{transform:translateY(-100%)}
+.nav-logo{font-family:var(--sans);font-weight:700;font-size:1.2rem;color:var(--accent);text-decoration:none;letter-spacing:.05em;cursor:pointer}
+.nav-links{display:flex;gap:1.5rem;align-items:center}
+.nav-links a{font-size:.7rem;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s;position:relative}
+.nav-links a::after{content:'';position:absolute;bottom:-3px;left:0;width:0;height:1px;background:var(--accent);transition:width .3s}
+.nav-links a:hover{color:var(--accent)}
+.nav-links a:hover::after{width:100%}
+.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px;background:none;border:none;padding:4px}
+.hamburger span{width:22px;height:1.5px;background:var(--text);transition:all .3s}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(4px,5px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(4px,-5px)}
+.mobile-menu{display:none;position:fixed;inset:0;z-index:99;background:rgba(12,12,12,.97);flex-direction:column;align-items:center;justify-content:center;gap:2rem}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-family:var(--sans);font-size:1.3rem;font-weight:500;letter-spacing:.1em;color:var(--text);text-decoration:none;transition:color .3s}
+.mobile-menu a:hover{color:var(--accent)}
 
-  /* ─── NAV ─── */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    padding: 1.2rem 3rem;
-    display: flex; align-items: center; justify-content: space-between;
-    background: rgba(10,10,10,0.85);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(201,169,110,0.1);
-    transition: transform 0.4s ease;
-  }
-  nav.hidden { transform: translateY(-100%); }
-  .nav-logo {
-    font-family: var(--display);
-    font-size: 1.6rem;
-    letter-spacing: 0.25em;
-    color: var(--accent);
-    text-decoration: none;
-  }
-  .nav-links { display: flex; gap: 2rem; align-items: center; }
-  .nav-links a {
-    font-family: var(--sans);
-    font-size: 0.75rem;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color 0.3s;
-    position: relative;
-  }
-  .nav-links a::after {
-    content: '';
-    position: absolute; bottom: -4px; left: 0;
-    width: 0; height: 1px;
-    background: var(--accent);
-    transition: width 0.3s ease;
-  }
-  .nav-links a:hover { color: var(--accent); }
-  .nav-links a:hover::after { width: 100%; }
+/* ── HERO ── */
+.hero{height:100vh;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;perspective:1000px}
+.hero-bg{position:absolute;inset:0;background:url('https://i.ibb.co/FbDwFTZx/1-1.jpg') center/cover no-repeat;filter:brightness(.3) saturate(.7);transform:scale(1.05);animation:heroZoom 25s ease-in-out infinite alternate}
+@keyframes heroZoom{0%{transform:scale(1.05)}100%{transform:scale(1)}}
+.hero-content{position:relative;z-index:2;text-align:center;animation:fadeUp 1s ease .3s both}
+.hero-sub{font-size:.65rem;font-weight:300;letter-spacing:.5em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem}
+.hero-title{font-family:var(--sans);font-weight:700;font-size:clamp(2.5rem,10vw,6rem);letter-spacing:.05em;line-height:1;color:var(--white)}
+.hero-tagline{font-family:var(--serif);font-size:clamp(.9rem,2.5vw,1.3rem);font-weight:300;font-style:italic;color:var(--muted);margin-top:1.2rem}
+.hero-cta{display:inline-block;margin-top:2rem;padding:.8rem 2.5rem;border:1px solid var(--accent);color:var(--accent);font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;text-decoration:none;transition:all .3s}
+.hero-cta:hover{background:var(--accent);color:var(--bg)}
+.hero-scroll{position:absolute;bottom:2.5rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.4rem;animation:fadeUp 1s ease 1s both}
+.hero-scroll span{font-size:.55rem;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
+.scroll-line{width:1px;height:35px;background:var(--accent);animation:scrollPulse 2s ease-in-out infinite}
+@keyframes scrollPulse{0%,100%{transform:scaleY(.4);opacity:.3}50%{transform:scaleY(1);opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(25px)}to{opacity:1;transform:translateY(0)}}
 
-  .hamburger {
-    display: none; cursor: pointer; flex-direction: column; gap: 5px;
-    background: none; border: none; padding: 4px;
-  }
-  .hamburger span {
-    width: 24px; height: 1.5px; background: var(--text);
-    transition: all 0.3s;
-  }
-  .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(4px, 5px); }
-  .hamburger.active span:nth-child(2) { opacity: 0; }
-  .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(4px, -5px); }
+/* ── SECTIONS ── */
+section{padding:5rem 2rem}
+.section-label{font-size:.6rem;font-weight:400;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.section-title{font-family:var(--display);font-size:clamp(1.8rem,4vw,3rem);letter-spacing:.08em;color:var(--white);margin-bottom:.8rem}
+.section-desc{font-size:.85rem;font-weight:300;line-height:1.8;color:var(--muted);max-width:550px}
+.divider{width:35px;height:1px;background:var(--accent);margin:1.2rem 0}
 
-  .mobile-menu {
-    display: none; position: fixed; inset: 0; z-index: 99;
-    background: rgba(10,10,10,0.97);
-    flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
-  }
-  .mobile-menu.open { display: flex; }
-  .mobile-menu a {
-    font-family: var(--display);
-    font-size: 2rem; letter-spacing: 0.2em;
-    color: var(--text); text-decoration: none;
-    transition: color 0.3s;
-  }
-  .mobile-menu a:hover { color: var(--accent); }
+/* ── CATEGORY PREVIEW (홈) ── */
+.cat-section{padding:3rem 2rem 4rem}
+.cat-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem}
+.cat-header h3{font-family:var(--display);font-size:clamp(1.5rem,3vw,2.2rem);letter-spacing:.06em;color:var(--white)}
+.cat-header .cat-sub{font-size:.7rem;color:var(--muted);margin-left:.8rem}
+.cat-more{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);text-decoration:none;border:1px solid rgba(201,169,110,.3);padding:.5rem 1.2rem;transition:all .3s;cursor:pointer;background:none;font-family:var(--sans)}
+.cat-more:hover{background:var(--accent);color:var(--bg)}
 
-  /* ─── HERO ─── */
-  .hero {
-    height: 100vh; position: relative;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
-  }
-  .hero-bg {
-    position: absolute; inset: 0;
-    background: url('https://images.unsplash.com/photo-1604881991720-f91add269bed?w=1920&q=80') center/cover no-repeat;
-    filter: brightness(0.35);
-    transform: scale(1.1);
-    animation: heroZoom 20s ease-in-out infinite alternate;
-  }
-  @keyframes heroZoom {
-    0% { transform: scale(1.1); }
-    100% { transform: scale(1.0); }
-  }
-  .hero-content {
-    position: relative; z-index: 2;
-    text-align: center;
-    animation: fadeUp 1.2s ease 0.5s both;
-  }
-  .hero-sub {
-    font-family: var(--sans);
-    font-size: 0.7rem;
-    font-weight: 300;
-    letter-spacing: 0.5em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 1.5rem;
-  }
-  .hero-title {
-    font-family: var(--display);
-    font-size: clamp(3.5rem, 12vw, 10rem);
-    letter-spacing: 0.15em;
-    line-height: 0.95;
-    color: var(--white);
-  }
-  .hero-tagline {
-    font-family: var(--serif);
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    font-weight: 300;
-    font-style: italic;
-    color: var(--text-muted);
-    margin-top: 1.5rem;
-  }
-  .hero-scroll {
-    position: absolute; bottom: 3rem; left: 50%;
-    transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-    animation: fadeUp 1.2s ease 1.2s both;
-  }
-  .hero-scroll span {
-    font-size: 0.6rem; letter-spacing: 0.3em;
-    text-transform: uppercase; color: var(--text-muted);
-  }
-  .scroll-line {
-    width: 1px; height: 40px; background: var(--accent);
-    animation: scrollPulse 2s ease-in-out infinite;
-  }
-  @keyframes scrollPulse {
-    0%, 100% { transform: scaleY(0.5); opacity: 0.3; }
-    50% { transform: scaleY(1); opacity: 1; }
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+/* ── 3D GALLERY WALL ── */
+.gallery-wall{perspective:1200px;display:flex;gap:1.2rem;overflow-x:auto;padding:1rem 0 2rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.gallery-wall::-webkit-scrollbar{display:none}
+.gallery-frame{flex:0 0 auto;width:min(320px,80vw);scroll-snap-align:center;position:relative;transform-style:preserve-3d;transition:transform .5s cubic-bezier(.25,.46,.45,.94)}
+.gallery-frame:hover{transform:rotateY(-3deg) scale(1.02)}
+.frame-inner{background:#1a1a1a;border:2px solid #222;padding:12px 12px 40px;box-shadow:0 8px 40px rgba(0,0,0,.5),inset 0 0 0 1px rgba(255,255,255,.03)}
+.frame-inner img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer;transition:filter .3s}
+.frame-inner img:hover{filter:brightness(1.1)}
+.frame-label{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:.6rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
 
-  /* ─── SECTION COMMON ─── */
-  section { padding: 6rem 3rem; }
-  .section-label {
-    font-family: var(--sans);
-    font-size: 0.65rem;
-    font-weight: 400;
-    letter-spacing: 0.4em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 0.8rem;
-  }
-  .section-title {
-    font-family: var(--display);
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    letter-spacing: 0.08em;
-    color: var(--white);
-    margin-bottom: 1rem;
-  }
-  .section-desc {
-    font-size: 0.9rem;
-    font-weight: 300;
-    line-height: 1.8;
-    color: var(--text-muted);
-    max-width: 600px;
-  }
-  .divider {
-    width: 40px; height: 1px;
-    background: var(--accent);
-    margin: 1.5rem 0;
-  }
+/* ── FULL GALLERY PAGE ── */
+.gallery-page{display:none;min-height:100vh;padding:6rem 2rem 4rem}
+.gallery-page.active{display:block}
+.gallery-back{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);text-decoration:none;cursor:pointer;background:none;border:1px solid rgba(201,169,110,.3);padding:.5rem 1.2rem;font-family:var(--sans);transition:all .3s;margin-bottom:2rem;display:inline-block}
+.gallery-back:hover{background:var(--accent);color:var(--bg)}
 
-  /* ─── PORTFOLIO ─── */
-  #portfolio { padding-top: 4rem; }
-  .filter-bar {
-    display: flex; gap: 0.5rem; flex-wrap: wrap;
-    margin-bottom: 3rem;
-    padding-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-  }
-  .filter-btn {
-    font-family: var(--sans);
-    font-size: 0.7rem;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 0.6rem 1.2rem;
-    background: transparent;
-    border: 1px solid rgba(255,255,255,0.1);
-    color: var(--text-muted);
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-  .filter-btn:hover, .filter-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--bg);
-  }
+/* 3D Room Gallery */
+.gallery-room{perspective:800px;perspective-origin:50% 50%}
+.gallery-masonry{columns:3;column-gap:1rem;padding:1rem 0}
+.gallery-masonry .g-item{break-inside:avoid;margin-bottom:1rem;position:relative;transform-style:preserve-3d;transition:transform .4s}
+.gallery-masonry .g-item:hover{transform:translateZ(20px) scale(1.03)}
+.g-item-frame{background:#1a1a1a;border:2px solid #222;padding:8px 8px 32px;box-shadow:0 6px 30px rgba(0,0,0,.4)}
+.g-item-frame img{width:100%;display:block;cursor:pointer}
+.g-item-name{position:absolute;bottom:8px;left:0;right:0;text-align:center;font-size:.55rem;letter-spacing:.1em;color:var(--muted)}
 
-  .gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1rem;
-  }
-  .gallery-item {
-    position: relative;
-    aspect-ratio: 4/3;
-    overflow: hidden;
-    cursor: pointer;
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-  .gallery-item.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .gallery-item img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94), filter 0.5s;
-  }
-  .gallery-item:hover img {
-    transform: scale(1.08);
-    filter: brightness(0.6);
-  }
-  .gallery-overlay {
-    position: absolute; inset: 0;
-    display: flex; flex-direction: column;
-    justify-content: flex-end;
-    padding: 1.5rem;
-    opacity: 0;
-    transition: opacity 0.4s;
-  }
-  .gallery-item:hover .gallery-overlay { opacity: 1; }
-  .gallery-overlay h3 {
-    font-family: var(--serif);
-    font-size: 1.3rem;
-    font-weight: 400;
-    color: var(--white);
-  }
-  .gallery-overlay span {
-    font-size: 0.65rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-top: 0.3rem;
-  }
+/* Sub-category tabs */
+.sub-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:2rem}
+.sub-tab{font-family:var(--sans);font-size:.65rem;letter-spacing:.1em;padding:.5rem 1rem;background:transparent;border:1px solid rgba(255,255,255,.08);color:var(--muted);cursor:pointer;transition:all .3s;text-transform:uppercase}
+.sub-tab:hover,.sub-tab.active{background:var(--accent);border-color:var(--accent);color:var(--bg)}
 
-  /* ─── ABOUT ─── */
-  #about {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4rem;
-    align-items: center;
-  }
-  .about-image {
-    position: relative;
-    aspect-ratio: 3/4;
-    overflow: hidden;
-  }
-  .about-image img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-    filter: grayscale(30%);
-  }
-  .about-image::after {
-    content: '';
-    position: absolute; inset: 0;
-    border: 1px solid var(--accent);
-    transform: translate(12px, 12px);
-    pointer-events: none;
-  }
-  .about-text { padding: 2rem 0; }
-  .about-text p {
-    font-size: 0.9rem;
-    font-weight: 300;
-    line-height: 2;
-    color: var(--text-muted);
-    margin-bottom: 1.5rem;
-  }
-  .stats {
-    display: flex; gap: 3rem; margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
-  .stat-num {
-    font-family: var(--display);
-    font-size: 2.5rem;
-    color: var(--accent);
-  }
-  .stat-label {
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin-top: 0.2rem;
-  }
+/* ── VIDEO SECTION ── */
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.2rem;margin-top:2rem}
+.video-card{background:var(--bg-card);border:1px solid rgba(255,255,255,.04);overflow:hidden;transition:border-color .3s,transform .3s}
+.video-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.video-thumb{position:relative;aspect-ratio:16/9;overflow:hidden;background:#000}
+.video-thumb iframe{width:100%;height:100%;border:none}
+.video-info{padding:1rem}
+.video-info h4{font-size:.85rem;font-weight:500;color:var(--white);margin-bottom:.3rem}
+.video-info span{font-size:.65rem;letter-spacing:.1em;color:var(--accent);text-transform:uppercase}
 
-  /* ─── SERVICES ─── */
-  .services-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.5rem;
-    margin-top: 3rem;
-  }
-  .service-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.04);
-    padding: 2.5rem 2rem;
-    transition: border-color 0.3s, transform 0.3s;
-  }
-  .service-card:hover {
-    border-color: var(--accent);
-    transform: translateY(-4px);
-  }
-  .service-icon {
-    font-size: 1.8rem;
-    margin-bottom: 1.2rem;
-  }
-  .service-card h3 {
-    font-family: var(--serif);
-    font-size: 1.3rem;
-    font-weight: 400;
-    color: var(--white);
-    margin-bottom: 0.8rem;
-  }
-  .service-card p {
-    font-size: 0.8rem;
-    font-weight: 300;
-    line-height: 1.8;
-    color: var(--text-muted);
-  }
+/* ── ABOUT ── */
+#about{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:center}
+.about-image{position:relative;aspect-ratio:3/4;overflow:hidden}
+.about-image img{width:100%;height:100%;object-fit:cover;filter:grayscale(20%)}
+.about-image::after{content:'';position:absolute;inset:0;border:1px solid var(--accent);transform:translate(10px,10px);pointer-events:none}
+.about-text{padding:1.5rem 0}
+.about-text p{font-size:.85rem;font-weight:300;line-height:2;color:var(--muted);margin-bottom:1.2rem}
+.stats{display:flex;gap:2.5rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid rgba(255,255,255,.05)}
+.stat-num{font-family:var(--display);font-size:2.2rem;color:var(--accent)}
+.stat-label{font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.15rem}
 
-  /* ─── CLIENTS ─── */
-  .clients-marquee {
-    overflow: hidden;
-    padding: 2rem 0;
-    border-top: 1px solid rgba(255,255,255,0.04);
-    border-bottom: 1px solid rgba(255,255,255,0.04);
-    margin-top: 3rem;
-  }
-  .marquee-track {
-    display: flex; gap: 4rem;
-    animation: marquee 30s linear infinite;
-    width: max-content;
-  }
-  .marquee-track span {
-    font-family: var(--display);
-    font-size: 1.2rem;
-    letter-spacing: 0.15em;
-    color: rgba(255,255,255,0.15);
-    white-space: nowrap;
-  }
-  @keyframes marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
-  }
+/* ── CONTACT ── */
+#contact{text-align:center;padding:6rem 2rem;position:relative}
+#contact::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),transparent)}
+.contact-link{font-family:var(--sans);font-weight:700;font-size:clamp(1.2rem,3vw,2rem);color:var(--white);text-decoration:none;display:inline-block;margin:1.5rem 0;transition:color .3s}
+.contact-link:hover{color:var(--accent)}
+.contact-info{font-size:.75rem;font-weight:300;color:var(--muted);line-height:2}
+.social-links{display:flex;gap:1.5rem;justify-content:center;margin-top:1.5rem}
+.social-links a{font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);text-decoration:none;transition:color .3s}
+.social-links a:hover{color:var(--accent)}
 
-  /* ─── CONTACT ─── */
-  #contact {
-    text-align: center;
-    padding: 8rem 3rem;
-    position: relative;
-  }
-  #contact::before {
-    content: '';
-    position: absolute; top: 0; left: 10%; right: 10%;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  }
-  .contact-email {
-    font-family: var(--display);
-    font-size: clamp(1.5rem, 4vw, 3rem);
-    letter-spacing: 0.1em;
-    color: var(--white);
-    text-decoration: none;
-    display: inline-block;
-    margin: 2rem 0;
-    transition: color 0.3s;
-  }
-  .contact-email:hover { color: var(--accent); }
-  .contact-info {
-    font-size: 0.8rem;
-    font-weight: 300;
-    color: var(--text-muted);
-    line-height: 2;
-  }
-  .social-links {
-    display: flex; gap: 2rem; justify-content: center;
-    margin-top: 2rem;
-  }
-  .social-links a {
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    text-decoration: none;
-    transition: color 0.3s;
-  }
-  .social-links a:hover { color: var(--accent); }
+footer{padding:1.5rem 2rem;text-align:center;font-size:.6rem;letter-spacing:.08em;color:rgba(255,255,255,.15);border-top:1px solid rgba(255,255,255,.03)}
 
-  /* ─── FOOTER ─── */
-  footer {
-    padding: 2rem 3rem;
-    text-align: center;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    color: rgba(255,255,255,0.2);
-    border-top: 1px solid rgba(255,255,255,0.03);
-  }
+/* ── LIGHTBOX ── */
+.lightbox{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center;cursor:pointer}
+.lightbox.open{display:flex}
+.lightbox img{max-width:92vw;max-height:92vh;object-fit:contain;animation:lbFade .3s ease}
+.lightbox-close{position:absolute;top:1.5rem;right:1.5rem;font-size:1.5rem;color:var(--white);cursor:pointer;background:none;border:none;font-family:var(--sans)}
+.lb-nav{position:absolute;top:50%;transform:translateY(-50%);font-size:2rem;color:var(--white);cursor:pointer;background:none;border:none;padding:1rem;opacity:.5;transition:opacity .3s}
+.lb-nav:hover{opacity:1}
+.lb-prev{left:1rem}
+.lb-next{right:1rem}
+@keyframes lbFade{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
 
-  /* ─── LIGHTBOX ─── */
-  .lightbox {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,0.95);
-    display: none; align-items: center; justify-content: center;
-    cursor: pointer;
-  }
-  .lightbox.open { display: flex; }
-  .lightbox img {
-    max-width: 90vw; max-height: 90vh;
-    object-fit: contain;
-    animation: lbFade 0.4s ease;
-  }
-  .lightbox-close {
-    position: absolute; top: 2rem; right: 2rem;
-    font-size: 1.5rem; color: var(--white);
-    cursor: pointer; background: none; border: none;
-    font-family: var(--sans);
-  }
-  @keyframes lbFade {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
-  }
+/* ── FADE IN ── */
+.fade-in{opacity:0;transform:translateY(25px);transition:opacity .7s ease-out,transform .7s ease-out}
+.fade-in.visible{opacity:1;transform:none}
 
-  /* ─── RESPONSIVE ─── */
-  @media (max-width: 768px) {
-    nav { padding: 1rem 1.5rem; }
-    .nav-links { display: none; }
-    .hamburger { display: flex; }
-    section { padding: 4rem 1.5rem; }
-    #about { grid-template-columns: 1fr; gap: 2rem; }
-    .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0.6rem; }
-    .stats { gap: 2rem; }
-    .filter-bar { gap: 0.3rem; }
-    .filter-btn { padding: 0.5rem 0.8rem; font-size: 0.6rem; }
-  }
-
-  /* 스크롤 애니메이션 클래스 추가 */
-  .fade-in-section {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-  }
-  .fade-in-section.is-visible {
-    opacity: 1;
-    transform: none;
-  }
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  nav{padding:.8rem 1.2rem}
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  section{padding:3.5rem 1.2rem}
+  .cat-section{padding:2rem 1.2rem 3rem}
+  #about{grid-template-columns:1fr;gap:1.5rem}
+  .gallery-masonry{columns:2;column-gap:.6rem}
+  .gallery-frame{width:min(280px,85vw)}
+  .stats{gap:1.5rem}
+  .video-grid{grid-template-columns:1fr}
+  .cat-header{flex-direction:column;align-items:flex-start;gap:.8rem}
+}
+@media(max-width:480px){
+  .gallery-masonry{columns:1}
+}
 </style>
 </head>
 <body>
 
-<!-- Preloader -->
-<div class="preloader" id="preloader">
-  <div class="preloader-text">순간, 스튜디오</div>
-</div>
+<div class="preloader" id="preloader"><div class="preloader-text">순간, 스튜디오</div></div>
 
-<!-- Nav -->
 <nav id="navbar">
-  <a href="#" class="nav-logo" style="font-family: var(--sans); font-weight: 700;">순간, 스튜디오</a>
+  <a class="nav-logo" onclick="showHome()">순간, 스튜디오</a>
   <div class="nav-links">
-    <a href="#portfolio">Portfolio</a>
-    <a href="#about">About</a>
-    <a href="#services">Services</a>
+    <a href="#" onclick="showHome()">Home</a>
+    <a href="#" onclick="openGallery('product')">제품</a>
+    <a href="#" onclick="openGallery('promo')">홍보</a>
+    <a href="#" onclick="openGallery('profile')">프로필</a>
+    <a href="#" onclick="openGallery('interior')">인테리어</a>
+    <a href="#" onclick="openGallery('food')">음식</a>
+    <a href="#" onclick="openGallery('video')">영상</a>
     <a href="#contact">Contact</a>
   </div>
-  <button class="hamburger" id="hamburger" aria-label="메뉴">
-    <span></span><span></span><span></span>
-  </button>
+  <button class="hamburger" id="hamburger" aria-label="메뉴"><span></span><span></span><span></span></button>
 </nav>
 
-<!-- Mobile Menu -->
 <div class="mobile-menu" id="mobileMenu">
-  <a href="#portfolio" onclick="closeMobile()">포트폴리오</a>
-  <a href="#about" onclick="closeMobile()">소개</a>
-  <a href="#services" onclick="closeMobile()">서비스</a>
-  <a href="#contact" onclick="closeMobile()">문의</a>
+  <a href="#" onclick="showHome();closeMobile()">Home</a>
+  <a href="#" onclick="openGallery('product');closeMobile()">제품</a>
+  <a href="#" onclick="openGallery('promo');closeMobile()">홍보</a>
+  <a href="#" onclick="openGallery('profile');closeMobile()">프로필</a>
+  <a href="#" onclick="openGallery('interior');closeMobile()">인테리어</a>
+  <a href="#" onclick="openGallery('food');closeMobile()">음식</a>
+  <a href="#" onclick="openGallery('video');closeMobile()">영상</a>
+  <a href="#contact" onclick="closeMobile()">Contact</a>
 </div>
 
-<!-- Hero -->
+<!-- ========== HOME ========== -->
+<div id="homePage">
+
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-content">
     <p class="hero-sub">전문사진촬영 &amp; 처리</p>
-    <h1 class="hero-title" style="font-family: var(--sans); font-weight: 700; font-size: clamp(2.5rem, 10vw, 7rem); letter-spacing: 0.05em;">순간,<br>스튜디오</h1>
+    <h1 class="hero-title">순간,<br>스튜디오</h1>
     <p class="hero-tagline">당신의 소중한 순간을 기록합니다</p>
+    <a href="#categories" class="hero-cta">Portfolio</a>
   </div>
-  <div class="hero-scroll">
-    <span>Scroll</span>
-    <div class="scroll-line"></div>
-  </div>
+  <div class="hero-scroll"><span>Scroll</span><div class="scroll-line"></div></div>
 </section>
 
-<!-- Portfolio -->
-<section id="portfolio" class="fade-in-section">
-  <p class="section-label">Selected Works</p>
-  <h2 class="section-title">PORTFOLIO</h2>
-  <div class="divider"></div>
-  <p class="section-desc">프로필, 증명, 웨딩, 가족 등 다양한 촬영 작업을 소개합니다.</p>
-
-  <div class="filter-bar" style="margin-top: 2rem;">
-    <button class="filter-btn active" data-filter="all">All</button>
-    <button class="filter-btn" data-filter="profile">프로필</button>
-    <button class="filter-btn" data-filter="id">증명사진</button>
-    <button class="filter-btn" data-filter="couple">웨딩 · 커플</button>
-    <button class="filter-btn" data-filter="family">가족 · 단체</button>
-  </div>
-
-  <div class="gallery-grid" id="galleryGrid">
-    <!-- JS로 렌더링 됩니다 -->
-  </div>
-</section>
+<!-- Category Previews -->
+<div id="categories"></div>
+<div id="categoryPreviews"></div>
 
 <!-- About -->
-<section id="about" class="fade-in-section">
+<section id="about" class="fade-in">
   <div class="about-image">
-    <img src="https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800&q=80" alt="순간 스튜디오">
+    <img src="https://i.ibb.co/FbDwFTZx/1-1.jpg" alt="순간 스튜디오">
   </div>
   <div class="about-text">
     <p class="section-label">About Us</p>
     <h2 class="section-title">STORY</h2>
     <div class="divider"></div>
-    <p>
-      순간, 스튜디오는 경남 진주에 위치한 전문 사진 촬영 및 보정 스튜디오입니다. 프로필 사진, 증명사진, 웨딩, 커플, 가족 촬영 등 다양한 인물 사진을 전문으로 합니다.
-    </p>
-    <p>
-      자연스럽고 아름다운 순간을 포착하여, 당신만의 특별한 이야기를 사진에 담아드립니다. 촬영부터 전문 보정까지 원스톱 서비스를 제공합니다.
-    </p>
+    <p>순간, 스튜디오는 경남 진주에 위치한 전문 사진 촬영 및 보정 스튜디오입니다. 제품, 음식, 인테리어, 프로필, 홍보 영상 등 다양한 분야의 상업 촬영을 전문으로 합니다.</p>
+    <p>자연스럽고 아름다운 순간을 포착하여, 당신만의 특별한 이야기를 사진과 영상에 담아드립니다.</p>
     <div class="stats">
-      <div>
-        <div class="stat-num">19+</div>
-        <div class="stat-label">Reviews</div>
-      </div>
-      <div>
-        <div class="stat-num">100+</div>
-        <div class="stat-label">Clients</div>
-      </div>
-      <div>
-        <div class="stat-num">진주</div>
-        <div class="stat-label">Location</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- Services -->
-<section id="services" class="fade-in-section">
-  <p class="section-label">What We Do</p>
-  <h2 class="section-title">SERVICES</h2>
-  <div class="divider"></div>
-  <p class="section-desc">전문 촬영부터 보정까지, 최고의 결과물을 제공합니다.</p>
-
-  <div class="services-grid">
-    <div class="service-card">
-      <div class="service-icon">📸</div>
-      <h3>프로필 촬영</h3>
-      <p>비즈니스 프로필, SNS 프로필, 배우 프로필 등 목적에 맞는 최적의 인물 사진을 촬영합니다.</p>
-    </div>
-    <div class="service-card">
-      <div class="service-icon">🪪</div>
-      <h3>증명사진</h3>
-      <p>여권, 이력서, 각종 서류용 증명사진을 자연스럽고 깔끔하게 촬영합니다.</p>
-    </div>
-    <div class="service-card">
-      <div class="service-icon">💍</div>
-      <h3>웨딩 · 커플</h3>
-      <p>사랑하는 두 사람의 특별한 순간을 아름답게 기록합니다. 스튜디오 및 야외 촬영 가능합니다.</p>
-    </div>
-    <div class="service-card">
-      <div class="service-icon">✨</div>
-      <h3>전문 보정</h3>
-      <p>피부 보정, 색감 조정, 배경 처리 등 전문적인 후보정으로 완성도를 높여드립니다.</p>
-    </div>
-  </div>
-</section>
-
-<!-- Clients Marquee -->
-<section style="padding: 0 3rem;" class="fade-in-section">
-  <div class="clients-marquee">
-    <div class="marquee-track" id="marqueeTrack">
-      <!-- JS에서 채워집니다 -->
+      <div><div class="stat-num">6</div><div class="stat-label">Categories</div></div>
+      <div><div class="stat-num">100+</div><div class="stat-label">Works</div></div>
+      <div><div class="stat-num">진주</div><div class="stat-label">Location</div></div>
     </div>
   </div>
 </section>
 
 <!-- Contact -->
-<section id="contact" class="fade-in-section">
+<section id="contact" class="fade-in">
   <p class="section-label">Get In Touch</p>
   <h2 class="section-title">CONTACT</h2>
-  <div class="divider" style="margin: 1.5rem auto;"></div>
-  <a href="https://blog.naver.com/sungan_studio" target="_blank" class="contact-email">NAVER BLOG</a>
+  <div class="divider" style="margin:1rem auto"></div>
+  <a href="https://blog.naver.com/sungan_studio" target="_blank" class="contact-link">NAVER BLOG →</a>
   <div class="contact-info">
     <p>경남 진주시 대신로 365 지하1층</p>
     <p>컴포즈커피 건물 지하 1층</p>
@@ -654,159 +256,516 @@
   <div class="social-links">
     <a href="https://www.instagram.com/sungan__studio/" target="_blank">Instagram</a>
     <a href="https://blog.naver.com/sungan_studio" target="_blank">Blog</a>
-    <a href="https://m.place.naver.com/place/1557329221/home?entry=pll&bk_query=%EC%88%9C%EA%B0%84%20%EC%8A%A4%ED%8A%9C%EB%94%94%EC%98%A4%20%EC%A7%84%EC%A3%BC" target="_blank">Naver Place</a>
+    <a href="https://youtube.com/@homepage-b1j" target="_blank">YouTube</a>
   </div>
 </section>
 
-<!-- Footer -->
-<footer>
-  ⓒ 2026 순간, 스튜디오. All Rights Reserved.
-</footer>
+<footer>ⓒ 2026 순간, 스튜디오. All Rights Reserved.</footer>
+</div>
 
-<!-- Lightbox -->
-<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+<!-- ========== GALLERY PAGES ========== -->
+<div class="gallery-page" id="galleryPage">
+  <button class="gallery-back" onclick="showHome()">← 홈으로</button>
+  <p class="section-label" id="gpLabel"></p>
+  <h2 class="section-title" id="gpTitle"></h2>
+  <div class="divider"></div>
+  <div class="sub-tabs" id="subTabs"></div>
+  <div class="gallery-room">
+    <div class="gallery-masonry" id="gpGrid"></div>
+  </div>
+</div>
+
+<!-- VIDEO PAGE -->
+<div class="gallery-page" id="videoPage">
+  <button class="gallery-back" onclick="showHome()">← 홈으로</button>
+  <p class="section-label">Film & Video</p>
+  <h2 class="section-title">영상 포트폴리오</h2>
+  <div class="divider"></div>
+  <div class="sub-tabs" id="videoTabs"></div>
+  <div class="video-grid" id="videoGrid"></div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
   <button class="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightboxImg" src="" alt="">
+  <button class="lb-nav lb-prev" onclick="lbNav(-1);event.stopPropagation()">‹</button>
+  <button class="lb-nav lb-next" onclick="lbNav(1);event.stopPropagation()">›</button>
+  <img id="lbImg" src="" alt="" onclick="event.stopPropagation()">
 </div>
 
 <script>
-  // ─── DATA ───
-  const portfolioItems = [
-    { title: '비즈니스 프로필', category: 'profile', img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80' },
-    { title: '여성 프로필', category: 'profile', img: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=800&q=80' },
-    { title: '증명사진', category: 'id', img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80' },
-    { title: '커플 스냅', category: 'couple', img: 'https://images.unsplash.com/photo-1529634597503-139d3726fed5?w=800&q=80' },
-    { title: '가족 촬영', category: 'family', img: 'https://images.unsplash.com/photo-1609220136736-443140cffec6?w=800&q=80' },
-    { title: '배우 프로필', category: 'profile', img: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80' },
-    { title: '이력서 증명', category: 'id', img: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80' },
-    { title: '웨딩 촬영', category: 'couple', img: 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80' },
-    { title: '돌잔치 가족', category: 'family', img: 'https://images.unsplash.com/photo-1581579438747-104c53d7fbc4?w=800&q=80' },
-    { title: 'SNS 프로필', category: 'profile', img: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80' },
-    { title: '셀프 웨딩', category: 'couple', img: 'https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=800&q=80' },
-    { title: '단체 촬영', category: 'family', img: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=800&q=80' },
-  ];
-
-  const clients = [
-    '프로필촬영', '증명사진', '웨딩스냅', '커플촬영', '가족사진',
-    '단체촬영', '배우프로필', '비즈니스프로필', '돌잔치', '졸업사진',
-    '전문보정', '야외촬영', '스튜디오촬영', '진주사진관',
-  ];
-
-  // ─── RENDER GALLERY ───
-  const grid = document.getElementById('galleryGrid');
-  let currentFilter = 'all';
-
-  function renderGallery(filter) {
-    grid.innerHTML = '';
-    const items = filter === 'all'
-      ? portfolioItems
-      : portfolioItems.filter(i => i.category === filter);
-
-    items.forEach((item, idx) => {
-      const div = document.createElement('div');
-      div.className = 'gallery-item';
-      div.style.transitionDelay = `${idx * 0.08}s`;
-      div.innerHTML = `
-        <img src="${item.img}" alt="${item.title}" loading="lazy">
-        <div class="gallery-overlay">
-          <h3>${item.title}</h3>
-          <span>${item.category}</span>
-        </div>
-      `;
-      div.addEventListener('click', () => openLightbox(item.img));
-      grid.appendChild(div);
-
-      // trigger animation
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => div.classList.add('visible'));
-      });
-    });
-  }
-  renderGallery('all');
-
-  // ─── FILTER ───
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      currentFilter = btn.dataset.filter;
-      renderGallery(currentFilter);
-    });
-  });
-
-  // ─── MARQUEE ───
-  const track = document.getElementById('marqueeTrack');
-  const clientList = [...clients, ...clients]; // 반복
-  track.innerHTML = clientList.map(c => `<span>${c}</span>`).join('');
-
-  // ─── LIGHTBOX ───
-  function openLightbox(src) {
-    document.getElementById('lightboxImg').src = src;
-    document.getElementById('lightbox').classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
-  function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-
-  // ─── MOBILE MENU ───
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobileMenu');
-  hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    mobileMenu.classList.toggle('open');
-  });
-  function closeMobile() {
-    hamburger.classList.remove('active');
-    mobileMenu.classList.remove('open');
-  }
-
-  // ─── NAV HIDE ON SCROLL ───
-  let lastScroll = 0;
-  window.addEventListener('scroll', () => {
-    const nav = document.getElementById('navbar');
-    const current = window.scrollY;
-    if (current > lastScroll && current > 100) {
-      nav.classList.add('hidden');
-    } else {
-      nav.classList.remove('hidden');
+// ══════════════════════════════════════
+// DATA — 엑셀에서 추출한 실제 이미지 링크
+// ══════════════════════════════════════
+const DATA = {
+  product: {
+    label: '제품 촬영', icon: '📦',
+    subs: {
+      'VR 기계 장비': [
+        'https://i.ibb.co/394NT0hM/image.jpg',
+        'https://i.ibb.co/Q7gdWbNN/vr.jpg',
+        'https://i.ibb.co/gLPWMbw0/vr.jpg',
+        'https://i.ibb.co/bj5Hvq1t/vr.jpg',
+        'https://i.ibb.co/mrDwxBdB/vr.jpg',
+        'https://i.ibb.co/4nQ2B4ZL/image.jpg',
+        'https://i.ibb.co/Mkx3G0XQ/image.jpg',
+        'https://i.ibb.co/Jfh7gtp/1.jpg',
+        'https://i.ibb.co/svfw8871/2.jpg',
+      ]
     }
-    lastScroll = current;
-  });
-
-  // ─── PRELOADER ───
-  function hidePreloader() {
-    document.getElementById('preloader').classList.add('hide');
+  },
+  promo: {
+    label: '홍보 촬영', icon: '🎯',
+    subs: {
+      '보드게임 카페': [
+        'https://i.ibb.co/W4PFFG1T/6.jpg',
+        'https://i.ibb.co/8498hrMN/3.jpg',
+        'https://i.ibb.co/60WVSVVY/5.jpg',
+        'https://i.ibb.co/QvH8vj6X/4.jpg',
+        'https://i.ibb.co/r2G8zdr5/4.jpg',
+        'https://i.ibb.co/99b7W86m/2.jpg',
+        'https://i.ibb.co/W4M1K7Z8/1.jpg',
+        'https://i.ibb.co/wFQsSP65/4.jpg',
+        'https://i.ibb.co/PGMmdjJq/2.jpg',
+        'https://i.ibb.co/4w2Q22xn/3.jpg',
+        'https://i.ibb.co/FkzLz4c1/5.jpg',
+        'https://i.ibb.co/xSkm32tQ/1.jpg',
+        'https://i.ibb.co/XxccBsBD/3.jpg',
+      ]
+    }
+  },
+  profile: {
+    label: '프로필 촬영', icon: '📸',
+    subs: {
+      '프로필': [
+        'https://i.ibb.co/FbDwFTZx/1-1.jpg',
+        'https://i.ibb.co/Lhn5BrVT/1-2.jpg',
+        'https://i.ibb.co/XZ5py8NV/1-3.jpg',
+        'https://i.ibb.co/S4ZpqSjt/1-4.jpg',
+        'https://i.ibb.co/cc1q7k0k/1-5.jpg',
+        'https://i.ibb.co/qYpTzfN7/1-6.jpg',
+        'https://i.ibb.co/GQtfgYFF/1-7.jpg',
+        'https://i.ibb.co/rR1RhYZq/1-8.jpg',
+        'https://i.ibb.co/FqzYHmpn/1-9.jpg',
+        'https://i.ibb.co/k6HBx8zZ/1-10.jpg',
+        'https://i.ibb.co/mV6gG0kN/1-11.jpg',
+        'https://i.ibb.co/DDbWgZ6J/1-12.jpg',
+        'https://i.ibb.co/rRstD68X/1-13.jpg',
+        'https://i.ibb.co/C5PXH99z/1-14.jpg',
+      ]
+    }
+  },
+  interior: {
+    label: '인테리어 촬영', icon: '🏠',
+    subs: {
+      '인테리어': [
+        'https://i.ibb.co/9kDFk5bS/3.jpg',
+        'https://i.ibb.co/qYQ5W6fK/1.jpg',
+        'https://i.ibb.co/HT55zCp8/2.jpg',
+        'https://i.ibb.co/7tmwks0d/3.jpg',
+        'https://i.ibb.co/C5N6pLsH/1.jpg',
+        'https://i.ibb.co/S4hMNRdS/2.jpg',
+        'https://i.ibb.co/N6cVtpjg/3.jpg',
+        'https://i.ibb.co/bT1sD4f/image.jpg',
+        'https://i.ibb.co/ZpBVxtMg/image.jpg',
+        'https://i.ibb.co/6cLDmtLx/1-1.jpg',
+        'https://i.ibb.co/tTV9rVGp/1-3.jpg',
+        'https://i.ibb.co/21WYhrP1/1-4.jpg',
+        'https://i.ibb.co/v4qc5n82/1-5.jpg',
+        'https://i.ibb.co/Myn4N6TV/1-6.jpg',
+        'https://i.ibb.co/Y4LpjSFZ/1-9.jpg',
+        'https://i.ibb.co/5XmFMQz8/1-10.jpg',
+        'https://i.ibb.co/Vpt7y3Mm/1-11.jpg',
+        'https://i.ibb.co/wNtT1WWZ/1-12.jpg',
+      ]
+    }
+  },
+  food: {
+    label: '음식 촬영', icon: '🍽️',
+    subs: {
+      '문산선지국': [
+        'https://i.ibb.co/JwdN9TrW/image.jpg',
+        'https://i.ibb.co/6VJXZd8/image.jpg',
+        'https://i.ibb.co/1tmmNPZ1/image.jpg',
+        'https://i.ibb.co/mCRvwztW/image.jpg',
+        'https://i.ibb.co/cSp5XrfM/image.jpg',
+        'https://i.ibb.co/TB3Frm96/1.jpg',
+        'https://i.ibb.co/SC0yfQX/2.jpg',
+        'https://i.ibb.co/39Qbttgc/1-1.jpg',
+        'https://i.ibb.co/NM0WwcW/1-2.jpg',
+        'https://i.ibb.co/ZR2DSJVW/1-1.jpg',
+        'https://i.ibb.co/RkngspyV/1-2.jpg',
+        'https://i.ibb.co/j9jvSMQ3/1-3.jpg',
+        'https://i.ibb.co/JwW3PW7Y/1-6.jpg',
+      ],
+      '여운포차': [
+        'https://i.ibb.co/HTz73Hg2/DSC08642.jpg',
+        'https://i.ibb.co/tpyJp01Y/DSC08650.jpg',
+        'https://i.ibb.co/DHz11r37/DSC08652.jpg',
+        'https://i.ibb.co/cSNk3mDb/DSC08669.jpg',
+        'https://i.ibb.co/yF0rML2z/DSC08675.jpg',
+        'https://i.ibb.co/V0B159NQ/DSC08681.jpg',
+        'https://i.ibb.co/1YWpvHzK/DSC08699.jpg',
+        'https://i.ibb.co/4wHWGqDn/DSC08715.jpg',
+        'https://i.ibb.co/Xr5HjCJP/DSC08739.jpg',
+        'https://i.ibb.co/0ycXqhgf/DSC08757.jpg',
+        'https://i.ibb.co/wZPMF6k9/DSC08771.jpg',
+        'https://i.ibb.co/wrJ9KvL9/DSC08792.jpg',
+        'https://i.ibb.co/xSWwKc4z/DSC08824.jpg',
+        'https://i.ibb.co/N6pr3zd3/DSC08865.jpg',
+        'https://i.ibb.co/bgT4cNLk/DSC08880.jpg',
+        'https://i.ibb.co/tT9jrkrX/DSC08937.jpg',
+        'https://i.ibb.co/pBWrcnM0/DSC08984.jpg',
+        'https://i.ibb.co/YT8Pfmtr/DSC09017.jpg',
+        'https://i.ibb.co/PsCksysB/DSC09035.jpg',
+        'https://i.ibb.co/p6Q3DMxn/DSC09056.jpg',
+        'https://i.ibb.co/G30mWgVd/DSC09072.jpg',
+        'https://i.ibb.co/7JhPnnT6/DSC09089.jpg',
+        'https://i.ibb.co/wh8rZ7nd/DSC09094.jpg',
+        'https://i.ibb.co/M5SQfzJ1/DSC09110.jpg',
+        'https://i.ibb.co/hF1WrVw7/DSC09111.jpg',
+        'https://i.ibb.co/R4ptHhYd/DSC09112.jpg',
+        'https://i.ibb.co/nNCQzYg8/image.jpg',
+      ],
+      '밤샘포차': [
+        'https://i.ibb.co/PsyWq9cb/1001-1.jpg',
+        'https://i.ibb.co/fVJ9TRh7/1001-2.jpg',
+        'https://i.ibb.co/pvWCT1S1/1001-3.jpg',
+        'https://i.ibb.co/hJ8qc96m/1001-4.jpg',
+        'https://i.ibb.co/M583cGPG/1001-5.jpg',
+        'https://i.ibb.co/wFzRfN2h/1001-6.jpg',
+        'https://i.ibb.co/7xq7cN38/1001-7.jpg',
+        'https://i.ibb.co/DH0yF4Xj/1001-8.jpg',
+        'https://i.ibb.co/hJxgyJqb/1001-9.jpg',
+        'https://i.ibb.co/S7WXyg3F/1001-10.jpg',
+        'https://i.ibb.co/3mKQdJ37/1001-11.jpg',
+        'https://i.ibb.co/1Yv9qYmN/1001-12.jpg',
+        'https://i.ibb.co/VpYr1fRY/1001-13.jpg',
+        'https://i.ibb.co/9k7RtnFt/1001-14.jpg',
+        'https://i.ibb.co/5Xccgt8r/1001-15.jpg',
+        'https://i.ibb.co/mCSX2VVL/1001-16.jpg',
+        'https://i.ibb.co/fYtRrgSy/1001-17.jpg',
+        'https://i.ibb.co/HMBT56s/1001-18.jpg',
+        'https://i.ibb.co/BKwN2DTw/1001-19.jpg',
+        'https://i.ibb.co/gb0TrPtn/1001-20.jpg',
+        'https://i.ibb.co/x8Dym1PZ/2001-1.jpg',
+        'https://i.ibb.co/zH5dbht9/2001-2.jpg',
+        'https://i.ibb.co/Pv9YM9jh/2001-3.jpg',
+        'https://i.ibb.co/4gjJP7LP/2001-4.jpg',
+        'https://i.ibb.co/F4H28LkM/2001-5.jpg',
+        'https://i.ibb.co/jZVbZmff/2001-6.jpg',
+        'https://i.ibb.co/TxbXw2jH/2001-7.jpg',
+        'https://i.ibb.co/bRmYCH8X/2001-8.jpg',
+        'https://i.ibb.co/S7mcB6Ls/2001-9.jpg',
+        'https://i.ibb.co/ZRNQvr1K/2001-10.jpg',
+        'https://i.ibb.co/JWnH0xHf/2001-11.jpg',
+        'https://i.ibb.co/3Ymy5vXq/2001-12.jpg',
+        'https://i.ibb.co/gZ8H7T4G/2001-13.jpg',
+        'https://i.ibb.co/Q7R15CQr/2001-14.jpg',
+        'https://i.ibb.co/4nC6v2x2/2001-15.jpg',
+        'https://i.ibb.co/LDmNnpLD/2001-16.jpg',
+        'https://i.ibb.co/wZTL9tHR/2001-17.jpg',
+        'https://i.ibb.co/TxXqqVR3/2001-18.jpg',
+        'https://i.ibb.co/b560drDm/2001-19.jpg',
+        'https://i.ibb.co/kzRQ5cV/2001-20.jpg',
+        'https://i.ibb.co/B2b356J9/2001-21.jpg',
+        'https://i.ibb.co/1YHsnQ6P/2001-22.jpg',
+        'https://i.ibb.co/N2Y4bG33/2001-23.jpg',
+        'https://i.ibb.co/Z6LCPY3G/2001-24.jpg',
+        'https://i.ibb.co/LyF5jfb/2001-25.jpg',
+        'https://i.ibb.co/GvyxFD1Y/2001-26.jpg',
+        'https://i.ibb.co/nqvjZQy8/3001-1.jpg',
+        'https://i.ibb.co/wFrcxG76/3001-2.jpg',
+        'https://i.ibb.co/zhJL0s1z/3001-3.jpg',
+        'https://i.ibb.co/XNvG96Z/3001-4.jpg',
+        'https://i.ibb.co/k2fgZWW4/3001-5.jpg',
+        'https://i.ibb.co/DBfhm9n/3001-6.jpg',
+        'https://i.ibb.co/jvZf3fLb/3001-7.jpg',
+        'https://i.ibb.co/xtLgP78H/3001-8.jpg',
+        'https://i.ibb.co/hRG5bYDV/3001-9.jpg',
+        'https://i.ibb.co/TMFrHbhr/3001-10.jpg',
+      ]
+    }
   }
-  // 이미지 로딩 완료 시
-  window.addEventListener('load', () => setTimeout(hidePreloader, 800));
-  // 혹시 이미지 로딩이 느려도 최대 2.5초 후 강제로 숨김
-  setTimeout(hidePreloader, 2500);
+};
 
-  // ─── SCROLL REVEAL (Intersection Observer) 완성 ───
-  // 스크롤 시 요소들이 나타나는 애니메이션 로직을 완성했습니다.
-  const observerOptions = {
-    root: null,
-    rootMargin: '0px',
-    threshold: 0.1
-  };
+const VIDEOS = {
+  '제품 광고': [
+    { title: 'DASHU 다운텍', id: 'WEPXeWG6rE4' },
+    { title: 'MIP 립밤', id: 'b-_Sh5KLv2c', shorts: true },
+    { title: 'MIP 선크림', id: 'fmFOpMx0jMo', shorts: true },
+    { title: 'MIP 쉐이빙 로션', id: 'KTjHKOImSug', shorts: true },
+  ],
+  '브랜드 · 로컬 홍보': [
+    { title: '바리안 마을 베틀가', id: 'bdjYh9NEU_0' },
+    { title: '밤깨비 농장', id: 'ba3QbhE1s08' },
+    { title: '진주유치원', id: 'xw1FHU9_HdQ' },
+  ],
+  '정치 · 공공 캠페인': [
+    { title: '정치 홍보 영상', id: 'qNo3q8fIRR4' },
+    { title: '정치 홍보 (인터뷰)', id: 'hzgDc2mUg9k' },
+    { title: '정치 홍보 (쇼츠)', id: 'TfZKVnArQpU' },
+  ],
+  '행사 기록 · 아카이빙': [
+    { title: '거제 민주로드', id: 'gAvkm-g8AJ8' },
+    { title: '진주 로컬크리에이터 워크숍', id: 'aEunZFVMH3c' },
+    { title: '별난 주부', id: 'rUCV0mGn7oM' },
+    { title: '청년창업의날 1일차', id: '8pZJkn1M3do' },
+    { title: '청년창업의날 2일차', id: '4F0pGnSovIQ' },
+  ]
+};
 
-  const observer = new IntersectionObserver((entries, observer) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        observer.unobserve(entry.target); // 한 번만 나타나게 하려면 unobserve 호출
-      }
-    });
-  }, observerOptions);
+// ══════════════════════════════════════
+// RENDER HOME — 카테고리별 미리보기 3장
+// ══════════════════════════════════════
+function renderHome() {
+  const container = document.getElementById('categoryPreviews');
+  container.innerHTML = '';
+  const cats = Object.entries(DATA);
 
-  // fade-in-section 클래스를 가진 요소들을 관찰합니다.
-  document.querySelectorAll('.fade-in-section').forEach((section) => {
-    observer.observe(section);
+  cats.forEach(([key, cat]) => {
+    const allImgs = Object.values(cat.subs).flat();
+    const preview = allImgs.slice(0, 3);
+    const total = allImgs.length;
+
+    const sec = document.createElement('div');
+    sec.className = 'cat-section fade-in';
+    sec.innerHTML = `
+      <div class="cat-header">
+        <div><h3>${cat.icon} ${cat.label}</h3><span class="cat-sub">${total}장</span></div>
+        <button class="cat-more" onclick="openGallery('${key}')">전체보기 →</button>
+      </div>
+      <div class="gallery-wall">
+        ${preview.map(img => `
+          <div class="gallery-frame">
+            <div class="frame-inner">
+              <img src="${img}" alt="${cat.label}" loading="lazy" onclick="openLb(this.src)">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(sec);
   });
 
+  // Video preview
+  const allVids = Object.values(VIDEOS).flat();
+  const vidPreview = allVids.slice(0, 3);
+  const vidSec = document.createElement('div');
+  vidSec.className = 'cat-section fade-in';
+  vidSec.innerHTML = `
+    <div class="cat-header">
+      <div><h3>🎬 영상 포트폴리오</h3><span class="cat-sub">${allVids.length}편</span></div>
+      <button class="cat-more" onclick="openGallery('video')">전체보기 →</button>
+    </div>
+    <div class="gallery-wall">
+      ${vidPreview.map(v => `
+        <div class="gallery-frame" style="width:min(380px,85vw)">
+          <div class="frame-inner" style="padding-bottom:12px">
+            <div style="aspect-ratio:16/9;overflow:hidden;background:#000">
+              <iframe src="https://www.youtube.com/embed/${v.id}" allowfullscreen style="width:100%;height:100%;border:none"></iframe>
+            </div>
+            <div class="frame-label">${v.title}</div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  container.appendChild(vidSec);
+
+  initFadeIn();
+}
+
+// ══════════════════════════════════════
+// GALLERY PAGE
+// ══════════════════════════════════════
+let currentGalleryImgs = [];
+
+function openGallery(key) {
+  if (key === 'video') { openVideoPage(); return; }
+  const cat = DATA[key];
+  if (!cat) return;
+
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('videoPage').classList.remove('active');
+  const gp = document.getElementById('galleryPage');
+  gp.classList.add('active');
+
+  document.getElementById('gpLabel').textContent = cat.label;
+  document.getElementById('gpTitle').textContent = cat.label.toUpperCase();
+
+  // Sub tabs
+  const subKeys = Object.keys(cat.subs);
+  const tabs = document.getElementById('subTabs');
+  tabs.innerHTML = '';
+  if (subKeys.length > 1) {
+    const allBtn = document.createElement('button');
+    allBtn.className = 'sub-tab active';
+    allBtn.textContent = '전체';
+    allBtn.onclick = () => { setActiveTab(allBtn); renderGalleryGrid(Object.values(cat.subs).flat()); };
+    tabs.appendChild(allBtn);
+  }
+  subKeys.forEach(sk => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-tab' + (subKeys.length === 1 ? ' active' : '');
+    btn.textContent = sk;
+    btn.onclick = () => { setActiveTab(btn); renderGalleryGrid(cat.subs[sk]); };
+    tabs.appendChild(btn);
+  });
+
+  renderGalleryGrid(Object.values(cat.subs).flat());
+  window.scrollTo(0, 0);
+}
+
+function setActiveTab(btn) {
+  btn.parentElement.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function renderGalleryGrid(imgs) {
+  currentGalleryImgs = imgs;
+  const grid = document.getElementById('gpGrid');
+  grid.innerHTML = imgs.map((img, i) => `
+    <div class="g-item" style="animation-delay:${i * 0.05}s">
+      <div class="g-item-frame">
+        <img src="${img}" alt="" loading="lazy" onclick="openLbAt(${i})">
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// VIDEO PAGE
+// ══════════════════════════════════════
+function openVideoPage() {
+  document.getElementById('homePage').style.display = 'none';
+  document.getElementById('galleryPage').classList.remove('active');
+  document.getElementById('videoPage').classList.add('active');
+
+  const tabs = document.getElementById('videoTabs');
+  const grid = document.getElementById('videoGrid');
+  const cats = Object.entries(VIDEOS);
+  const allVids = cats.flatMap(([,v]) => v);
+
+  tabs.innerHTML = '';
+  const allBtn = document.createElement('button');
+  allBtn.className = 'sub-tab active';
+  allBtn.textContent = '전체';
+  allBtn.onclick = () => { setActiveTab(allBtn); renderVideoGrid(allVids); };
+  tabs.appendChild(allBtn);
+
+  cats.forEach(([cat, vids]) => {
+    const btn = document.createElement('button');
+    btn.className = 'sub-tab';
+    btn.textContent = cat;
+    btn.onclick = () => { setActiveTab(btn); renderVideoGrid(vids); };
+    tabs.appendChild(btn);
+  });
+
+  renderVideoGrid(allVids);
+  window.scrollTo(0, 0);
+}
+
+function renderVideoGrid(vids) {
+  document.getElementById('videoGrid').innerHTML = vids.map(v => `
+    <div class="video-card">
+      <div class="video-thumb">
+        <iframe src="https://www.youtube.com/embed/${v.id}" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div class="video-info">
+        <h4>${v.title}</h4>
+        <span>${v.shorts ? 'Shorts' : 'Video'}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function showHome() {
+  document.getElementById('homePage').style.display = '';
+  document.getElementById('galleryPage').classList.remove('active');
+  document.getElementById('videoPage').classList.remove('active');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════
+// LIGHTBOX with nav
+// ══════════════════════════════════════
+let lbIdx = 0;
+function openLb(src) {
+  currentGalleryImgs = [src];
+  lbIdx = 0;
+  showLb();
+}
+function openLbAt(idx) {
+  lbIdx = idx;
+  showLb();
+}
+function showLb() {
+  document.getElementById('lbImg').src = currentGalleryImgs[lbIdx];
+  document.getElementById('lightbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // show/hide nav
+  document.querySelector('.lb-prev').style.display = currentGalleryImgs.length > 1 ? '' : 'none';
+  document.querySelector('.lb-next').style.display = currentGalleryImgs.length > 1 ? '' : 'none';
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function lbNav(dir) {
+  lbIdx = (lbIdx + dir + currentGalleryImgs.length) % currentGalleryImgs.length;
+  document.getElementById('lbImg').src = currentGalleryImgs[lbIdx];
+}
+document.getElementById('lightbox').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('lightbox').classList.contains('open')) return;
+  if (e.key === 'Escape') closeLightbox();
+  if (e.key === 'ArrowLeft') lbNav(-1);
+  if (e.key === 'ArrowRight') lbNav(1);
+});
+
+// ══════════════════════════════════════
+// MOBILE MENU
+// ══════════════════════════════════════
+const hamburger = document.getElementById('hamburger');
+const mobileMenu = document.getElementById('mobileMenu');
+hamburger.addEventListener('click', () => { hamburger.classList.toggle('active'); mobileMenu.classList.toggle('open'); });
+function closeMobile() { hamburger.classList.remove('active'); mobileMenu.classList.remove('open'); }
+
+// ══════════════════════════════════════
+// NAV HIDE ON SCROLL
+// ══════════════════════════════════════
+let lastScroll = 0;
+window.addEventListener('scroll', () => {
+  const cur = window.scrollY;
+  document.getElementById('navbar').classList.toggle('hidden', cur > lastScroll && cur > 80);
+  lastScroll = cur;
+});
+
+// ══════════════════════════════════════
+// PRELOADER
+// ══════════════════════════════════════
+function hidePreloader() { document.getElementById('preloader').classList.add('hide'); }
+window.addEventListener('load', () => setTimeout(hidePreloader, 600));
+setTimeout(hidePreloader, 2500);
+
+// ══════════════════════════════════════
+// FADE IN (Intersection Observer)
+// ══════════════════════════════════════
+function initFadeIn() {
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => obs.observe(el));
+}
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+renderHome();
 </script>
 </body>
 </html>
-
