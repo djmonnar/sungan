@@ -45,15 +45,33 @@
     button { font: inherit; background: none; border: none; color: inherit; cursor: pointer; }
     a { color: inherit; text-decoration: none; }
 
-    /* ── GRAIN OVERLAY ─────────────────────────────────────── */
+    /* ── KOREAN TEXT HANDLING ──────────────────────────── */
+    .c-ko, .c-room, .c-count, .d-head p, .about-row,
+    .hud-tip, .d-back, .v-meta span, .p-label {
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    /* ── GRAIN OVERLAY (animated film grain) ─────────────── */
     .grain {
       position: fixed; inset: 0; z-index: 200;
-      pointer-events: none; opacity: .03;
-      background-image:
-        radial-gradient(circle at 20% 20%, #fff .5px, transparent .6px),
-        radial-gradient(circle at 80% 60%, #fff .5px, transparent .6px),
-        radial-gradient(circle at 50% 85%, #fff .5px, transparent .6px);
-      background-size: 32px 32px, 38px 38px, 44px 44px;
+      pointer-events: none; opacity: .04;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px 200px;
+      animation: grain-move 8s steps(10) infinite;
+    }
+    @keyframes grain-move {
+      0%   { transform: translate(0, 0); }
+      10%  { transform: translate(-5%, -10%); }
+      20%  { transform: translate(-15%, 5%); }
+      30%  { transform: translate(7%, -25%); }
+      40%  { transform: translate(-5%, 25%); }
+      50%  { transform: translate(-15%, 10%); }
+      60%  { transform: translate(15%, 0%); }
+      70%  { transform: translate(0%, 15%); }
+      80%  { transform: translate(3%, 35%); }
+      90%  { transform: translate(-10%, 10%); }
+      100% { transform: translate(0, 0); }
     }
 
     /* ── DOORS (입장 애니메이션) ────────────────────────────── */
@@ -144,9 +162,10 @@
       padding: var(--st) 20px 14px;
       display: flex; justify-content: space-between; align-items: flex-end;
       background: linear-gradient(to bottom,
-        rgba(7,7,6,.88) 0%, rgba(7,7,6,.38) 65%, transparent);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+        rgba(7,7,6,.92) 0%, rgba(7,7,6,.60) 50%, transparent);
+      backdrop-filter: blur(16px) saturate(1.4);
+      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      border-bottom: 1px solid rgba(255,255,255,.04);
       pointer-events: none;
     }
     .hdr-logo {
@@ -174,17 +193,38 @@
       border-radius: var(--radius);
       overflow: hidden;
       /* will-change는 JS에서 활성 카드에만 부여 */
-      transition: transform .46s cubic-bezier(.25,.46,.45,.94),
+      transition: transform .52s cubic-bezier(.34,1.56,.64,1),
                   opacity  .36s ease;
       contain: layout paint;
     }
-    /* Inset border ring for premium look */
+    /* 외부 베젤 링 — double-bezel 첫 번째 레이어 */
     .c-card::before {
       content: '';
       position: absolute; inset: 0;
       border-radius: var(--radius);
-      border: 1px solid var(--border2);
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
       z-index: 3; pointer-events: none;
+    }
+    /* 내부 시머 링 — double-bezel 두 번째 레이어 */
+    .c-card::after {
+      content: '';
+      position: absolute; inset: 2px;
+      border-radius: calc(var(--radius) - 2px);
+      border: 1px solid rgba(200,168,108,.08);
+      background: linear-gradient(135deg,
+        rgba(255,255,255,.04) 0%, transparent 60%);
+      z-index: 3; pointer-events: none;
+    }
+    /* 활성 카드 이미지 hover (포인터 디바이스만) */
+    @media (hover: hover) {
+      .c-card.is-active .c-img-wrap img {
+        transition: transform .5s ease, filter .3s ease;
+      }
+      .c-card.is-active .c-img-wrap img:hover {
+        transform: translateZ(0) scale(1.03);
+        filter: brightness(1.08);
+      }
     }
 
     .c-img-wrap {
@@ -248,6 +288,18 @@
     .btn-more.gold {
       background: var(--accent); border-color: transparent;
       color: #18120a; font-weight: 700;
+    }
+    @media (hover: hover) {
+      .btn-more:hover {
+        background: rgba(255,255,255,.14);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 16px rgba(0,0,0,.3);
+      }
+      .btn-more.gold:hover {
+        background: #d4b87c;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 20px rgba(200,168,108,.35);
+      }
     }
 
     /* About card special styling */
@@ -342,8 +394,10 @@
       line-height: .86; font-weight: 300; letter-spacing: -.03em;
     }
     .d-head p {
-      margin-top: 14px; font-size: .88rem;
-      line-height: 1.88; color: var(--muted);
+      margin-top: 16px; font-size: .9rem;
+      line-height: 2.0; color: var(--muted);
+      word-break: keep-all;
+      white-space: pre-line;
     }
 
     /* Photo grid – masonry-style 2 col */
@@ -353,6 +407,13 @@
       border-radius: 14px; overflow: hidden;
       position: relative; cursor: pointer;
       border: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .45s ease, transform .45s cubic-bezier(.34,1.56,.64,1);
+    }
+    .p-item.visible {
+      opacity: 1;
+      transform: translateY(0);
     }
     .p-item img { width: 100%; display: block; transition: transform .4s ease; }
     .p-item:active img { transform: scale(.97); }
@@ -513,62 +574,219 @@
    DATA
 ════════════════════════════════════════════════════ */
 const CATS = [
+  /* ── Room 01: Commercial ─────────────────────────── */
   {
     id: 'commercial', en: 'Commercial', ko: '상업 사진', room: 'Room 01',
-    desc: '제품, 브랜딩, 광고 촬영을 담았습니다. 브랜드의 본질을 한 장면에 압축합니다.',
-    feat: 'https://i.ibb.co/bgVfDWBB/vr.jpg',
+    desc: '제품 하나에도 브랜드의 이야기가 있습니다.\n순간스튜디오는 그 이야기를 가장 선명한 한 장면으로 압축합니다.',
+    feat: '제품/정면%20vr.webp',
     type: 'photo',
     items: [
-      { src: 'https://i.ibb.co/bgVfDWBB/vr.jpg',    title: 'Product 01' },
-      { src: 'https://i.ibb.co/zhKgwjvF/vr.jpg',    title: 'Product 02' },
-      { src: 'https://i.ibb.co/spVX6587/1.jpg',     title: 'Branding 01' },
-      { src: 'https://i.ibb.co/wZKZhKZd/2.jpg',     title: 'Branding 02' },
+      { src: '제품/정면%20vr.webp',                       title: 'VR 정면' },
+      { src: '제품/vr%20측면.webp',                       title: 'VR 측면' },
+      { src: '제품/오른쪽%20측면%20vr.webp',               title: 'VR 오른쪽 측면' },
+      { src: '제품/왼쪽%20측면%20vr.webp',                 title: 'VR 왼쪽 측면' },
+      { src: '제품/vr%20%2B%20손잡이%20배경.webp',         title: 'VR + 손잡이' },
+      { src: '제품/정면.webp',                             title: '제품 정면' },
+      { src: '제품/오른쪽%20측면.webp',                    title: '제품 오른쪽 측면' },
+      { src: '제품/왼쪽%20측면.webp',                      title: '제품 왼쪽 측면' },
+      { src: '제품/기계%20전체.webp',                      title: '기계 전체' },
+      { src: '제품/기계%20정면.webp',                      title: '기계 정면' },
+      { src: '제품/기계%20오른쪽.webp',                    title: '기계 오른쪽' },
+      { src: '제품/기계%20왼쪽.webp',                      title: '기계 왼쪽' },
+      { src: '제품/손잡이%201개%20배경.webp',               title: '손잡이 1개' },
+      { src: '제품/손잡이%202개%20배경.webp',               title: '손잡이 2개' },
+      { src: '제품/대표님%20탑승%20오른쪽.webp',            title: '탑승 오른쪽' },
+      { src: '제품/대표님%20탑승%20왼쪽.webp',              title: '탑승 왼쪽' },
+      { src: '제품/의자.webp',                             title: '의자' },
+      { src: '홍보/게임%20연출%201%20복사.webp',            title: '게임 연출' },
+      { src: '홍보/게임%20연출%203%20복사.webp',            title: '게임 연출' },
+      { src: '홍보/게임%20연출%204%20복사.webp',            title: '게임 연출' },
+      { src: '홍보/보드%20연출%203%20복사.webp',            title: '보드 연출' },
+      { src: '홍보/보드%20연출%204%20복사.webp',            title: '보드 연출' },
+      { src: '홍보/셀프%20연출%202%20복사.webp',            title: '셀프 연출' },
+      { src: '홍보/셀프%20연출%203%20복사.webp',            title: '셀프 연출' },
+      { src: '홍보/커피%20연출%201%20복사.webp',            title: '커피 연출' },
+      { src: '홍보/커피%20연출%204%20복사.webp',            title: '커피 연출' },
+      { src: '홍보/커피%20연출%205%20복사.webp',            title: '커피 연출' },
+      { src: '홍보/키오스크%20연출%202%20복사.webp',        title: '키오스크 연출' },
     ]
   },
+  /* ── Room 02: Portrait ──────────────────────────── */
   {
     id: 'portrait', en: 'Portrait', ko: '인물 사진', room: 'Room 02',
-    desc: '사람의 순간을 담는 일이 스튜디오의 가장 큰 즐거움입니다.',
-    feat: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+    desc: '사람의 표정 속에 가장 솔직한 순간이 있습니다.\n프로필부터 배우 포트폴리오까지, 피사체가 가진 빛을 끌어냅니다.',
+    feat: '프로필/강다원%201.webp',
     type: 'photo',
     items: [
-      { src: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',   title: 'Portrait 01' },
-      { src: 'https://i.ibb.co/SX0XmQXR/1-2.jpg',   title: 'Portrait 02' },
-      { src: 'https://i.ibb.co/DgpybcdJ/1-3.jpg',   title: 'Portrait 03' },
-      { src: 'https://i.ibb.co/G4tYPyXx/1-4.jpg',   title: 'Portrait 04' },
-      { src: 'https://i.ibb.co/B2cTdydH/1-5.jpg',   title: 'Portrait 05' },
-      { src: 'https://i.ibb.co/PGB80nj7/1-6.jpg',   title: 'Portrait 06' },
+      { src: '프로필/강다원%201.webp',          title: '강다원 01' },
+      { src: '프로필/강다원%202.webp',          title: '강다원 02' },
+      { src: '프로필/강다원%203.webp',          title: '강다원 03' },
+      { src: '프로필/공원걸%20%281%29.webp',    title: '공원걸 01' },
+      { src: '프로필/공원걸%20%282%29.webp',    title: '공원걸 02' },
+      { src: '프로필/김지민%20%281%29.webp',    title: '김지민 01' },
+      { src: '프로필/김지민%20%282%29.webp',    title: '김지민 02' },
+      { src: '프로필/서동성%20%281%29.webp',    title: '서동성 01' },
+      { src: '프로필/서동성%20%282%29.webp',    title: '서동성 02' },
+      { src: '프로필/이상영%20%281%29.webp',    title: '이상영 01' },
+      { src: '프로필/이상영%20%282%29.webp',    title: '이상영 02' },
+      { src: '프로필/최지우%20%281%29.webp',    title: '최지우 01' },
+      { src: '프로필/최지우%20%282%29.webp',    title: '최지우 02' },
     ]
   },
+  /* ── Room 03: Food & Night ──────────────────────── */
   {
     id: 'food', en: 'Food & Night', ko: '푸드 & 야간', room: 'Room 03',
-    desc: '음식과 빛, 야간의 분위기를 하나의 프레임에 담습니다.',
-    feat: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg',
+    desc: '음식의 질감, 포차의 불빛, 밤의 공기까지.\n한 컷 안에 그 공간의 온도를 담습니다.',
+    feat: '음식/문산선지국/뚝배기%20%281%29_1.webp',
     type: 'photo',
     items: [
-      { src: 'https://i.ibb.co/cSNR8Spw/1-1-copy-0.jpg', title: 'Food 01' },
-      { src: 'https://i.ibb.co/cSQH0HV5/1-2-copy-0.jpg', title: 'Food 02' },
-      { src: 'https://i.ibb.co/xdFXY4X/DSC08642.jpg',    title: 'Night 01' },
-      { src: 'https://i.ibb.co/BKKgggYn/DSC08650.jpg',   title: 'Night 02' },
-      { src: 'https://i.ibb.co/tPkTZDnX/DSC08652.jpg',   title: 'Night 03' },
+      { src: '음식/문산선지국/뚝배기%20%281%29_1.webp',       title: '문산선지국' },
+      { src: '음식/문산선지국/뚝배기%20%282%29_2.webp',       title: '문산선지국' },
+      { src: '음식/문산선지국/선지%20%281%29_3.webp',         title: '문산선지국' },
+      { src: '음식/문산선지국/선지%20%282%29_4.webp',         title: '문산선지국' },
+      { src: '음식/문산선지국/선지%20%283%29_5.webp',         title: '문산선지국' },
+      { src: '음식/문산선지국/선지_6.webp',                   title: '문산선지국' },
+      { src: '음식/문산선지국/선지2_7.webp',                  title: '문산선지국' },
+      { src: '음식/문산선지국/선지3_8.webp',                  title: '문산선지국' },
+      { src: '음식/문산선지국/소고기_9.webp',                 title: '문산선지국' },
+      { src: '음식/문산선지국/소고기2_10.webp',               title: '문산선지국' },
+      { src: '음식/문산선지국/소고기3_11.webp',               title: '문산선지국' },
+      { src: '음식/문산선지국/수육_12.webp',                  title: '문산선지국' },
+      { src: '음식/문산선지국/수육2_13.webp',                 title: '문산선지국' },
+      { src: '음식/문산선지국/수육3_14.webp',                 title: '문산선지국' },
+      { src: '음식/문산선지국/스지내장_15.webp',              title: '문산선지국' },
+      { src: '음식/문산선지국/스지내장2_16.webp',             title: '문산선지국' },
+      { src: '음식/문산선지국/스지내장3_17.webp',             title: '문산선지국' },
+      { src: '음식/문산선지국/식사%20연출%20%281%29_18.webp', title: '문산선지국' },
+      { src: '음식/문산선지국/식사%20연출%20%282%29_19.webp', title: '문산선지국' },
+      { src: '음식/문산선지국/식사%20연출%20%283%29_20.webp', title: '문산선지국' },
+      { src: '음식/문산선지국/식사%20연출%20%284%29_21.webp', title: '문산선지국' },
+      { src: '음식/문산선지국/양곰탕_22.webp',                title: '문산선지국' },
+      { src: '음식/문산선지국/양곰탕2_23.webp',               title: '문산선지국' },
+      { src: '음식/문산선지국/양곰탕3_24.webp',               title: '문산선지국' },
+      { src: '음식/여운포차/DSC08652_1_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08669_2_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08675_3_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08681_4_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08699_5_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08715_6_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08739_7_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08757_8_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08771_9_11zon.webp',           title: '여운포차' },
+      { src: '음식/여운포차/DSC08792_10_11zon.webp',          title: '여운포차' },
+      { src: '음식/여운포차/DSC08824_11_11zon.webp',          title: '여운포차' },
+      { src: '음식/여운포차/DSC08865_12_11zon.webp',          title: '여운포차' },
+      { src: '음식/여운포차/DSC08880_13_11zon.webp',          title: '여운포차' },
+      { src: '음식/밤샘포차/1001%20%281%29_1_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%282%29_2_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%283%29_3_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%284%29_4_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%285%29_5_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%286%29_6_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%287%29_7_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%288%29_8_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%289%29_9_11zon.webp',     title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2810%29_10_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2811%29_11_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2812%29_12_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2813%29_13_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2814%29_14_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2815%29_15_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2816%29_16_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2817%29_17_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2818%29_18_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2819%29_19_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/1001%20%2820%29_20_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%281%29_21_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%282%29_22_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%283%29_23_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%284%29_24_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%285%29_25_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%286%29_26_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%287%29_27_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%288%29_28_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%289%29_29_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2810%29_30_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2811%29_31_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2812%29_32_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2813%29_33_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2814%29_34_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2815%29_35_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2816%29_36_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2817%29_37_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2818%29_38_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2819%29_39_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2820%29_40_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2821%29_41_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2822%29_42_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2823%29_43_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2824%29_44_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2825%29_45_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/2001%20%2826%29_46_11zon.webp',   title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%281%29_47_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%282%29_48_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%283%29_49_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%284%29_50_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%285%29_51_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%286%29_52_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%287%29_53_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%288%29_54_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%289%29_55_11zon.webp',    title: '밤샘포차' },
+      { src: '음식/밤샘포차/3001%20%2810%29_56_11zon.webp',   title: '밤샘포차' },
     ]
   },
+  /* ── Room 04: Motion (YouTube) ──────────────────── */
   {
     id: 'motion', en: 'Motion', ko: '영상', room: 'Room 04',
-    desc: '움직이는 이미지로 브랜드를 이야기합니다.',
+    desc: '브랜드의 움직임을 설계합니다.\n광고 영상부터 브랜드 필름까지, 진주에서 제작합니다.',
     feat: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
     type: 'video',
     items: [
       { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
-        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',   sub: 'Motion 01' },
+        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',  sub: 'Commercial Film' },
       { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
-        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',    sub: 'Motion 02' },
+        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',   sub: 'Product Film' },
       { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
-        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장',   sub: 'Motion 03' },
+        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장', sub: 'Brand Film' },
     ]
   },
+  /* ── Room 05: Interior (NEW) ────────────────────── */
+  {
+    id: 'interior', en: 'Interior', ko: '인테리어', room: 'Room 05',
+    desc: '공간이 가진 성격을 그대로 사진에 담습니다.\n게임 카페부터 한식당까지, 공간의 결을 읽어냅니다.',
+    feat: '인테리어/보드커넥션/배경%201%20복사.webp',
+    type: 'photo',
+    items: [
+      { src: '인테리어/보드커넥션/배경%201%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/배경%202%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/배경%203%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/게임%204%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/게임%205%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/게임%206%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/룸%203%20복사.webp',               title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/보드%201%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/보드%202%20복사.webp',             title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/셀프%20코너%202%20복사.webp',      title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/셀프%20코너%203%20복사.webp',      title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/키오스크%201%20복사.webp',         title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/키오스크%202%20복사.webp',         title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/태블릿%20복사.webp',               title: '보드커넥션' },
+      { src: '인테리어/보드커넥션/태블릿%2C%20키오스크%20복사.webp', title: '보드커넥션' },
+      { src: '인테리어/문산선지국/1%20%281%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%283%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%284%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%285%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%286%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%289%29.webp',                 title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%2810%29.webp',                title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%2811%29.webp',                title: '문산선지국' },
+      { src: '인테리어/문산선지국/1%20%2812%29.webp',                title: '문산선지국' },
+    ]
+  },
+  /* ── About / Contact ─────────────────────────────── */
   {
     id: 'about', en: 'Contact', ko: '문의', room: 'About',
-    feat: 'https://i.ibb.co/ks6QB1J7/1-1.jpg',
+    feat: '프로필/강다원%201.webp',
     type: 'about',
   }
 ];
@@ -614,12 +832,12 @@ function buildCards() {
         <div class="c-room">${cat.room}</div>
         <div class="c-title">${cat.en}</div>
         <div class="about-lines">
-          <div class="about-row"><span>Email</span><strong>momentstudio@example.com</strong></div>
-          <div class="about-row"><span>Instagram</span><strong>@moment.studio</strong></div>
-          <div class="about-row"><span>Location</span><strong>경남 진주시</strong></div>
+          <div class="about-row"><span>Studio</span><strong>순간, 스튜디오</strong></div>
+          <div class="about-row"><span>Location</span><strong>경남 진주시 봉곡동 474-39 101호</strong></div>
+          <div class="about-row"><span>Instagram</span><strong>@sungan__studio</strong></div>
         </div>
         <div class="c-actions">
-          <a class="btn-more gold" href="mailto:momentstudio@example.com">이메일 문의</a>
+          <a class="btn-more gold" href="https://www.instagram.com/sungan__studio" target="_blank" rel="noopener">인스타그램 문의</a>
         </div>`;
     } else {
       bodyHTML = `
@@ -639,7 +857,6 @@ function buildCards() {
           alt="${cat.en}"
           loading="${i === 0 ? 'eager' : 'lazy'}"
           fetchpriority="${i === 0 ? 'high' : 'auto'}"
-          referrerpolicy="no-referrer"
           decoding="async">
       </div>
       <div class="c-body">${bodyHTML}</div>`;
@@ -685,6 +902,7 @@ function setPositions(animate = true) {
     card.style.opacity       = opacity;
     card.style.zIndex        = 10 - absOff;
     card.style.pointerEvents = off === 0 ? 'auto' : 'none';
+    card.classList.toggle('is-active', off === 0);
 
     if (!animate) {
       void card.offsetHeight;
@@ -827,12 +1045,27 @@ function openDetail(id) {
       div.className = 'p-item';
       div.innerHTML = `
         <img src="${item.src}" alt="${item.title}"
-             loading="lazy" referrerpolicy="no-referrer" decoding="async">
+             loading="lazy" decoding="async">
         <div class="p-label">${item.title}</div>`;
       div.addEventListener('click', () => openLightbox(srcs, idx));
       grid.appendChild(div);
     });
     dBody.appendChild(grid);
+
+    /* 스크롤 리빌 — #detail 컨테이너 기준 IntersectionObserver */
+    const io = new IntersectionObserver((entries, obs) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          obs.unobserve(e.target);
+        }
+      });
+    }, { root: detail, threshold: 0.08, rootMargin: '0px 0px -20px 0px' });
+
+    grid.querySelectorAll('.p-item').forEach((item, idx) => {
+      item.style.transitionDelay = `${Math.min(idx * 40, 400)}ms`;
+      io.observe(item);
+    });
 
   } else if (cat.type === 'video') {
     const grid = document.createElement('div');
@@ -950,7 +1183,6 @@ setTimeout(() => { timeReady = true; tryOpen(); }, 1400);
 /* 첫 이미지 로드 감지 */
 const heroProbe = new Image();
 heroProbe.onload = heroProbe.onerror = () => { imgReady = true; tryOpen(); };
-heroProbe.referrerPolicy = 'no-referrer';
 heroProbe.src = CATS[0].feat;
 
 /* 절대 폴백: 4초 후 강제 열기 */
