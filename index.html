@@ -193,8 +193,8 @@
       border-radius: var(--radius);
       overflow: hidden;
       /* will-change는 JS에서 활성 카드에만 부여 */
-      transition: transform .52s cubic-bezier(.34,1.56,.64,1),
-                  opacity  .36s ease;
+      transition: transform .46s cubic-bezier(.22,1,.36,1),
+                  opacity  .32s ease;
       contain: layout paint;
     }
     /* 외부 베젤 링 — double-bezel 첫 번째 레이어 */
@@ -303,14 +303,17 @@
     }
 
     /* About card special styling */
-    .about-lines { margin-top: 18px; display: grid; gap: 0; }
+    .about-lines { margin-top: 18px; display: grid; gap: 14px; }
     .about-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 11px 0; border-bottom: 1px solid rgba(255,255,255,.07);
-      font-size: .84rem; gap: 12px;
+      display: flex; flex-direction: column; align-items: flex-start;
+      padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,.07);
+      gap: 3px;
     }
-    .about-row span { color: var(--muted); flex-shrink: 0; }
-    .about-row strong { text-align: right; font-weight: 500; }
+    .about-row span {
+      font-size: .66rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--accent); font-family: 'Cormorant Garamond', serif; font-style: italic;
+    }
+    .about-row strong { font-size: .9rem; font-weight: 500; color: var(--text); }
 
     /* ── HUD / DOTS ─────────────────────────────────────────── */
     #hud {
@@ -832,9 +835,18 @@ function buildCards() {
         <div class="c-room">${cat.room}</div>
         <div class="c-title">${cat.en}</div>
         <div class="about-lines">
-          <div class="about-row"><span>Studio</span><strong>순간, 스튜디오</strong></div>
-          <div class="about-row"><span>Location</span><strong>경남 진주시 봉곡동 474-39 101호</strong></div>
-          <div class="about-row"><span>Instagram</span><strong>@sungan__studio</strong></div>
+          <div class="about-row">
+            <span>Studio</span>
+            <strong>순간, 스튜디오</strong>
+          </div>
+          <div class="about-row">
+            <span>Location</span>
+            <strong>경남 진주시 봉곡동 474-39 101호</strong>
+          </div>
+          <div class="about-row">
+            <span>Instagram</span>
+            <strong>@sungan__studio</strong>
+          </div>
         </div>
         <div class="c-actions">
           <a class="btn-more gold" href="https://www.instagram.com/sungan__studio" target="_blank" rel="noopener">인스타그램 문의</a>
