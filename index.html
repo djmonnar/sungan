@@ -52,26 +52,12 @@
       overflow-wrap: break-word;
     }
 
-    /* ── GRAIN OVERLAY (animated film grain) ─────────────── */
+    /* ── GRAIN OVERLAY (static — no animation for GPU) ──── */
     .grain {
       position: fixed; inset: 0; z-index: 200;
-      pointer-events: none; opacity: .04;
+      pointer-events: none; opacity: .035;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      background-size: 200px 200px;
-      animation: grain-move 8s steps(10) infinite;
-    }
-    @keyframes grain-move {
-      0%   { transform: translate(0, 0); }
-      10%  { transform: translate(-5%, -10%); }
-      20%  { transform: translate(-15%, 5%); }
-      30%  { transform: translate(7%, -25%); }
-      40%  { transform: translate(-5%, 25%); }
-      50%  { transform: translate(-15%, 10%); }
-      60%  { transform: translate(15%, 0%); }
-      70%  { transform: translate(0%, 15%); }
-      80%  { transform: translate(3%, 35%); }
-      90%  { transform: translate(-10%, 10%); }
-      100% { transform: translate(0, 0); }
+      background-size: 180px 180px;
     }
 
     /* ── DOORS (입장 애니메이션) ────────────────────────────── */
@@ -163,8 +149,8 @@
       display: flex; justify-content: space-between; align-items: flex-end;
       background: linear-gradient(to bottom,
         rgba(7,7,6,.92) 0%, rgba(7,7,6,.60) 50%, transparent);
-      backdrop-filter: blur(16px) saturate(1.4);
-      -webkit-backdrop-filter: blur(16px) saturate(1.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-bottom: 1px solid rgba(255,255,255,.04);
       pointer-events: none;
     }
@@ -314,6 +300,84 @@
       color: var(--accent); font-family: 'Cormorant Garamond', serif; font-style: italic;
     }
     .about-row strong { font-size: .9rem; font-weight: 500; color: var(--text); }
+
+    /* ── CONTACT SCROLL BUTTON ─────────────────────────────── */
+    .hud-contact {
+      pointer-events: all; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      padding: 4px 16px; margin-top: 2px;
+    }
+    .hud-contact span {
+      font-size: .62rem; letter-spacing: .22em; text-transform: uppercase;
+      color: var(--accent); font-family: 'Cormorant Garamond', serif; font-style: italic;
+    }
+    .hud-contact svg {
+      width: 16px; height: 16px; stroke: var(--accent);
+      animation: nudge 2.4s ease-in-out infinite;
+    }
+    @keyframes nudge {
+      0%, 100% { transform: translateY(0); }
+      55%       { transform: translateY(4px); }
+    }
+
+    /* ── CONTACT SECTION ────────────────────────────────────── */
+    #contact {
+      position: fixed; inset: 0; z-index: 65;
+      background: var(--bg);
+      transform: translateY(100%);
+      transition: transform .52s cubic-bezier(.22,1,.36,1);
+      display: flex; flex-direction: column;
+      align-items: flex-start; justify-content: center;
+      padding: calc(var(--st) + 56px) 32px calc(var(--sb) + 40px);
+      overflow-y: auto;
+    }
+    #contact.open { transform: translateY(0); }
+    #contact::before {
+      content: '';
+      position: fixed; inset: 0;
+      background: url('프로필/강다원%201.webp') center / cover no-repeat;
+      opacity: .06; pointer-events: none;
+      filter: blur(30px); transform: scale(1.1);
+    }
+    .ct-back {
+      position: fixed; top: var(--st); left: 20px; z-index: 5;
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .8rem; color: var(--muted); padding: 8px 0;
+    }
+    .ct-back svg { width: 15px; height: 15px; }
+    .ct-kicker {
+      font-size: .64rem; letter-spacing: .28em; text-transform: uppercase;
+      color: var(--accent); font-family: 'Cormorant Garamond', serif;
+      font-style: italic; margin-bottom: 10px; position: relative;
+    }
+    .ct-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.8rem, 20vw, 6.5rem);
+      font-weight: 300; letter-spacing: -.02em;
+      line-height: .88; margin-bottom: 44px; position: relative;
+    }
+    .ct-items { width: 100%; display: grid; gap: 0; margin-bottom: 36px; position: relative; }
+    .ct-item {
+      display: flex; flex-direction: column; gap: 5px;
+      padding: 18px 0; border-bottom: 1px solid var(--border);
+    }
+    .ct-item:first-child { border-top: 1px solid var(--border); }
+    .ct-item span {
+      font-size: .62rem; letter-spacing: .26em; text-transform: uppercase;
+      color: var(--accent); font-family: 'Cormorant Garamond', serif; font-style: italic;
+    }
+    .ct-item strong { font-size: .95rem; font-weight: 500; word-break: keep-all; }
+    .ct-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 52px; padding: 0 28px; border-radius: 999px;
+      background: var(--accent); color: #18120a;
+      font-size: .88rem; font-weight: 700; letter-spacing: .06em;
+      transition: background .2s, transform .15s; position: relative;
+    }
+    .ct-btn:active { transform: scale(.97); }
+    @media (hover: hover) {
+      .ct-btn:hover { background: #d4b87c; transform: translateY(-1px); }
+    }
 
     /* ── HUD / DOTS ─────────────────────────────────────────── */
     #hud {
@@ -542,6 +606,43 @@
 <div id="hud">
   <div class="hud-dots" id="dots"></div>
   <div class="hud-tip">좌우로 넘기기</div>
+  <button class="hud-contact" id="hud-contact" aria-label="문의 열기">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+    <span>문의하기</span>
+  </button>
+</div>
+
+<!-- CONTACT SECTION (scroll down) -->
+<div id="contact">
+  <button class="ct-back" id="ct-back">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="15 18 9 12 15 6"/>
+    </svg>
+    돌아가기
+  </button>
+  <div class="ct-kicker">순간, 스튜디오</div>
+  <div class="ct-title">Contact</div>
+  <div class="ct-items">
+    <div class="ct-item">
+      <span>Studio</span>
+      <strong>순간, 스튜디오</strong>
+    </div>
+    <div class="ct-item">
+      <span>Location</span>
+      <strong>경남 진주시 봉곡동 474-39 101호</strong>
+    </div>
+    <div class="ct-item">
+      <span>Instagram</span>
+      <strong>@sungan__studio</strong>
+    </div>
+  </div>
+  <a class="ct-btn" href="https://www.instagram.com/sungan__studio" target="_blank" rel="noopener">
+    인스타그램 문의
+  </a>
 </div>
 
 <!-- DETAIL OVERLAY -->
@@ -786,12 +887,6 @@ const CATS = [
       { src: '인테리어/문산선지국/1%20%2812%29.webp',                title: '문산선지국' },
     ]
   },
-  /* ── About / Contact ─────────────────────────────── */
-  {
-    id: 'about', en: 'Contact', ko: '문의', room: 'About',
-    feat: '프로필/강다원%201.webp',
-    type: 'about',
-  }
 ];
 
 /* ════════════════════════════════════════════════════
@@ -809,6 +904,9 @@ const dotsEl  = document.getElementById('dots');
 const arrL    = document.getElementById('arr-l');
 const arrR    = document.getElementById('arr-r');
 const detail  = document.getElementById('detail');
+const contact  = document.getElementById('contact');
+const ctBack   = document.getElementById('ct-back');
+const hudContact = document.getElementById('hud-contact');
 const dName   = document.getElementById('d-name');
 const dBody   = document.getElementById('d-body');
 const dBack   = document.getElementById('d-back');
@@ -969,7 +1067,7 @@ arrR.addEventListener('click', () => goTo(cur + 1));
 let tsX = 0, tsY = 0, swipeDir = null, swiping = false;
 
 document.getElementById('stage').addEventListener('touchstart', e => {
-  if (detail.classList.contains('open') || lb.classList.contains('open')) return;
+  if (detail.classList.contains('open') || lb.classList.contains('open') || contact.classList.contains('open')) return;
   tsX = e.touches[0].clientX;
   tsY = e.touches[0].clientY;
   swiping = true;
@@ -985,11 +1083,19 @@ document.getElementById('stage').addEventListener('touchmove', e => {
 }, { passive: false });
 
 document.getElementById('stage').addEventListener('touchend', e => {
-  if (!swiping || swipeDir !== 'h') { swiping = false; return; }
-  const dx = e.changedTouches[0].clientX - tsX;
-  swiping = false; swipeDir = null;
-  if (Math.abs(dx) < 40) return;
-  goTo(dx < 0 ? cur + 1 : cur - 1);
+  if (!swiping) { swiping = false; return; }
+  if (swipeDir === 'h') {
+    const dx = e.changedTouches[0].clientX - tsX;
+    swiping = false; swipeDir = null;
+    if (Math.abs(dx) < 40) return;
+    goTo(dx < 0 ? cur + 1 : cur - 1);
+  } else if (swipeDir === 'v') {
+    const dy = e.changedTouches[0].clientY - tsY;
+    swiping = false; swipeDir = null;
+    if (dy < -60) openContact(); /* 위로 스와이프 → 문의 열기 */
+  } else {
+    swiping = false;
+  }
 });
 
 /* ════════════════════════════════════════════════════
@@ -1000,6 +1106,10 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape')      closeLightbox();
     if (e.key === 'ArrowLeft')   lbStep(-1);
     if (e.key === 'ArrowRight')  lbStep(1);
+    return;
+  }
+  if (contact.classList.contains('open')) {
+    if (e.key === 'Escape') closeContact();
     return;
   }
   if (detail.classList.contains('open')) {
@@ -1111,6 +1221,15 @@ function openDetail(id) {
 
 function closeDetail() { detail.classList.remove('open'); }
 dBack.addEventListener('click', closeDetail);
+
+/* ════════════════════════════════════════════════════
+   CONTACT SECTION
+════════════════════════════════════════════════════ */
+function openContact()  { contact.classList.add('open'); }
+function closeContact() { contact.classList.remove('open'); contact.scrollTop = 0; }
+
+ctBack.addEventListener('click', closeContact);
+hudContact.addEventListener('click', openContact);
 
 /* ════════════════════════════════════════════════════
    LIGHTBOX
