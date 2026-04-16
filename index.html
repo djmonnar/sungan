@@ -324,21 +324,15 @@
     #contact {
       position: fixed; inset: 0; z-index: 65;
       background: var(--bg);
-      transform: translateY(100%);
-      transition: transform .52s cubic-bezier(.22,1,.36,1);
+      transform: translateY(100%) translateZ(0);
+      will-change: transform;
+      transition: transform .44s cubic-bezier(.22,1,.36,1);
       display: flex; flex-direction: column;
       align-items: flex-start; justify-content: center;
       padding: calc(var(--st) + 56px) 32px calc(var(--sb) + 40px);
       overflow-y: auto;
     }
-    #contact.open { transform: translateY(0); }
-    #contact::before {
-      content: '';
-      position: fixed; inset: 0;
-      background: url('프로필/강다원%201.webp') center / cover no-repeat;
-      opacity: .06; pointer-events: none;
-      filter: blur(30px); transform: scale(1.1);
-    }
+    #contact.open { transform: translateY(0) translateZ(0); }
     .ct-back {
       position: fixed; top: var(--st); left: 20px; z-index: 5;
       display: inline-flex; align-items: center; gap: 6px;
@@ -367,16 +361,23 @@
       color: var(--accent); font-family: 'Cormorant Garamond', serif; font-style: italic;
     }
     .ct-item strong { font-size: .95rem; font-weight: 500; word-break: keep-all; }
+    .ct-actions { display: flex; gap: 10px; flex-wrap: wrap; position: relative; }
     .ct-btn {
       display: inline-flex; align-items: center; gap: 8px;
-      height: 52px; padding: 0 28px; border-radius: 999px;
+      height: 52px; padding: 0 24px; border-radius: 999px;
       background: var(--accent); color: #18120a;
-      font-size: .88rem; font-weight: 700; letter-spacing: .06em;
-      transition: background .2s, transform .15s; position: relative;
+      font-size: .86rem; font-weight: 700; letter-spacing: .04em;
+      transition: background .2s, transform .15s;
+    }
+    .ct-btn.outline {
+      background: transparent; color: var(--text);
+      border: 1px solid var(--border2);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
     }
     .ct-btn:active { transform: scale(.97); }
     @media (hover: hover) {
       .ct-btn:hover { background: #d4b87c; transform: translateY(-1px); }
+      .ct-btn.outline:hover { background: rgba(255,255,255,.1); transform: translateY(-1px); }
     }
 
     /* ── HUD / DOTS ─────────────────────────────────────────── */
@@ -636,13 +637,18 @@
       <strong>경남 진주시 봉곡동 474-39 101호</strong>
     </div>
     <div class="ct-item">
+      <span>Phone</span>
+      <strong>010-2506-4076</strong>
+    </div>
+    <div class="ct-item">
       <span>Instagram</span>
       <strong>@sungan__studio</strong>
     </div>
   </div>
-  <a class="ct-btn" href="https://www.instagram.com/sungan__studio" target="_blank" rel="noopener">
-    인스타그램 문의
-  </a>
+  <div class="ct-actions">
+    <a class="ct-btn" href="tel:01025064076">전화하기</a>
+    <a class="ct-btn outline" href="https://www.instagram.com/sungan__studio" target="_blank" rel="noopener">인스타그램</a>
+  </div>
 </div>
 
 <!-- DETAIL OVERLAY -->
@@ -963,10 +969,9 @@ function buildCards() {
     card.innerHTML = `
       <div class="c-img-wrap">
         <img
-          src="${cat.feat}"
+          ${i === 0 ? `src="${cat.feat}" fetchpriority="high"` : `data-src="${cat.feat}"`}
           alt="${cat.en}"
           loading="${i === 0 ? 'eager' : 'lazy'}"
-          fetchpriority="${i === 0 ? 'high' : 'auto'}"
           decoding="async">
       </div>
       <div class="c-body">${bodyHTML}</div>`;
@@ -1013,6 +1018,14 @@ function setPositions(animate = true) {
     card.style.zIndex        = 10 - absOff;
     card.style.pointerEvents = off === 0 ? 'auto' : 'none';
     card.classList.toggle('is-active', off === 0);
+
+    /* 인접 카드(±1) 이미지 지연 로드 */
+    if (absOff <= 1) {
+      const img = card.querySelector('.c-img-wrap img');
+      if (img && img.dataset.src && !img.src) {
+        img.src = img.dataset.src;
+      }
+    }
 
     if (!animate) {
       void card.offsetHeight;
