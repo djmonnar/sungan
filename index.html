@@ -47,7 +47,7 @@
 
     /* ── KOREAN TEXT HANDLING ──────────────────────────── */
     .c-ko, .c-room, .c-count, .d-head p, .about-row,
-    .hud-tip, .d-back, .v-meta span, .p-label {
+    .hud-tip, .d-back, .v-meta span {
       word-break: keep-all;
       overflow-wrap: break-word;
     }
@@ -485,13 +485,7 @@
     }
     .p-item img { width: 100%; display: block; transition: transform .4s ease; }
     .p-item:active img { transform: scale(.97); }
-    .p-label {
-      position: absolute; bottom: 0; left: 0; right: 0;
-      padding: 28px 10px 10px;
-      background: linear-gradient(to top, rgba(0,0,0,.72), transparent);
-      font-size: .7rem; letter-spacing: .08em;
-      color: rgba(255,255,255,.82);
-    }
+    .p-label { display: none; }
 
     /* Video cards */
     .video-grid { display: grid; gap: 12px; }
@@ -900,6 +894,7 @@ const CATS = [
 ════════════════════════════════════════════════════ */
 let cur = 0;
 const N = CATS.length;
+let detailIO = null;
 
 /* ════════════════════════════════════════════════════
    ELEMENTS
@@ -1022,7 +1017,7 @@ function setPositions(animate = true) {
     /* 인접 카드(±1) 이미지 지연 로드 */
     if (absOff <= 1) {
       const img = card.querySelector('.c-img-wrap img');
-      if (img && img.dataset.src && !img.src) {
+      if (img && img.dataset.src && !img.getAttribute('src')) {
         img.src = img.dataset.src;
       }
     }
@@ -1179,16 +1174,16 @@ function openDetail(id) {
       const div = document.createElement('div');
       div.className = 'p-item';
       div.innerHTML = `
-        <img src="${item.src}" alt="${item.title}"
-             loading="lazy" decoding="async">
-        <div class="p-label">${item.title}</div>`;
+        <img src="${item.src}" alt=""
+             loading="lazy" decoding="async">`;
       div.addEventListener('click', () => openLightbox(srcs, idx));
       grid.appendChild(div);
     });
     dBody.appendChild(grid);
 
     /* 스크롤 리빌 — #detail 컨테이너 기준 IntersectionObserver */
-    const io = new IntersectionObserver((entries, obs) => {
+    if (detailIO) { detailIO.disconnect(); detailIO = null; }
+    detailIO = new IntersectionObserver((entries, obs) => {
       entries.forEach(e => {
         if (e.isIntersecting) {
           e.target.classList.add('visible');
@@ -1199,7 +1194,7 @@ function openDetail(id) {
 
     grid.querySelectorAll('.p-item').forEach((item, idx) => {
       item.style.transitionDelay = `${Math.min(idx * 40, 400)}ms`;
-      io.observe(item);
+      detailIO.observe(item);
     });
 
   } else if (cat.type === 'video') {
