@@ -221,6 +221,57 @@
     }
 
     /* ══════════════════════════════════════════════
+       DELETE BUTTON (in photo card overlay)
+    ══════════════════════════════════════════════ */
+    .btn-delete {
+      padding: 5px 14px; border-radius: 8px;
+      background: var(--danger); color: #fff;
+      font-size: .72rem; font-weight: 600;
+      transition: opacity .2s;
+    }
+    .btn-delete:hover { opacity: .8; }
+
+    /* ══════════════════════════════════════════════
+       CONFIRM DIALOG
+    ══════════════════════════════════════════════ */
+    .confirm-bg {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .confirm-bg.open { opacity: 1; pointer-events: all; }
+    .confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border2); border-radius: 14px;
+      padding: 28px 24px; max-width: 320px; width: 100%;
+      text-align: center;
+    }
+    .confirm-box strong {
+      display: block; font-size: .85rem;
+      color: var(--text); margin-bottom: 8px;
+      word-break: break-all;
+    }
+    .confirm-box p { font-size: .82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-conf-cancel {
+      flex: 1; padding: 10px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: .82rem; color: var(--muted);
+      transition: color .2s, border-color .2s;
+    }
+    .btn-conf-cancel:hover { color: var(--text); border-color: var(--border2); }
+    .btn-conf-ok {
+      flex: 1; padding: 10px;
+      background: var(--danger); border-radius: 8px;
+      font-size: .82rem; font-weight: 600; color: #fff;
+      transition: opacity .2s;
+    }
+    .btn-conf-ok:hover { opacity: .8; }
+
+    /* ══════════════════════════════════════════════
        UPLOAD BUTTON
     ══════════════════════════════════════════════ */
     .btn-upload {
@@ -393,6 +444,18 @@
   <main class="admin-main" id="admin-main">
     <div class="placeholder">대시보드 로딩 중…</div>
   </main>
+</div>
+
+<!-- ══ CONFIRM DIALOG ════════════════════════════════ -->
+<div class="confirm-bg" id="confirm-bg">
+  <div class="confirm-box">
+    <strong id="confirm-name"></strong>
+    <p>이 사진을 삭제하시겠습니까?<br>삭제 후 복구할 수 없습니다.</p>
+    <div class="confirm-actions">
+      <button class="btn-conf-cancel" id="confirm-cancel">취소</button>
+      <button class="btn-conf-ok"     id="confirm-ok">삭제</button>
+    </div>
+  </div>
 </div>
 
 <!-- ══ UPLOAD MODAL ══════════════════════════════════ -->
@@ -658,7 +721,13 @@ function renderGrid(images) {
     name.className = 'photo-name';
     name.textContent = img.name;
 
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.textContent = '삭제';
+    delBtn.addEventListener('click', () => confirmDelete(img));
+
     overlay.appendChild(name);
+    overlay.appendChild(delBtn);
     card.appendChild(el);
     card.appendChild(overlay);
     grid.appendChild(card);
@@ -668,7 +737,7 @@ function renderGrid(images) {
 }
 
 /* ════════════════════════════════════════════════
-   GITHUB API — WRITE
+   GITHUB API — WRITE / DELETE
 ════════════════════════════════════════════════ */
 async function ghPut(path, base64, message) {
   const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}`;
@@ -683,6 +752,51 @@ async function ghPut(path, base64, message) {
   }
   return r.json();
 }
+
+async function ghDelete(path, sha, message) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}`;
+  const r = await fetch(url, {
+    method: 'DELETE',
+    headers: ghHeaders(),
+    body: JSON.stringify({ message, sha, branch: BRANCH })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+/* ════════════════════════════════════════════════
+   DELETE CONFIRM
+════════════════════════════════════════════════ */
+let deleteTarget = null;
+const confirmBg = document.getElementById('confirm-bg');
+
+function confirmDelete(img) {
+  deleteTarget = img;
+  document.getElementById('confirm-name').textContent = img.name;
+  confirmBg.classList.add('open');
+}
+
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  confirmBg.classList.remove('open');
+  deleteTarget = null;
+});
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!deleteTarget) return;
+  confirmBg.classList.remove('open');
+  const target = deleteTarget;
+  deleteTarget = null;
+  try {
+    await ghDelete(target.path, target.sha, `삭제: ${target.path}`);
+    showToast('사진이 삭제되었습니다.');
+    loadFolder(curFolder);
+  } catch (e) {
+    showToast(`삭제 실패: ${e.message}`, 'err');
+  }
+});
 
 /* ════════════════════════════════════════════════
    UPLOAD MODAL
