@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>순간, 스튜디오 — 관리자</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <style>
+    /* ── VARIABLES ─────────────────────────────────── */
+    :root {
+      --bg:      #070706;
+      --surface: #0f0f0e;
+      --surface2: #1a1a18;
+      --border:  rgba(255,255,255,.08);
+      --border2: rgba(255,255,255,.14);
+      --text:    #f0ece6;
+      --muted:   rgba(240,236,230,.50);
+      --accent:  #c8a86c;
+      --danger:  #e05555;
+      --success: #7ecf8f;
+      --radius:  16px;
+    }
+
+    /* ── RESET ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    input, select { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; }
+
+    /* ══════════════════════════════════════════════
+       LOGIN
+    ══════════════════════════════════════════════ */
+    #login-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .login-box {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 44px 36px;
+    }
+    .login-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300; letter-spacing: .08em;
+      text-align: center; margin-bottom: 6px;
+    }
+    .login-sub {
+      text-align: center; font-size: .68rem; letter-spacing: .3em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 40px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: .72rem; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field input {
+      display: block; width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px; font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus { border-color: var(--accent); }
+
+    .login-err {
+      font-size: .78rem; color: var(--danger);
+      min-height: 20px; margin-bottom: 14px;
+    }
+    .btn-primary {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600;
+      font-size: .9rem; letter-spacing: .04em;
+      transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .85; }
+    .btn-primary:disabled { opacity: .45; cursor: default; }
+
+    .login-hint {
+      font-size: .7rem; color: var(--muted);
+      text-align: center; margin-top: 20px; line-height: 1.8;
+    }
+    .login-hint a { color: var(--accent); }
+
+    /* ══════════════════════════════════════════════
+       ADMIN SHELL
+    ══════════════════════════════════════════════ */
+    #admin-shell { display: none; flex-direction: column; min-height: 100vh; }
+    #admin-shell.visible { display: flex; }
+
+    /* TOP BAR */
+    .top-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(7,7,6,.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .top-bar-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; font-weight: 300; letter-spacing: .07em;
+      white-space: nowrap;
+    }
+    .top-bar-right { display: flex; gap: 10px; align-items: center; }
+    .btn-logout {
+      font-size: .72rem; letter-spacing: .1em; color: var(--muted);
+      padding: 6px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      transition: color .2s, border-color .2s;
+    }
+    .btn-logout:hover { color: var(--text); border-color: var(--border2); }
+
+    /* MAIN */
+    .admin-main {
+      flex: 1; padding: 32px 28px;
+      max-width: 1280px; margin: 0 auto; width: 100%;
+    }
+
+    /* placeholder for subsequent phases */
+    .placeholder {
+      padding: 80px 0; text-align: center;
+      color: var(--muted); font-size: .9rem; letter-spacing: .06em;
+    }
+
+    /* ══════════════════════════════════════════════
+       TOAST
+    ══════════════════════════════════════════════ */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 11px 20px;
+      font-size: .82rem; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok   { border-color: rgba(126,207,143,.35); color: var(--success); }
+    .toast.err  { border-color: rgba(224,85,85,.35);   color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">순간, 스튜디오</div>
+    <div class="login-sub">Admin Panel</div>
+
+    <div class="field">
+      <label>GitHub Personal Access Token</label>
+      <input id="pat-input" type="password"
+             placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="login-err" id="login-err"></div>
+
+    <button class="btn-primary" id="login-btn">로그인</button>
+
+    <p class="login-hint">
+      repo 쓰기 권한이 있는 Classic Token이 필요합니다.<br>
+      <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">
+        GitHub 토큰 발급 →
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- ══ ADMIN SHELL ══════════════════════════════════ -->
+<div id="admin-shell">
+  <header class="top-bar">
+    <span class="top-bar-logo">순간, 스튜디오 — 관리자</span>
+    <div class="top-bar-right">
+      <button class="btn-logout" id="logout-btn">로그아웃</button>
+    </div>
+  </header>
+
+  <main class="admin-main" id="admin-main">
+    <div class="placeholder">대시보드 로딩 중…</div>
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════ */
+const OWNER  = 'djmonnar';
+const REPO   = 'sungan';
+const BRANCH = 'main';
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let pat = sessionStorage.getItem('sg_pat') || '';
+
+/* ════════════════════════════════════════════════
+   GITHUB API HELPERS
+════════════════════════════════════════════════ */
+function ghHeaders() {
+  return {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+
+async function ghGet(path) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}?ref=${BRANCH}`;
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (!r.ok) throw Object.assign(new Error(`${r.status} ${r.statusText}`), { status: r.status });
+  return r.json();
+}
+
+/* Encode each segment but preserve slashes */
+function encodePath(p) {
+  return p.split('/').map(s => encodeURIComponent(s)).join('/');
+}
+
+/* ════════════════════════════════════════════════
+   LOGIN
+════════════════════════════════════════════════ */
+const loginScreen = document.getElementById('login-screen');
+const adminShell  = document.getElementById('admin-shell');
+const loginBtn    = document.getElementById('login-btn');
+const loginErr    = document.getElementById('login-err');
+const patInput    = document.getElementById('pat-input');
+
+async function tryLogin() {
+  const token = patInput.value.trim();
+  if (!token) { loginErr.textContent = 'Token을 입력해주세요.'; return; }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = '확인 중…';
+  loginErr.textContent = '';
+
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+
+    if (r.status === 401) { loginErr.textContent = '유효하지 않은 토큰입니다.'; return; }
+    if (r.status === 404) { loginErr.textContent = '저장소에 접근할 수 없습니다.'; return; }
+    if (!r.ok)            { loginErr.textContent = `오류: ${r.status}`; return; }
+
+    const data = await r.json();
+    if (!data.permissions?.push) {
+      loginErr.textContent = 'repo 쓰기 권한이 없습니다. 토큰 권한을 확인하세요.';
+      return;
+    }
+
+    pat = token;
+    sessionStorage.setItem('sg_pat', token);
+    enterAdmin();
+
+  } catch {
+    loginErr.textContent = '네트워크 오류가 발생했습니다.';
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = '로그인';
+  }
+}
+
+loginBtn.addEventListener('click', tryLogin);
+patInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+/* Auto-login if token cached */
+if (pat) { patInput.value = pat; tryLogin(); }
+
+/* ════════════════════════════════════════════════
+   ENTER ADMIN
+════════════════════════════════════════════════ */
+function enterAdmin() {
+  loginScreen.style.display = 'none';
+  adminShell.classList.add('visible');
+  renderDashboard();
+}
+
+/* ════════════════════════════════════════════════
+   LOGOUT
+════════════════════════════════════════════════ */
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('sg_pat');
+  pat = '';
+  patInput.value = '';
+  loginErr.textContent = '';
+  loginScreen.style.display = '';
+  adminShell.classList.remove('visible');
+});
+
+/* ════════════════════════════════════════════════
+   DASHBOARD PLACEHOLDER (Phase 2에서 교체)
+════════════════════════════════════════════════ */
+function renderDashboard() {
+  document.getElementById('admin-main').innerHTML =
+    '<div class="placeholder">✓ 로그인 성공 — 다음 단계에서 대시보드를 구성합니다.</div>';
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+let toastTimer;
+const toastEl = document.getElementById('toast');
+
+function showToast(msg, type = 'ok') {
+  toastEl.textContent = msg;
+  toastEl.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>
