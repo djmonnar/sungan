@@ -242,6 +242,47 @@
     }
     .btn-delete:hover { opacity: .8; }
 
+    /* ── YOUTUBE MANAGEMENT ── */
+    .yt-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+    .yt-card {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 14px;
+      cursor: grab;
+    }
+    .yt-card.dragging  { opacity: .35; cursor: grabbing; }
+    .yt-card.drag-over { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .yt-thumb {
+      width: 80px; height: 54px; border-radius: 6px;
+      object-fit: cover; flex-shrink: 0;
+    }
+    .yt-meta { flex: 1; min-width: 0; }
+    .yt-title { font-size: .85rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .yt-sub   { font-size: .7rem; color: var(--muted); margin-top: 2px; }
+    .yt-url   { font-size: .65rem; color: var(--muted); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .yt-handle { font-size: 1rem; color: var(--muted); cursor: grab; padding: 0 4px; }
+
+    .yt-add-form {
+      display: flex; flex-direction: column; gap: 10px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px;
+    }
+    .yt-add-form input {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; font-size: .82rem;
+      color: var(--text); outline: none; width: 100%;
+      transition: border-color .2s;
+    }
+    .yt-add-form input:focus { border-color: var(--accent); }
+    .yt-add-form input::placeholder { color: var(--muted); }
+    .btn-yt-add {
+      padding: 9px 20px; background: var(--accent); color: #1a1000;
+      border-radius: 8px; font-weight: 600; font-size: .82rem;
+      align-self: flex-end; transition: opacity .2s;
+    }
+    .btn-yt-add:hover { opacity: .85; }
+    .yt-section-title { font-size: .78rem; color: var(--muted); letter-spacing: .1em; margin-bottom: 12px; }
+
     /* ── DRAG & DROP ── */
     .photo-card { cursor: grab; }
     .photo-card.dragging { opacity: .35; cursor: grabbing; }
@@ -639,6 +680,7 @@ const CATS = [
   { label: '밤샘포차',            folder: '음식/밤샘포차' },
   { label: '보드커넥션 (인테리어)', folder: '인테리어/보드커넥션' },
   { label: '문산선지국 (인테리어)', folder: '인테리어/문산선지국' },
+  { label: '▶ Motion (유튜브)',   folder: '__motion__' },
 ];
 
 let curFolder     = CATS[0].folder;
@@ -682,7 +724,8 @@ function buildTabs() {
       curFolder = cat.folder;
       tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       btn.classList.add('active');
-      loadFolder(cat.folder);
+      if (cat.folder === '__motion__') loadMotion();
+      else loadFolder(cat.folder);
     });
     tabsEl.appendChild(btn);
   });
@@ -974,6 +1017,121 @@ function toBase64(file) {
 }
 
 /* ════════════════════════════════════════════════
+   YOUTUBE (MOTION) 관리
+════════════════════════════════════════════════ */
+let motionItems = null; /* null = 아직 로드 안 됨 */
+
+async function loadMotion() {
+  document.getElementById('folder-title').textContent = 'Motion (유튜브)';
+  document.getElementById('folder-count').textContent = '';
+  const area = document.getElementById('grid-area');
+  area.innerHTML = `<div class="state-msg"><div class="spinner"></div>불러오는 중…</div>`;
+
+  if (!motionItems) {
+    try {
+      const { content } = await fetchIndexHtml();
+      motionItems = parseMotionItems(content);
+    } catch (e) {
+      area.innerHTML = `<div class="state-msg" style="color:var(--danger)">로드 실패: ${e.message}</div>`;
+      return;
+    }
+  }
+  document.getElementById('folder-count').textContent = `${motionItems.length}개`;
+  renderMotion();
+}
+
+/* index.html에서 motion items 추출 */
+function parseMotionItems(html) {
+  const items = [];
+  /* { thumb: '...', url: '...', title: '...', sub: '...' } 패턴 매칭 */
+  const re = /\{\s*thumb:\s*'([^']+)',\s*\n\s*url:\s*'([^']+)',\s*title:\s*'([^']+)',\s*sub:\s*'([^']+)'\s*\}/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    items.push({ thumb: m[1], url: m[2], title: m[3], sub: m[4] });
+  }
+  return items;
+}
+
+function renderMotion() {
+  const area = document.getElementById('grid-area');
+  area.innerHTML = '';
+
+  /* 목록 */
+  const listEl = document.createElement('div');
+  listEl.className = 'yt-list';
+
+  let ytDragSrc = null;
+
+  motionItems.forEach((item, idx) => {
+    const card = document.createElement('div');
+    card.className = 'yt-card';
+    card.draggable = true;
+    card.innerHTML = `
+      <span class="yt-handle">⠿</span>
+      <img class="yt-thumb" src="${item.thumb}" alt="" loading="lazy">
+      <div class="yt-meta">
+        <div class="yt-title">${item.title}</div>
+        <div class="yt-sub">${item.sub}</div>
+        <div class="yt-url">${item.url}</div>
+      </div>
+      <button class="btn-delete" style="flex-shrink:0">삭제</button>
+    `;
+    card.querySelector('.btn-delete').addEventListener('click', () => {
+      motionItems.splice(idx, 1);
+      renderMotion();
+    });
+    /* drag */
+    card.addEventListener('dragstart', () => { ytDragSrc = idx; card.classList.add('dragging'); });
+    card.addEventListener('dragend',   () => listEl.querySelectorAll('.yt-card').forEach(c => c.classList.remove('dragging','drag-over')));
+    card.addEventListener('dragover',  e => { e.preventDefault(); listEl.querySelectorAll('.yt-card').forEach(c => c.classList.remove('drag-over')); card.classList.add('drag-over'); });
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      if (ytDragSrc === null || ytDragSrc === idx) return;
+      const moved = motionItems.splice(ytDragSrc, 1)[0];
+      motionItems.splice(idx, 0, moved);
+      renderMotion();
+    });
+    listEl.appendChild(card);
+  });
+  area.appendChild(listEl);
+
+  /* 추가 폼 */
+  const form = document.createElement('div');
+  form.className = 'yt-add-form';
+  form.innerHTML = `
+    <p class="yt-section-title">YouTube 영상 추가</p>
+    <input id="yt-url"   placeholder="YouTube URL  (예: https://youtu.be/xxxxx)" type="url">
+    <input id="yt-title" placeholder="영상 제목  (예: DASHU 광고)">
+    <input id="yt-sub"   placeholder="서브 타이틀  (예: Commercial Film)">
+    <button class="btn-yt-add" id="yt-add-btn">추가</button>
+  `;
+  form.querySelector('#yt-add-btn').addEventListener('click', () => {
+    const url   = form.querySelector('#yt-url').value.trim();
+    const title = form.querySelector('#yt-title').value.trim();
+    const sub   = form.querySelector('#yt-sub').value.trim();
+    if (!url || !title) { showToast('URL과 제목을 입력하세요.', 'err'); return; }
+
+    /* YouTube ID 추출 */
+    const id = extractYtId(url);
+    if (!id) { showToast('올바른 YouTube URL을 입력하세요.', 'err'); return; }
+
+    motionItems.push({
+      thumb: `https://img.youtube.com/vi/${id}/hqdefault.jpg`,
+      url:   `https://youtu.be/${id}`,
+      title, sub: sub || 'Video'
+    });
+    renderMotion();
+    showToast('추가됐습니다. "사이트 갱신"을 눌러 반영하세요.');
+  });
+  area.appendChild(form);
+}
+
+function extractYtId(url) {
+  const m = url.match(/(?:youtu\.be\/|v=|vi=|embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
+/* ════════════════════════════════════════════════
    SITE REFRESH — CATS 재생성 + index.html 업데이트
 ════════════════════════════════════════════════ */
 
@@ -1037,7 +1195,7 @@ async function putIndexHtml(content, sha) {
   return r.json();
 }
 
-/* CATS 항목 재생성 (Motion은 하드코딩 유지) */
+/* CATS 항목 재생성 */
 function buildCatsJs(folderMap) {
   const items = (srcs) =>
     srcs.map(src => `      { src: '${src}', title: '' }`).join(',\n');
@@ -1056,10 +1214,25 @@ function buildCatsJs(folderMap) {
 
   const featOf = (arr, fallback) => arr.length ? `'${arr[0]}'` : `'${fallback}'`;
 
+  /* Motion: 관리자가 편집한 motionItems 사용, 없으면 현재 index.html 값 유지 */
+  const motionFeat = motionItems && motionItems.length
+    ? motionItems[0].thumb
+    : 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg';
+  const motionItemsJs = motionItems
+    ? motionItems.map(it =>
+        `      { thumb: '${it.thumb}',\n        url: '${it.url}', title: '${it.title}',  sub: '${it.sub}' }`
+      ).join(',\n')
+    : `      { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',  sub: 'Commercial Film' },
+      { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
+        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',   sub: 'Product Film' },
+      { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
+        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장', sub: 'Brand Film' }`;
+
   return `const CATS = [
-  /* ── Room 01: Commercial ─────────────────────────── */
+  /* ── Room 01: Product ────────────────────────────── */
   {
-    id: 'commercial', en: 'Commercial', ko: '상업 사진', room: 'Room 01',
+    id: 'commercial', en: 'Product', ko: '제품', room: 'Room 01',
     desc: '제품 하나에도 브랜드의 이야기가 있습니다.\\n순간스튜디오는 그 이야기를 가장 선명한 한 장면으로 압축합니다.',
     feat: ${featOf(commercial, '제품/정면%20vr.webp')},
     type: 'photo',
@@ -1067,9 +1240,9 @@ function buildCatsJs(folderMap) {
 ${items(commercial)}
     ]
   },
-  /* ── Room 02: Portrait ───────────────────────────── */
+  /* ── Room 02: Profile ───────────────────────────── */
   {
-    id: 'portrait', en: 'Portrait', ko: '인물 사진', room: 'Room 02',
+    id: 'portrait', en: 'Profile', ko: '인물 사진', room: 'Room 02',
     desc: '사람의 표정 속에 가장 솔직한 순간이 있습니다.\\n프로필부터 배우 포트폴리오까지, 피사체가 가진 빛을 끌어냅니다.',
     feat: ${featOf(portrait, '프로필/강다원%201.webp')},
     type: 'photo',
@@ -1077,9 +1250,9 @@ ${items(commercial)}
 ${items(portrait)}
     ]
   },
-  /* ── Room 03: Food & Night ───────────────────────── */
+  /* ── Room 03: Food ──────────────────────────────── */
   {
-    id: 'food', en: 'Food & Night', ko: '푸드 & 야간', room: 'Room 03',
+    id: 'food', en: 'Food', ko: '음식 사진', room: 'Room 03',
     desc: '음식의 질감, 포차의 불빛, 밤의 공기까지.\\n한 컷 안에 그 공간의 온도를 담습니다.',
     feat: ${featOf(food, '음식/문산선지국/뚝배기%20%281%29_1.webp')},
     type: 'photo',
@@ -1091,15 +1264,10 @@ ${items(food)}
   {
     id: 'motion', en: 'Motion', ko: '영상', room: 'Room 04',
     desc: '브랜드의 움직임을 설계합니다.\\n광고 영상부터 브랜드 필름까지, 진주에서 제작합니다.',
-    feat: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+    feat: '${motionFeat}',
     type: 'video',
     items: [
-      { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
-        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',  sub: 'Commercial Film' },
-      { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
-        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',   sub: 'Product Film' },
-      { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
-        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장', sub: 'Brand Film' },
+${motionItemsJs}
     ]
   },
   /* ── Room 05: Interior ──────────────────────────── */
