@@ -137,6 +137,83 @@
       max-width: 1280px; margin: 0 auto; width: 100%;
     }
 
+    /* ══════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════ */
+    .tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .tab {
+      padding: 7px 16px; border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: .75rem; letter-spacing: .08em;
+      color: var(--muted); cursor: pointer;
+      transition: border-color .2s, color .2s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); border-color: var(--border2); }
+    .tab.active { border-color: var(--accent); color: var(--accent); }
+
+    /* ══════════════════════════════════════════════
+       SECTION HEADER
+    ══════════════════════════════════════════════ */
+    .section-hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px; gap: 12px;
+    }
+    .section-title { font-size: 1rem; font-weight: 500; }
+    .section-count { font-size: .78rem; color: var(--muted); margin-left: 8px; }
+
+    /* ══════════════════════════════════════════════
+       PHOTO GRID
+    ══════════════════════════════════════════════ */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .photo-card {
+      position: relative; border-radius: 10px; overflow: hidden;
+      aspect-ratio: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+    .photo-card img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block;
+    }
+    .photo-card-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.62);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .photo-card:hover .photo-card-overlay { opacity: 1; }
+    .photo-name {
+      font-size: .62rem; color: rgba(255,255,255,.8);
+      text-align: center; padding: 0 8px;
+      word-break: break-all; line-height: 1.4;
+    }
+
+    /* ══════════════════════════════════════════════
+       STATE MESSAGES
+    ══════════════════════════════════════════════ */
+    .state-msg {
+      padding: 72px 0; text-align: center;
+      color: var(--muted); font-size: .85rem; letter-spacing: .06em;
+    }
+    .spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      animation: spin .75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     /* placeholder for subsequent phases */
     .placeholder {
       padding: 80px 0; text-align: center;
@@ -318,11 +395,112 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 });
 
 /* ════════════════════════════════════════════════
-   DASHBOARD PLACEHOLDER (Phase 2에서 교체)
+   CATEGORIES
+════════════════════════════════════════════════ */
+const CATS = [
+  { label: '제품',                folder: '제품' },
+  { label: '홍보',                folder: '홍보' },
+  { label: '프로필',              folder: '프로필' },
+  { label: '문산선지국 (음식)',    folder: '음식/문산선지국' },
+  { label: '여운포차',            folder: '음식/여운포차' },
+  { label: '밤샘포차',            folder: '음식/밤샘포차' },
+  { label: '보드커넥션 (인테리어)', folder: '인테리어/보드커넥션' },
+  { label: '문산선지국 (인테리어)', folder: '인테리어/문산선지국' },
+];
+
+let curFolder = CATS[0].folder;
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
 ════════════════════════════════════════════════ */
 function renderDashboard() {
-  document.getElementById('admin-main').innerHTML =
-    '<div class="placeholder">✓ 로그인 성공 — 다음 단계에서 대시보드를 구성합니다.</div>';
+  const main = document.getElementById('admin-main');
+  main.innerHTML = `
+    <div class="tabs" id="tabs"></div>
+    <div class="section-hdr">
+      <div>
+        <span class="section-title" id="folder-title"></span>
+        <span class="section-count" id="folder-count"></span>
+      </div>
+    </div>
+    <div id="grid-area"></div>
+  `;
+  buildTabs();
+  loadFolder(curFolder);
+}
+
+/* ── Tabs ── */
+function buildTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  CATS.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat.folder === curFolder ? ' active' : '');
+    btn.textContent = cat.label;
+    btn.addEventListener('click', () => {
+      curFolder = cat.folder;
+      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      loadFolder(cat.folder);
+    });
+    tabsEl.appendChild(btn);
+  });
+}
+
+/* ── Load folder from GitHub API ── */
+async function loadFolder(folder) {
+  document.getElementById('folder-title').textContent = folder;
+  document.getElementById('folder-count').textContent = '';
+  const area = document.getElementById('grid-area');
+  area.innerHTML = `<div class="state-msg"><div class="spinner"></div>불러오는 중…</div>`;
+
+  try {
+    const items = await ghGet(folder);
+    const images = items.filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name));
+    document.getElementById('folder-count').textContent = `${images.length}장`;
+    images.length ? renderGrid(images) :
+      (area.innerHTML = `<div class="state-msg">사진이 없습니다.</div>`);
+  } catch (e) {
+    if (e.status === 404) {
+      document.getElementById('folder-count').textContent = '0장';
+      area.innerHTML = `<div class="state-msg">폴더가 비어있습니다.<br>사진을 업로드하면 자동 생성됩니다.</div>`;
+    } else {
+      area.innerHTML = `<div class="state-msg" style="color:var(--danger)">${e.message}</div>`;
+    }
+  }
+}
+
+/* ── Render photo grid ── */
+function renderGrid(images) {
+  const area = document.getElementById('grid-area');
+  area.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'photo-grid';
+
+  images.forEach(img => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+
+    const el = document.createElement('img');
+    el.src = img.download_url;
+    el.loading = 'lazy';
+    el.decoding = 'async';
+    el.alt = img.name;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-card-overlay';
+
+    const name = document.createElement('div');
+    name.className = 'photo-name';
+    name.textContent = img.name;
+
+    overlay.appendChild(name);
+    card.appendChild(el);
+    card.appendChild(overlay);
+    grid.appendChild(card);
+  });
+
+  area.appendChild(grid);
 }
 
 /* ════════════════════════════════════════════════
