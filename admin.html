@@ -242,6 +242,15 @@
     }
     .btn-delete:hover { opacity: .8; }
 
+    /* ── DRAG & DROP ── */
+    .photo-card { cursor: grab; }
+    .photo-card.dragging { opacity: .35; cursor: grabbing; }
+    .photo-card.drag-over { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .order-hint {
+      font-size: .68rem; color: var(--muted); letter-spacing: .06em;
+      margin-bottom: 12px;
+    }
+
     /* ══════════════════════════════════════════════
        CONFIRM DIALOG
     ══════════════════════════════════════════════ */
@@ -632,7 +641,9 @@ const CATS = [
   { label: '문산선지국 (인테리어)', folder: '인테리어/문산선지국' },
 ];
 
-let curFolder = CATS[0].folder;
+let curFolder     = CATS[0].folder;
+let currentImages = [];          /* 현재 폴더 이미지 배열 (드래그로 순서 변경) */
+let folderOrders  = {};          /* { 'folder': ['file1.webp', ...] } 저장 */
 
 /* ════════════════════════════════════════════════
    DASHBOARD
@@ -686,7 +697,15 @@ async function loadFolder(folder) {
 
   try {
     const items = await ghGet(folder);
-    const images = items.filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name));
+    let images = items.filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name));
+    /* 저장된 순서가 있으면 적용 */
+    if (folderOrders[folder]) {
+      const orderMap = Object.fromEntries(images.map(img => [img.name, img]));
+      const ordered  = folderOrders[folder].map(n => orderMap[n]).filter(Boolean);
+      const rest     = images.filter(img => !folderOrders[folder].includes(img.name));
+      images = [...ordered, ...rest];
+    }
+    currentImages = images;
     document.getElementById('folder-count').textContent = `${images.length}장`;
     images.length ? renderGrid(images) :
       (area.innerHTML = `<div class="state-msg">사진이 없습니다.</div>`);
@@ -700,16 +719,20 @@ async function loadFolder(folder) {
   }
 }
 
-/* ── Render photo grid ── */
+/* ── Render photo grid (drag-and-drop 포함) ── */
 function renderGrid(images) {
   const area = document.getElementById('grid-area');
-  area.innerHTML = '';
+  area.innerHTML = '<p class="order-hint">드래그해서 순서를 바꾸세요 — "사이트 갱신" 시 반영됩니다.</p>';
   const grid = document.createElement('div');
   grid.className = 'photo-grid';
 
-  images.forEach(img => {
+  let dragSrcIdx = null;
+
+  const buildCard = (img, idx) => {
     const card = document.createElement('div');
     card.className = 'photo-card';
+    card.draggable = true;
+    card.dataset.idx = idx;
 
     const el = document.createElement('img');
     el.src = img.download_url;
@@ -719,23 +742,50 @@ function renderGrid(images) {
 
     const overlay = document.createElement('div');
     overlay.className = 'photo-card-overlay';
-
     const name = document.createElement('div');
     name.className = 'photo-name';
     name.textContent = img.name;
-
     const delBtn = document.createElement('button');
     delBtn.className = 'btn-delete';
     delBtn.textContent = '삭제';
     delBtn.addEventListener('click', () => confirmDelete(img));
-
     overlay.appendChild(name);
     overlay.appendChild(delBtn);
+
     card.appendChild(el);
     card.appendChild(overlay);
-    grid.appendChild(card);
-  });
 
+    /* drag events */
+    card.addEventListener('dragstart', e => {
+      dragSrcIdx = idx;
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', () => {
+      grid.querySelectorAll('.photo-card').forEach(c => {
+        c.classList.remove('dragging', 'drag-over');
+      });
+    });
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      grid.querySelectorAll('.photo-card').forEach(c => c.classList.remove('drag-over'));
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      if (dragSrcIdx === null || dragSrcIdx === idx) return;
+      /* 배열에서 이동 */
+      const moved = currentImages.splice(dragSrcIdx, 1)[0];
+      currentImages.splice(idx, 0, moved);
+      folderOrders[curFolder] = currentImages.map(i => i.name);
+      renderGrid(currentImages);   /* 재렌더 */
+    });
+
+    return card;
+  };
+
+  images.forEach((img, idx) => grid.appendChild(buildCard(img, idx)));
   area.appendChild(grid);
 }
 
@@ -938,13 +988,20 @@ function encodeFileName(name) {
     .replace(/,/g, '%2C');
 }
 
-/* 폴더 내 이미지 목록 가져오기 (404 = 빈 폴더) */
+/* 폴더 내 이미지 목록 가져오기 — 관리자가 바꾼 순서 우선 적용 */
 async function fetchImages(folder) {
   try {
     const items = await ghGet(folder);
-    return items
-      .filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name))
-      .map(it => `${folder}/${encodeFileName(it.name)}`);
+    const images = items.filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name));
+    let names = images.map(it => it.name);
+    /* 저장된 순서가 있으면 적용 */
+    if (folderOrders[folder]) {
+      const set = new Set(names);
+      const ordered = folderOrders[folder].filter(n => set.has(n));
+      const rest    = names.filter(n => !folderOrders[folder].includes(n));
+      names = [...ordered, ...rest];
+    }
+    return names.map(n => `${folder}/${encodeFileName(n)}`);
   } catch (e) {
     if (e.status === 404) return [];
     throw e;
