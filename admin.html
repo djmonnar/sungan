@@ -123,6 +123,17 @@
       white-space: nowrap;
     }
     .top-bar-right { display: flex; gap: 10px; align-items: center; }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .72rem; letter-spacing: .08em;
+      padding: 6px 14px;
+      border: 1px solid rgba(200,168,108,.35); border-radius: 8px;
+      color: var(--accent);
+      transition: background .2s, border-color .2s;
+    }
+    .btn-refresh:hover { background: rgba(200,168,108,.08); border-color: var(--accent); }
+    .btn-refresh:disabled { opacity: .4; cursor: default; }
+    .btn-refresh svg { width: 13px; height: 13px; }
     .btn-logout {
       font-size: .72rem; letter-spacing: .1em; color: var(--muted);
       padding: 6px 14px;
@@ -437,6 +448,13 @@
   <header class="top-bar">
     <span class="top-bar-logo">순간, 스튜디오 — 관리자</span>
     <div class="top-bar-right">
+      <button class="btn-refresh" id="refresh-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        사이트 갱신
+      </button>
       <button class="btn-logout" id="logout-btn">로그아웃</button>
     </div>
   </header>
@@ -909,6 +927,188 @@ function toBase64(file) {
     r.readAsDataURL(file);
   });
 }
+
+/* ════════════════════════════════════════════════
+   SITE REFRESH — CATS 재생성 + index.html 업데이트
+════════════════════════════════════════════════ */
+
+/* 파일명 → URL 인코딩 (공백, 괄호, 쉼표, + 처리) */
+function encodeFileName(name) {
+  return name
+    .replace(/%/g, '%25')   /* 이미 인코딩된 문자 중복 방지 — 먼저 처리 */
+    .replace(/ /g, '%20')
+    .replace(/\+/g, '%2B')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/,/g, '%2C');
+}
+
+/* 폴더 내 이미지 목록 가져오기 (404 = 빈 폴더) */
+async function fetchImages(folder) {
+  try {
+    const items = await ghGet(folder);
+    return items
+      .filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name))
+      .map(it => `${folder}/${encodeFileName(it.name)}`);
+  } catch (e) {
+    if (e.status === 404) return [];
+    throw e;
+  }
+}
+
+/* index.html GET (Base64 decode) */
+async function fetchIndexHtml() {
+  const data = await ghGet('index.html');
+  return {
+    content: atob(data.content.replace(/\n/g, '')),
+    sha: data.sha
+  };
+}
+
+/* index.html PUT */
+async function putIndexHtml(content, sha) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/index.html`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({
+      message: `사이트 갱신: CATS 자동 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha,
+      branch: BRANCH
+    })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+/* CATS 항목 재생성 (Motion은 하드코딩 유지) */
+function buildCatsJs(folderMap) {
+  const items = (srcs) =>
+    srcs.map(src => `      { src: '${src}', title: '' }`).join(',\n');
+
+  const commercial = [...(folderMap['제품'] || []), ...(folderMap['홍보'] || [])];
+  const portrait   = folderMap['프로필'] || [];
+  const food       = [
+    ...(folderMap['음식/문산선지국'] || []),
+    ...(folderMap['음식/여운포차']   || []),
+    ...(folderMap['음식/밤샘포차']   || []),
+  ];
+  const interior   = [
+    ...(folderMap['인테리어/보드커넥션'] || []),
+    ...(folderMap['인테리어/문산선지국'] || []),
+  ];
+
+  const featOf = (arr, fallback) => arr.length ? `'${arr[0]}'` : `'${fallback}'`;
+
+  return `const CATS = [
+  /* ── Room 01: Commercial ─────────────────────────── */
+  {
+    id: 'commercial', en: 'Commercial', ko: '상업 사진', room: 'Room 01',
+    desc: '제품 하나에도 브랜드의 이야기가 있습니다.\\n순간스튜디오는 그 이야기를 가장 선명한 한 장면으로 압축합니다.',
+    feat: ${featOf(commercial, '제품/정면%20vr.webp')},
+    type: 'photo',
+    items: [
+${items(commercial)}
+    ]
+  },
+  /* ── Room 02: Portrait ───────────────────────────── */
+  {
+    id: 'portrait', en: 'Portrait', ko: '인물 사진', room: 'Room 02',
+    desc: '사람의 표정 속에 가장 솔직한 순간이 있습니다.\\n프로필부터 배우 포트폴리오까지, 피사체가 가진 빛을 끌어냅니다.',
+    feat: ${featOf(portrait, '프로필/강다원%201.webp')},
+    type: 'photo',
+    items: [
+${items(portrait)}
+    ]
+  },
+  /* ── Room 03: Food & Night ───────────────────────── */
+  {
+    id: 'food', en: 'Food & Night', ko: '푸드 & 야간', room: 'Room 03',
+    desc: '음식의 질감, 포차의 불빛, 밤의 공기까지.\\n한 컷 안에 그 공간의 온도를 담습니다.',
+    feat: ${featOf(food, '음식/문산선지국/뚝배기%20%281%29_1.webp')},
+    type: 'photo',
+    items: [
+${items(food)}
+    ]
+  },
+  /* ── Room 04: Motion (YouTube) ──────────────────── */
+  {
+    id: 'motion', en: 'Motion', ko: '영상', room: 'Room 04',
+    desc: '브랜드의 움직임을 설계합니다.\\n광고 영상부터 브랜드 필름까지, 진주에서 제작합니다.',
+    feat: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+    type: 'video',
+    items: [
+      { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',  sub: 'Commercial Film' },
+      { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
+        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',   sub: 'Product Film' },
+      { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
+        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장', sub: 'Brand Film' },
+    ]
+  },
+  /* ── Room 05: Interior ──────────────────────────── */
+  {
+    id: 'interior', en: 'Interior', ko: '인테리어', room: 'Room 05',
+    desc: '공간이 가진 성격을 그대로 사진에 담습니다.\\n게임 카페부터 한식당까지, 공간의 결을 읽어냅니다.',
+    feat: ${featOf(interior, '인테리어/보드커넥션/배경%201%20복사.webp')},
+    type: 'photo',
+    items: [
+${items(interior)}
+    ]
+  },
+];`;
+}
+
+/* Main refresh handler */
+const refreshBtn = document.getElementById('refresh-btn');
+
+refreshBtn.addEventListener('click', async () => {
+  if (!confirm('전체 폴더를 스캔해서 index.html의 CATS 배열을 업데이트합니다.\n계속하시겠습니까?')) return;
+
+  refreshBtn.disabled = true;
+  refreshBtn.querySelector('svg').style.animation = 'spin .75s linear infinite';
+  showToast('폴더 스캔 중…');
+
+  try {
+    /* 1. 8개 폴더 병렬 스캔 */
+    const folders = [
+      '제품', '홍보', '프로필',
+      '음식/문산선지국', '음식/여운포차', '음식/밤샘포차',
+      '인테리어/보드커넥션', '인테리어/문산선지국'
+    ];
+    const results = await Promise.all(folders.map(f => fetchImages(f)));
+    const folderMap = Object.fromEntries(folders.map((f, i) => [f, results[i]]));
+
+    const total = Object.values(folderMap).reduce((s, a) => s + a.length, 0);
+    showToast(`${total}개 이미지 확인 — index.html 업데이트 중…`);
+
+    /* 2. 현재 index.html GET */
+    const { content, sha } = await fetchIndexHtml();
+
+    /* 3. CATS 블록 교체 */
+    const newCats = buildCatsJs(folderMap);
+    const updated = content.replace(/const CATS = \[[\s\S]*?^];/m, newCats);
+
+    if (updated === content) {
+      showToast('CATS 패턴을 찾지 못했습니다.', 'err');
+      return;
+    }
+
+    /* 4. index.html PUT */
+    await putIndexHtml(updated, sha);
+
+    showToast('사이트 갱신 완료! 약 1분 후 반영됩니다.', 'ok');
+  } catch (e) {
+    showToast(`갱신 실패: ${e.message}`, 'err');
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.querySelector('svg').style.animation = '';
+  }
+});
 
 /* ════════════════════════════════════════════════
    TOAST
