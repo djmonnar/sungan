@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>순간, 스튜디오 — 관리자</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <style>
+    /* ── VARIABLES ─────────────────────────────────── */
+    :root {
+      --bg:      #070706;
+      --surface: #0f0f0e;
+      --surface2: #1a1a18;
+      --border:  rgba(255,255,255,.08);
+      --border2: rgba(255,255,255,.14);
+      --text:    #f0ece6;
+      --muted:   rgba(240,236,230,.50);
+      --accent:  #c8a86c;
+      --danger:  #e05555;
+      --success: #7ecf8f;
+      --radius:  16px;
+    }
+
+    /* ── RESET ─────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+    input, select { font: inherit; color: inherit; }
+    a { color: inherit; text-decoration: none; }
+    img { display: block; }
+
+    /* ══════════════════════════════════════════════
+       LOGIN
+    ══════════════════════════════════════════════ */
+    #login-screen {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .login-box {
+      width: 100%; max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 44px 36px;
+    }
+    .login-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem; font-weight: 300; letter-spacing: .08em;
+      text-align: center; margin-bottom: 6px;
+    }
+    .login-sub {
+      text-align: center; font-size: .68rem; letter-spacing: .3em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 40px;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block; font-size: .72rem; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field input {
+      display: block; width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px; font-size: .9rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .field input:focus { border-color: var(--accent); }
+
+    .login-err {
+      font-size: .78rem; color: var(--danger);
+      min-height: 20px; margin-bottom: 14px;
+    }
+    .btn-primary {
+      width: 100%; padding: 13px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600;
+      font-size: .9rem; letter-spacing: .04em;
+      transition: opacity .2s;
+    }
+    .btn-primary:hover { opacity: .85; }
+    .btn-primary:disabled { opacity: .45; cursor: default; }
+
+    .login-hint {
+      font-size: .7rem; color: var(--muted);
+      text-align: center; margin-top: 20px; line-height: 1.8;
+    }
+    .login-hint a { color: var(--accent); }
+
+    /* ══════════════════════════════════════════════
+       ADMIN SHELL
+    ══════════════════════════════════════════════ */
+    #admin-shell { display: none; flex-direction: column; min-height: 100vh; }
+    #admin-shell.visible { display: flex; }
+
+    /* TOP BAR */
+    .top-bar {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(7,7,6,.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+    }
+    .top-bar-logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem; font-weight: 300; letter-spacing: .07em;
+      white-space: nowrap;
+    }
+    .top-bar-right { display: flex; gap: 10px; align-items: center; }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px;
+      font-size: .72rem; letter-spacing: .08em;
+      padding: 6px 14px;
+      border: 1px solid rgba(200,168,108,.35); border-radius: 8px;
+      color: var(--accent);
+      transition: background .2s, border-color .2s;
+    }
+    .btn-refresh:hover { background: rgba(200,168,108,.08); border-color: var(--accent); }
+    .btn-refresh:disabled { opacity: .4; cursor: default; }
+    .btn-refresh svg { width: 13px; height: 13px; }
+    .btn-logout {
+      font-size: .72rem; letter-spacing: .1em; color: var(--muted);
+      padding: 6px 14px;
+      border: 1px solid var(--border); border-radius: 8px;
+      transition: color .2s, border-color .2s;
+    }
+    .btn-logout:hover { color: var(--text); border-color: var(--border2); }
+
+    /* MAIN */
+    .admin-main {
+      flex: 1; padding: 32px 28px;
+      max-width: 1280px; margin: 0 auto; width: 100%;
+    }
+
+    /* ══════════════════════════════════════════════
+       TABS
+    ══════════════════════════════════════════════ */
+    .tabs {
+      display: flex; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 28px;
+    }
+    .tab {
+      padding: 7px 16px; border-radius: 20px;
+      border: 1px solid var(--border);
+      font-size: .75rem; letter-spacing: .08em;
+      color: var(--muted); cursor: pointer;
+      transition: border-color .2s, color .2s;
+      white-space: nowrap;
+    }
+    .tab:hover { color: var(--text); border-color: var(--border2); }
+    .tab.active { border-color: var(--accent); color: var(--accent); }
+
+    /* ══════════════════════════════════════════════
+       SECTION HEADER
+    ══════════════════════════════════════════════ */
+    .section-hdr {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px; gap: 12px;
+    }
+    .section-title { font-size: 1rem; font-weight: 500; }
+    .section-count { font-size: .78rem; color: var(--muted); margin-left: 8px; }
+
+    /* ══════════════════════════════════════════════
+       PHOTO GRID
+    ══════════════════════════════════════════════ */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+    }
+    .photo-card {
+      position: relative; border-radius: 10px; overflow: hidden;
+      aspect-ratio: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+    .photo-card img {
+      width: 100%; height: 100%; object-fit: cover;
+      display: block;
+    }
+    .photo-card-overlay {
+      position: absolute; inset: 0;
+      background: rgba(0,0,0,.62);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      opacity: 0; transition: opacity .2s;
+    }
+    .photo-card:hover .photo-card-overlay { opacity: 1; }
+    .photo-name {
+      font-size: .62rem; color: rgba(255,255,255,.8);
+      text-align: center; padding: 0 8px;
+      word-break: break-all; line-height: 1.4;
+    }
+
+    /* ══════════════════════════════════════════════
+       STATE MESSAGES
+    ══════════════════════════════════════════════ */
+    .state-msg {
+      padding: 72px 0; text-align: center;
+      color: var(--muted); font-size: .85rem; letter-spacing: .06em;
+    }
+    .spinner {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 2px solid var(--border2);
+      border-top-color: var(--accent);
+      animation: spin .75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* placeholder for subsequent phases */
+    .placeholder {
+      padding: 80px 0; text-align: center;
+      color: var(--muted); font-size: .9rem; letter-spacing: .06em;
+    }
+
+    /* ══════════════════════════════════════════════
+       DELETE BUTTON (in photo card overlay)
+    ══════════════════════════════════════════════ */
+    .btn-delete {
+      padding: 5px 14px; border-radius: 8px;
+      background: var(--danger); color: #fff;
+      font-size: .72rem; font-weight: 600;
+      transition: opacity .2s;
+    }
+    .btn-delete:hover { opacity: .8; }
+
+    /* ══════════════════════════════════════════════
+       CONFIRM DIALOG
+    ══════════════════════════════════════════════ */
+    .confirm-bg {
+      position: fixed; inset: 0; z-index: 150;
+      background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .2s;
+    }
+    .confirm-bg.open { opacity: 1; pointer-events: all; }
+    .confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border2); border-radius: 14px;
+      padding: 28px 24px; max-width: 320px; width: 100%;
+      text-align: center;
+    }
+    .confirm-box strong {
+      display: block; font-size: .85rem;
+      color: var(--text); margin-bottom: 8px;
+      word-break: break-all;
+    }
+    .confirm-box p { font-size: .82rem; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+    .confirm-actions { display: flex; gap: 10px; }
+    .btn-conf-cancel {
+      flex: 1; padding: 10px;
+      border: 1px solid var(--border); border-radius: 8px;
+      font-size: .82rem; color: var(--muted);
+      transition: color .2s, border-color .2s;
+    }
+    .btn-conf-cancel:hover { color: var(--text); border-color: var(--border2); }
+    .btn-conf-ok {
+      flex: 1; padding: 10px;
+      background: var(--danger); border-radius: 8px;
+      font-size: .82rem; font-weight: 600; color: #fff;
+      transition: opacity .2s;
+    }
+    .btn-conf-ok:hover { opacity: .8; }
+
+    /* ══════════════════════════════════════════════
+       UPLOAD BUTTON
+    ══════════════════════════════════════════════ */
+    .btn-upload {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 20px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600; font-size: .82rem;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+    .btn-upload:hover { opacity: .85; }
+    .btn-upload svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ══════════════════════════════════════════════
+       UPLOAD MODAL
+    ══════════════════════════════════════════════ */
+    .modal-bg {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .modal-bg.open { opacity: 1; pointer-events: all; }
+    .modal {
+      width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 28px;
+      transform: translateY(12px);
+      transition: transform .25s;
+    }
+    .modal-bg.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 1rem; font-weight: 600; margin-bottom: 22px; }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 12px; padding: 36px 20px;
+      text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone.over { border-color: var(--accent); background: rgba(200,168,108,.05); }
+    .drop-zone svg { width: 36px; height: 36px; margin: 0 auto 10px; opacity: .4; color: var(--text); }
+    .drop-zone p { font-size: .82rem; color: var(--muted); }
+    .drop-zone span { font-size: .7rem; color: var(--muted); display: block; margin-top: 4px; }
+    #file-input { display: none; }
+
+    /* Previews */
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px; margin-top: 14px;
+    }
+    .preview-item {
+      position: relative; aspect-ratio: 1;
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface2);
+    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-rm {
+      position: absolute; top: 3px; right: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; cursor: pointer; color: #fff;
+      line-height: 1;
+    }
+
+    /* Folder select */
+    .modal-field { margin-top: 18px; }
+    .modal-field label {
+      display: block; font-size: .72rem; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .modal-field select {
+      width: 100%; padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); cursor: pointer; outline: none;
+      transition: border-color .2s;
+    }
+    .modal-field select:focus { border-color: var(--accent); }
+
+    /* Progress */
+    .upload-progress { margin-top: 16px; display: none; }
+    .prog-track { height: 3px; border-radius: 2px; background: var(--border2); overflow: hidden; }
+    .prog-fill  { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+    .prog-text  { font-size: .7rem; color: var(--muted); margin-top: 8px; text-align: center; }
+
+    /* Modal actions */
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-cancel {
+      flex: 1; padding: 11px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: .85rem; color: var(--muted);
+      transition: color .2s, border-color .2s;
+    }
+    .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+    .btn-submit {
+      flex: 2; padding: 11px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600; font-size: .85rem;
+      transition: opacity .2s;
+    }
+    .btn-submit:hover { opacity: .85; }
+    .btn-submit:disabled { opacity: .4; cursor: default; }
+
+    /* ══════════════════════════════════════════════
+       TOAST
+    ══════════════════════════════════════════════ */
+    .toast {
+      position: fixed; bottom: 28px; left: 50%;
+      transform: translateX(-50%);
+      z-index: 200;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 11px 20px;
+      font-size: .82rem; white-space: nowrap;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .toast.show { opacity: 1; }
+    .toast.ok   { border-color: rgba(126,207,143,.35); color: var(--success); }
+    .toast.err  { border-color: rgba(224,85,85,.35);   color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<!-- ══ LOGIN ════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">순간, 스튜디오</div>
+    <div class="login-sub">Admin Panel</div>
+
+    <div class="field">
+      <label>GitHub Personal Access Token</label>
+      <input id="pat-input" type="password"
+             placeholder="ghp_xxxxxxxxxxxx" autocomplete="off" spellcheck="false">
+    </div>
+
+    <div class="login-err" id="login-err"></div>
+
+    <button class="btn-primary" id="login-btn">로그인</button>
+
+    <p class="login-hint">
+      repo 쓰기 권한이 있는 Classic Token이 필요합니다.<br>
+      <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">
+        GitHub 토큰 발급 →
+      </a>
+    </p>
+  </div>
+</div>
+
+<!-- ══ ADMIN SHELL ══════════════════════════════════ -->
+<div id="admin-shell">
+  <header class="top-bar">
+    <span class="top-bar-logo">순간, 스튜디오 — 관리자</span>
+    <div class="top-bar-right">
+      <button class="btn-refresh" id="refresh-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 4 23 10 17 10"/>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+        </svg>
+        사이트 갱신
+      </button>
+      <button class="btn-logout" id="logout-btn">로그아웃</button>
+    </div>
+  </header>
+
+  <main class="admin-main" id="admin-main">
+    <div class="placeholder">대시보드 로딩 중…</div>
+  </main>
+</div>
+
+<!-- ══ CONFIRM DIALOG ════════════════════════════════ -->
+<div class="confirm-bg" id="confirm-bg">
+  <div class="confirm-box">
+    <strong id="confirm-name"></strong>
+    <p>이 사진을 삭제하시겠습니까?<br>삭제 후 복구할 수 없습니다.</p>
+    <div class="confirm-actions">
+      <button class="btn-conf-cancel" id="confirm-cancel">취소</button>
+      <button class="btn-conf-ok"     id="confirm-ok">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ UPLOAD MODAL ══════════════════════════════════ -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">사진 업로드</div>
+
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" multiple>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <p>클릭하거나 사진을 드래그하세요</p>
+      <span>JPG · PNG · WEBP — 최대 50MB/장</span>
+    </div>
+
+    <div class="preview-grid" id="preview-grid"></div>
+
+    <div class="modal-field">
+      <label>업로드 폴더</label>
+      <select id="folder-select">
+        <option value="제품">Commercial — 제품</option>
+        <option value="홍보">Commercial — 홍보</option>
+        <option value="프로필">Portrait — 프로필</option>
+        <option value="음식/문산선지국">Food&amp;Night — 문산선지국</option>
+        <option value="음식/여운포차">Food&amp;Night — 여운포차</option>
+        <option value="음식/밤샘포차">Food&amp;Night — 밤샘포차</option>
+        <option value="인테리어/보드커넥션">Interior — 보드커넥션</option>
+        <option value="인테리어/문산선지국">Interior — 문산선지국</option>
+      </select>
+    </div>
+
+    <div class="upload-progress" id="upload-progress">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-text" id="prog-text"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">취소</button>
+      <button class="btn-submit" id="modal-submit" disabled>업로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════════════ */
+const OWNER  = 'djmonnar';
+const REPO   = 'sungan';
+const BRANCH = 'main';
+
+/* ════════════════════════════════════════════════
+   STATE
+════════════════════════════════════════════════ */
+let pat = sessionStorage.getItem('sg_pat') || '';
+
+/* ════════════════════════════════════════════════
+   GITHUB API HELPERS
+════════════════════════════════════════════════ */
+function ghHeaders() {
+  return {
+    'Authorization': `token ${pat}`,
+    'Accept': 'application/vnd.github+json',
+    'X-GitHub-Api-Version': '2022-11-28'
+  };
+}
+
+async function ghGet(path) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}?ref=${BRANCH}`;
+  const r = await fetch(url, { headers: ghHeaders() });
+  if (!r.ok) throw Object.assign(new Error(`${r.status} ${r.statusText}`), { status: r.status });
+  return r.json();
+}
+
+/* Encode each segment but preserve slashes */
+function encodePath(p) {
+  return p.split('/').map(s => encodeURIComponent(s)).join('/');
+}
+
+/* ════════════════════════════════════════════════
+   LOGIN
+════════════════════════════════════════════════ */
+const loginScreen = document.getElementById('login-screen');
+const adminShell  = document.getElementById('admin-shell');
+const loginBtn    = document.getElementById('login-btn');
+const loginErr    = document.getElementById('login-err');
+const patInput    = document.getElementById('pat-input');
+
+async function tryLogin() {
+  const token = patInput.value.trim();
+  if (!token) { loginErr.textContent = 'Token을 입력해주세요.'; return; }
+
+  loginBtn.disabled = true;
+  loginBtn.textContent = '확인 중…';
+  loginErr.textContent = '';
+
+  try {
+    const r = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}`, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+
+    if (r.status === 401) { loginErr.textContent = '유효하지 않은 토큰입니다.'; return; }
+    if (r.status === 404) { loginErr.textContent = '저장소에 접근할 수 없습니다.'; return; }
+    if (!r.ok)            { loginErr.textContent = `오류: ${r.status}`; return; }
+
+    const data = await r.json();
+    if (!data.permissions?.push) {
+      loginErr.textContent = 'repo 쓰기 권한이 없습니다. 토큰 권한을 확인하세요.';
+      return;
+    }
+
+    pat = token;
+    sessionStorage.setItem('sg_pat', token);
+    enterAdmin();
+
+  } catch {
+    loginErr.textContent = '네트워크 오류가 발생했습니다.';
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = '로그인';
+  }
+}
+
+loginBtn.addEventListener('click', tryLogin);
+patInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+
+/* Auto-login if token cached */
+if (pat) { patInput.value = pat; tryLogin(); }
+
+/* ════════════════════════════════════════════════
+   ENTER ADMIN
+════════════════════════════════════════════════ */
+function enterAdmin() {
+  loginScreen.style.display = 'none';
+  adminShell.classList.add('visible');
+  renderDashboard();
+}
+
+/* ════════════════════════════════════════════════
+   LOGOUT
+════════════════════════════════════════════════ */
+document.getElementById('logout-btn').addEventListener('click', () => {
+  sessionStorage.removeItem('sg_pat');
+  pat = '';
+  patInput.value = '';
+  loginErr.textContent = '';
+  loginScreen.style.display = '';
+  adminShell.classList.remove('visible');
+});
+
+/* ════════════════════════════════════════════════
+   CATEGORIES
+════════════════════════════════════════════════ */
+const CATS = [
+  { label: '제품',                folder: '제품' },
+  { label: '홍보',                folder: '홍보' },
+  { label: '프로필',              folder: '프로필' },
+  { label: '문산선지국 (음식)',    folder: '음식/문산선지국' },
+  { label: '여운포차',            folder: '음식/여운포차' },
+  { label: '밤샘포차',            folder: '음식/밤샘포차' },
+  { label: '보드커넥션 (인테리어)', folder: '인테리어/보드커넥션' },
+  { label: '문산선지국 (인테리어)', folder: '인테리어/문산선지국' },
+];
+
+let curFolder = CATS[0].folder;
+
+/* ════════════════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════════════════ */
+function renderDashboard() {
+  const main = document.getElementById('admin-main');
+  main.innerHTML = `
+    <div class="tabs" id="tabs"></div>
+    <div class="section-hdr">
+      <div>
+        <span class="section-title" id="folder-title"></span>
+        <span class="section-count" id="folder-count"></span>
+      </div>
+      <button class="btn-upload" id="upload-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+        업로드
+      </button>
+    </div>
+    <div id="grid-area"></div>
+  `;
+  buildTabs();
+  loadFolder(curFolder);
+}
+
+/* ── Tabs ── */
+function buildTabs() {
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = '';
+  CATS.forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'tab' + (cat.folder === curFolder ? ' active' : '');
+    btn.textContent = cat.label;
+    btn.addEventListener('click', () => {
+      curFolder = cat.folder;
+      tabsEl.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      loadFolder(cat.folder);
+    });
+    tabsEl.appendChild(btn);
+  });
+}
+
+/* ── Load folder from GitHub API ── */
+async function loadFolder(folder) {
+  document.getElementById('folder-title').textContent = folder;
+  document.getElementById('folder-count').textContent = '';
+  const area = document.getElementById('grid-area');
+  area.innerHTML = `<div class="state-msg"><div class="spinner"></div>불러오는 중…</div>`;
+
+  try {
+    const items = await ghGet(folder);
+    const images = items.filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name));
+    document.getElementById('folder-count').textContent = `${images.length}장`;
+    images.length ? renderGrid(images) :
+      (area.innerHTML = `<div class="state-msg">사진이 없습니다.</div>`);
+  } catch (e) {
+    if (e.status === 404) {
+      document.getElementById('folder-count').textContent = '0장';
+      area.innerHTML = `<div class="state-msg">폴더가 비어있습니다.<br>사진을 업로드하면 자동 생성됩니다.</div>`;
+    } else {
+      area.innerHTML = `<div class="state-msg" style="color:var(--danger)">${e.message}</div>`;
+    }
+  }
+}
+
+/* ── Render photo grid ── */
+function renderGrid(images) {
+  const area = document.getElementById('grid-area');
+  area.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'photo-grid';
+
+  images.forEach(img => {
+    const card = document.createElement('div');
+    card.className = 'photo-card';
+
+    const el = document.createElement('img');
+    el.src = img.download_url;
+    el.loading = 'lazy';
+    el.decoding = 'async';
+    el.alt = img.name;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'photo-card-overlay';
+
+    const name = document.createElement('div');
+    name.className = 'photo-name';
+    name.textContent = img.name;
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.textContent = '삭제';
+    delBtn.addEventListener('click', () => confirmDelete(img));
+
+    overlay.appendChild(name);
+    overlay.appendChild(delBtn);
+    card.appendChild(el);
+    card.appendChild(overlay);
+    grid.appendChild(card);
+  });
+
+  area.appendChild(grid);
+}
+
+/* ════════════════════════════════════════════════
+   GITHUB API — WRITE / DELETE
+════════════════════════════════════════════════ */
+async function ghPut(path, base64, message) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({ message, content: base64, branch: BRANCH })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+async function ghDelete(path, sha, message) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}`;
+  const r = await fetch(url, {
+    method: 'DELETE',
+    headers: ghHeaders(),
+    body: JSON.stringify({ message, sha, branch: BRANCH })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+/* ════════════════════════════════════════════════
+   DELETE CONFIRM
+════════════════════════════════════════════════ */
+let deleteTarget = null;
+const confirmBg = document.getElementById('confirm-bg');
+
+function confirmDelete(img) {
+  deleteTarget = img;
+  document.getElementById('confirm-name').textContent = img.name;
+  confirmBg.classList.add('open');
+}
+
+document.getElementById('confirm-cancel').addEventListener('click', () => {
+  confirmBg.classList.remove('open');
+  deleteTarget = null;
+});
+
+document.getElementById('confirm-ok').addEventListener('click', async () => {
+  if (!deleteTarget) return;
+  confirmBg.classList.remove('open');
+  const target = deleteTarget;
+  deleteTarget = null;
+  try {
+    await ghDelete(target.path, target.sha, `삭제: ${target.path}`);
+    showToast('사진이 삭제되었습니다.');
+    loadFolder(curFolder);
+  } catch (e) {
+    showToast(`삭제 실패: ${e.message}`, 'err');
+  }
+});
+
+/* ════════════════════════════════════════════════
+   UPLOAD MODAL
+════════════════════════════════════════════════ */
+let pendingFiles = [];
+
+const modalBg     = document.getElementById('modal-bg');
+const dropZone    = document.getElementById('drop-zone');
+const fileInput   = document.getElementById('file-input');
+const previewGrid = document.getElementById('preview-grid');
+const folderSel   = document.getElementById('folder-select');
+const progEl      = document.getElementById('upload-progress');
+const progFill    = document.getElementById('prog-fill');
+const progText    = document.getElementById('prog-text');
+const submitBtn   = document.getElementById('modal-submit');
+
+/* Open / Close */
+function openModal() {
+  pendingFiles = [];
+  previewGrid.innerHTML = '';
+  submitBtn.disabled = true;
+  progEl.style.display = 'none';
+  progFill.style.width = '0%';
+  progText.textContent = '';
+  folderSel.value = curFolder;
+  modalBg.classList.add('open');
+}
+function closeModal() { modalBg.classList.remove('open'); }
+
+document.getElementById('upload-btn').addEventListener('click', openModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
+
+/* Drop zone */
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  addFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
+
+function addFiles(files) {
+  const images = files.filter(f => f.type.startsWith('image/'));
+  pendingFiles = [...pendingFiles, ...images];
+  renderPreviews();
+}
+
+function renderPreviews() {
+  previewGrid.innerHTML = '';
+  pendingFiles.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const rm = document.createElement('div');
+    rm.className = 'preview-rm';
+    rm.textContent = '✕';
+    rm.addEventListener('click', () => {
+      URL.revokeObjectURL(img.src);
+      pendingFiles.splice(i, 1);
+      renderPreviews();
+    });
+    item.appendChild(img); item.appendChild(rm);
+    previewGrid.appendChild(item);
+  });
+  submitBtn.disabled = pendingFiles.length === 0;
+}
+
+/* Submit */
+submitBtn.addEventListener('click', async () => {
+  if (!pendingFiles.length) return;
+  const folder = folderSel.value;
+  const total  = pendingFiles.length;
+  let done = 0;
+
+  progEl.style.display = 'block';
+  submitBtn.disabled = true;
+  document.getElementById('modal-cancel').style.pointerEvents = 'none';
+
+  for (const file of pendingFiles) {
+    progText.textContent = `업로드 중 ${done + 1} / ${total} — ${file.name}`;
+    try {
+      const b64 = await toBase64(file);
+      await ghPut(`${folder}/${file.name}`, b64, `업로드: ${folder}/${file.name}`);
+      done++;
+      progFill.style.width = `${Math.round(done / total * 100)}%`;
+    } catch (e) {
+      showToast(`오류: ${file.name} — ${e.message}`, 'err');
+    }
+  }
+
+  progText.textContent = `완료! ${done}장 업로드됨`;
+  document.getElementById('modal-cancel').style.pointerEvents = '';
+  showToast(`${done}장 업로드 완료!`);
+
+  setTimeout(() => {
+    closeModal();
+    loadFolder(folder);
+  }, 900);
+});
+
+/* File → Base64 */
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/* ════════════════════════════════════════════════
+   SITE REFRESH — CATS 재생성 + index.html 업데이트
+════════════════════════════════════════════════ */
+
+/* 파일명 → URL 인코딩 (공백, 괄호, 쉼표, + 처리) */
+function encodeFileName(name) {
+  return name
+    .replace(/%/g, '%25')   /* 이미 인코딩된 문자 중복 방지 — 먼저 처리 */
+    .replace(/ /g, '%20')
+    .replace(/\+/g, '%2B')
+    .replace(/\(/g, '%28')
+    .replace(/\)/g, '%29')
+    .replace(/,/g, '%2C');
+}
+
+/* 폴더 내 이미지 목록 가져오기 (404 = 빈 폴더) */
+async function fetchImages(folder) {
+  try {
+    const items = await ghGet(folder);
+    return items
+      .filter(it => /\.(webp|jpg|jpeg|png|gif)$/i.test(it.name))
+      .map(it => `${folder}/${encodeFileName(it.name)}`);
+  } catch (e) {
+    if (e.status === 404) return [];
+    throw e;
+  }
+}
+
+/* index.html GET (Base64 decode) */
+async function fetchIndexHtml() {
+  const data = await ghGet('index.html');
+  return {
+    content: atob(data.content.replace(/\n/g, '')),
+    sha: data.sha
+  };
+}
+
+/* index.html PUT */
+async function putIndexHtml(content, sha) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/index.html`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({
+      message: `사이트 갱신: CATS 자동 업데이트 ${new Date().toLocaleString('ko-KR')}`,
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha,
+      branch: BRANCH
+    })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+/* CATS 항목 재생성 (Motion은 하드코딩 유지) */
+function buildCatsJs(folderMap) {
+  const items = (srcs) =>
+    srcs.map(src => `      { src: '${src}', title: '' }`).join(',\n');
+
+  const commercial = [...(folderMap['제품'] || []), ...(folderMap['홍보'] || [])];
+  const portrait   = folderMap['프로필'] || [];
+  const food       = [
+    ...(folderMap['음식/문산선지국'] || []),
+    ...(folderMap['음식/여운포차']   || []),
+    ...(folderMap['음식/밤샘포차']   || []),
+  ];
+  const interior   = [
+    ...(folderMap['인테리어/보드커넥션'] || []),
+    ...(folderMap['인테리어/문산선지국'] || []),
+  ];
+
+  const featOf = (arr, fallback) => arr.length ? `'${arr[0]}'` : `'${fallback}'`;
+
+  return `const CATS = [
+  /* ── Room 01: Commercial ─────────────────────────── */
+  {
+    id: 'commercial', en: 'Commercial', ko: '상업 사진', room: 'Room 01',
+    desc: '제품 하나에도 브랜드의 이야기가 있습니다.\\n순간스튜디오는 그 이야기를 가장 선명한 한 장면으로 압축합니다.',
+    feat: ${featOf(commercial, '제품/정면%20vr.webp')},
+    type: 'photo',
+    items: [
+${items(commercial)}
+    ]
+  },
+  /* ── Room 02: Portrait ───────────────────────────── */
+  {
+    id: 'portrait', en: 'Portrait', ko: '인물 사진', room: 'Room 02',
+    desc: '사람의 표정 속에 가장 솔직한 순간이 있습니다.\\n프로필부터 배우 포트폴리오까지, 피사체가 가진 빛을 끌어냅니다.',
+    feat: ${featOf(portrait, '프로필/강다원%201.webp')},
+    type: 'photo',
+    items: [
+${items(portrait)}
+    ]
+  },
+  /* ── Room 03: Food & Night ───────────────────────── */
+  {
+    id: 'food', en: 'Food & Night', ko: '푸드 & 야간', room: 'Room 03',
+    desc: '음식의 질감, 포차의 불빛, 밤의 공기까지.\\n한 컷 안에 그 공간의 온도를 담습니다.',
+    feat: ${featOf(food, '음식/문산선지국/뚝배기%20%281%29_1.webp')},
+    type: 'photo',
+    items: [
+${items(food)}
+    ]
+  },
+  /* ── Room 04: Motion (YouTube) ──────────────────── */
+  {
+    id: 'motion', en: 'Motion', ko: '영상', room: 'Room 04',
+    desc: '브랜드의 움직임을 설계합니다.\\n광고 영상부터 브랜드 필름까지, 진주에서 제작합니다.',
+    feat: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+    type: 'video',
+    items: [
+      { thumb: 'https://img.youtube.com/vi/WEPXeWG6rE4/hqdefault.jpg',
+        url: 'https://youtu.be/WEPXeWG6rE4', title: 'DASHU 광고',  sub: 'Commercial Film' },
+      { thumb: 'https://img.youtube.com/vi/b-_Sh5KLv2c/hqdefault.jpg',
+        url: 'https://youtu.be/b-_Sh5KLv2c', title: 'MIP 립밤',   sub: 'Product Film' },
+      { thumb: 'https://img.youtube.com/vi/ba3QbhE1s08/hqdefault.jpg',
+        url: 'https://youtu.be/ba3QbhE1s08', title: '밤깨비 농장', sub: 'Brand Film' },
+    ]
+  },
+  /* ── Room 05: Interior ──────────────────────────── */
+  {
+    id: 'interior', en: 'Interior', ko: '인테리어', room: 'Room 05',
+    desc: '공간이 가진 성격을 그대로 사진에 담습니다.\\n게임 카페부터 한식당까지, 공간의 결을 읽어냅니다.',
+    feat: ${featOf(interior, '인테리어/보드커넥션/배경%201%20복사.webp')},
+    type: 'photo',
+    items: [
+${items(interior)}
+    ]
+  },
+];`;
+}
+
+/* Main refresh handler */
+const refreshBtn = document.getElementById('refresh-btn');
+
+refreshBtn.addEventListener('click', async () => {
+  if (!confirm('전체 폴더를 스캔해서 index.html의 CATS 배열을 업데이트합니다.\n계속하시겠습니까?')) return;
+
+  refreshBtn.disabled = true;
+  refreshBtn.querySelector('svg').style.animation = 'spin .75s linear infinite';
+  showToast('폴더 스캔 중…');
+
+  try {
+    /* 1. 8개 폴더 병렬 스캔 */
+    const folders = [
+      '제품', '홍보', '프로필',
+      '음식/문산선지국', '음식/여운포차', '음식/밤샘포차',
+      '인테리어/보드커넥션', '인테리어/문산선지국'
+    ];
+    const results = await Promise.all(folders.map(f => fetchImages(f)));
+    const folderMap = Object.fromEntries(folders.map((f, i) => [f, results[i]]));
+
+    const total = Object.values(folderMap).reduce((s, a) => s + a.length, 0);
+    showToast(`${total}개 이미지 확인 — index.html 업데이트 중…`);
+
+    /* 2. 현재 index.html GET */
+    const { content, sha } = await fetchIndexHtml();
+
+    /* 3. CATS 블록 교체 */
+    const newCats = buildCatsJs(folderMap);
+    const updated = content.replace(/const CATS = \[[\s\S]*?^];/m, newCats);
+
+    if (updated === content) {
+      showToast('CATS 패턴을 찾지 못했습니다.', 'err');
+      return;
+    }
+
+    /* 4. index.html PUT */
+    await putIndexHtml(updated, sha);
+
+    showToast('사이트 갱신 완료! 약 1분 후 반영됩니다.', 'ok');
+  } catch (e) {
+    showToast(`갱신 실패: ${e.message}`, 'err');
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.querySelector('svg').style.animation = '';
+  }
+});
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+let toastTimer;
+const toastEl = document.getElementById('toast');
+
+function showToast(msg, type = 'ok') {
+  toastEl.textContent = msg;
+  toastEl.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toastEl.classList.remove('show'); }, 3000);
+}
+</script>
+</body>
+</html>
