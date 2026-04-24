@@ -221,6 +221,120 @@
     }
 
     /* ══════════════════════════════════════════════
+       UPLOAD BUTTON
+    ══════════════════════════════════════════════ */
+    .btn-upload {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 20px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600; font-size: .82rem;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+    .btn-upload:hover { opacity: .85; }
+    .btn-upload svg { width: 15px; height: 15px; flex-shrink: 0; }
+
+    /* ══════════════════════════════════════════════
+       UPLOAD MODAL
+    ══════════════════════════════════════════════ */
+    .modal-bg {
+      position: fixed; inset: 0; z-index: 100;
+      background: rgba(0,0,0,.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .modal-bg.open { opacity: 1; pointer-events: all; }
+    .modal {
+      width: 100%; max-width: 500px;
+      max-height: 90vh; overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: var(--radius);
+      padding: 28px;
+      transform: translateY(12px);
+      transition: transform .25s;
+    }
+    .modal-bg.open .modal { transform: translateY(0); }
+    .modal-title { font-size: 1rem; font-weight: 600; margin-bottom: 22px; }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed var(--border2);
+      border-radius: 12px; padding: 36px 20px;
+      text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .drop-zone.over { border-color: var(--accent); background: rgba(200,168,108,.05); }
+    .drop-zone svg { width: 36px; height: 36px; margin: 0 auto 10px; opacity: .4; color: var(--text); }
+    .drop-zone p { font-size: .82rem; color: var(--muted); }
+    .drop-zone span { font-size: .7rem; color: var(--muted); display: block; margin-top: 4px; }
+    #file-input { display: none; }
+
+    /* Previews */
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+      gap: 8px; margin-top: 14px;
+    }
+    .preview-item {
+      position: relative; aspect-ratio: 1;
+      border-radius: 8px; overflow: hidden;
+      background: var(--surface2);
+    }
+    .preview-item img { width: 100%; height: 100%; object-fit: cover; }
+    .preview-rm {
+      position: absolute; top: 3px; right: 3px;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: rgba(0,0,0,.75);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; cursor: pointer; color: #fff;
+      line-height: 1;
+    }
+
+    /* Folder select */
+    .modal-field { margin-top: 18px; }
+    .modal-field label {
+      display: block; font-size: .72rem; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .modal-field select {
+      width: 100%; padding: 10px 14px;
+      background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); cursor: pointer; outline: none;
+      transition: border-color .2s;
+    }
+    .modal-field select:focus { border-color: var(--accent); }
+
+    /* Progress */
+    .upload-progress { margin-top: 16px; display: none; }
+    .prog-track { height: 3px; border-radius: 2px; background: var(--border2); overflow: hidden; }
+    .prog-fill  { height: 100%; background: var(--accent); width: 0%; transition: width .3s; }
+    .prog-text  { font-size: .7rem; color: var(--muted); margin-top: 8px; text-align: center; }
+
+    /* Modal actions */
+    .modal-actions { display: flex; gap: 10px; margin-top: 22px; }
+    .btn-cancel {
+      flex: 1; padding: 11px;
+      border: 1px solid var(--border); border-radius: 10px;
+      font-size: .85rem; color: var(--muted);
+      transition: color .2s, border-color .2s;
+    }
+    .btn-cancel:hover { color: var(--text); border-color: var(--border2); }
+    .btn-submit {
+      flex: 2; padding: 11px;
+      background: var(--accent); color: #1a1000;
+      border-radius: 10px; font-weight: 600; font-size: .85rem;
+      transition: opacity .2s;
+    }
+    .btn-submit:hover { opacity: .85; }
+    .btn-submit:disabled { opacity: .4; cursor: default; }
+
+    /* ══════════════════════════════════════════════
        TOAST
     ══════════════════════════════════════════════ */
     .toast {
@@ -279,6 +393,50 @@
   <main class="admin-main" id="admin-main">
     <div class="placeholder">대시보드 로딩 중…</div>
   </main>
+</div>
+
+<!-- ══ UPLOAD MODAL ══════════════════════════════════ -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title">사진 업로드</div>
+
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="image/*" multiple>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="3"/>
+        <circle cx="8.5" cy="8.5" r="1.5"/>
+        <polyline points="21 15 16 10 5 21"/>
+      </svg>
+      <p>클릭하거나 사진을 드래그하세요</p>
+      <span>JPG · PNG · WEBP — 최대 50MB/장</span>
+    </div>
+
+    <div class="preview-grid" id="preview-grid"></div>
+
+    <div class="modal-field">
+      <label>업로드 폴더</label>
+      <select id="folder-select">
+        <option value="제품">Commercial — 제품</option>
+        <option value="홍보">Commercial — 홍보</option>
+        <option value="프로필">Portrait — 프로필</option>
+        <option value="음식/문산선지국">Food&amp;Night — 문산선지국</option>
+        <option value="음식/여운포차">Food&amp;Night — 여운포차</option>
+        <option value="음식/밤샘포차">Food&amp;Night — 밤샘포차</option>
+        <option value="인테리어/보드커넥션">Interior — 보드커넥션</option>
+        <option value="인테리어/문산선지국">Interior — 문산선지국</option>
+      </select>
+    </div>
+
+    <div class="upload-progress" id="upload-progress">
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+      <div class="prog-text" id="prog-text"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">취소</button>
+      <button class="btn-submit" id="modal-submit" disabled>업로드</button>
+    </div>
+  </div>
 </div>
 
 <!-- TOAST -->
@@ -422,6 +580,12 @@ function renderDashboard() {
         <span class="section-title" id="folder-title"></span>
         <span class="section-count" id="folder-count"></span>
       </div>
+      <button class="btn-upload" id="upload-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+        업로드
+      </button>
     </div>
     <div id="grid-area"></div>
   `;
@@ -501,6 +665,135 @@ function renderGrid(images) {
   });
 
   area.appendChild(grid);
+}
+
+/* ════════════════════════════════════════════════
+   GITHUB API — WRITE
+════════════════════════════════════════════════ */
+async function ghPut(path, base64, message) {
+  const url = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${encodePath(path)}`;
+  const r = await fetch(url, {
+    method: 'PUT',
+    headers: ghHeaders(),
+    body: JSON.stringify({ message, content: base64, branch: BRANCH })
+  });
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({}));
+    throw new Error(err.message || `${r.status}`);
+  }
+  return r.json();
+}
+
+/* ════════════════════════════════════════════════
+   UPLOAD MODAL
+════════════════════════════════════════════════ */
+let pendingFiles = [];
+
+const modalBg     = document.getElementById('modal-bg');
+const dropZone    = document.getElementById('drop-zone');
+const fileInput   = document.getElementById('file-input');
+const previewGrid = document.getElementById('preview-grid');
+const folderSel   = document.getElementById('folder-select');
+const progEl      = document.getElementById('upload-progress');
+const progFill    = document.getElementById('prog-fill');
+const progText    = document.getElementById('prog-text');
+const submitBtn   = document.getElementById('modal-submit');
+
+/* Open / Close */
+function openModal() {
+  pendingFiles = [];
+  previewGrid.innerHTML = '';
+  submitBtn.disabled = true;
+  progEl.style.display = 'none';
+  progFill.style.width = '0%';
+  progText.textContent = '';
+  folderSel.value = curFolder;
+  modalBg.classList.add('open');
+}
+function closeModal() { modalBg.classList.remove('open'); }
+
+document.getElementById('upload-btn').addEventListener('click', openModal);
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+modalBg.addEventListener('click', e => { if (e.target === modalBg) closeModal(); });
+
+/* Drop zone */
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('over');
+  addFiles([...e.dataTransfer.files]);
+});
+fileInput.addEventListener('change', () => { addFiles([...fileInput.files]); fileInput.value = ''; });
+
+function addFiles(files) {
+  const images = files.filter(f => f.type.startsWith('image/'));
+  pendingFiles = [...pendingFiles, ...images];
+  renderPreviews();
+}
+
+function renderPreviews() {
+  previewGrid.innerHTML = '';
+  pendingFiles.forEach((f, i) => {
+    const item = document.createElement('div');
+    item.className = 'preview-item';
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(f);
+    const rm = document.createElement('div');
+    rm.className = 'preview-rm';
+    rm.textContent = '✕';
+    rm.addEventListener('click', () => {
+      URL.revokeObjectURL(img.src);
+      pendingFiles.splice(i, 1);
+      renderPreviews();
+    });
+    item.appendChild(img); item.appendChild(rm);
+    previewGrid.appendChild(item);
+  });
+  submitBtn.disabled = pendingFiles.length === 0;
+}
+
+/* Submit */
+submitBtn.addEventListener('click', async () => {
+  if (!pendingFiles.length) return;
+  const folder = folderSel.value;
+  const total  = pendingFiles.length;
+  let done = 0;
+
+  progEl.style.display = 'block';
+  submitBtn.disabled = true;
+  document.getElementById('modal-cancel').style.pointerEvents = 'none';
+
+  for (const file of pendingFiles) {
+    progText.textContent = `업로드 중 ${done + 1} / ${total} — ${file.name}`;
+    try {
+      const b64 = await toBase64(file);
+      await ghPut(`${folder}/${file.name}`, b64, `업로드: ${folder}/${file.name}`);
+      done++;
+      progFill.style.width = `${Math.round(done / total * 100)}%`;
+    } catch (e) {
+      showToast(`오류: ${file.name} — ${e.message}`, 'err');
+    }
+  }
+
+  progText.textContent = `완료! ${done}장 업로드됨`;
+  document.getElementById('modal-cancel').style.pointerEvents = '';
+  showToast(`${done}장 업로드 완료!`);
+
+  setTimeout(() => {
+    closeModal();
+    loadFolder(folder);
+  }, 900);
+});
+
+/* File → Base64 */
+function toBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
 }
 
 /* ════════════════════════════════════════════════
